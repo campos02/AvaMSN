@@ -1,0 +1,122 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:AvaMSN.ViewModels"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+             xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+             xmlns:conv="clr-namespace:AvaMSN.Converters"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+             x:Class="AvaMSN.Views.ConversationView"
+             x:DataType="vm:ConversationViewModel">
+  
+  <UserControl.Resources>
+    <conv:UserSaysConverter x:Key="userSaysConverter"/>
+  </UserControl.Resources>
+
+  <Grid Margin="30"
+        RowDefinitions="Auto, 10, *, 10, Auto, 5, Auto, 5, Auto">
+
+    <TextBlock Text="{Binding Conversation.Contact.DisplayName}"
+               FontWeight="ExtraBold"
+               FontSize="20"/>
+
+    <Button HorizontalAlignment="Right"
+            Command="{Binding BackCommand}">Go Back</Button>
+
+    <ScrollViewer Grid.Row="2">
+      <StackPanel Spacing="10">
+        <ItemsControl ItemsSource="{Binding Conversation.MessageHistory}"
+                      Background="Transparent">
+
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid RowDefinitions="10, Auto, 5, Auto"
+                    ColumnDefinitions="*, Auto">
+                <StackPanel Orientation="Horizontal"
+                            Spacing="4"
+                            IsVisible="{Binding SenderDisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                            Grid.Row="1">
+                  <TextBlock Text="{Binding SenderDisplayName}"
+                             Foreground="Gray"/>
+                  <TextBlock Text="{Binding IsHistory, Converter={StaticResource userSaysConverter}}"
+                             Foreground="Gray"/>
+                </StackPanel>
+                <TextBlock Text="{Binding Text}"
+                           TextWrapping="Wrap"
+                           Foreground="Gray"
+                           Grid.Row="3"/>
+                <TextBlock Text="{Binding DateTime, StringFormat={}{0:dd MMM yyyy HH:mm}}"
+                           Foreground="Gray"
+                           Grid.Row="3"
+                           Grid.Column="2"/>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+
+        </ItemsControl>
+
+        <Separator/>
+
+        <ItemsControl ItemsSource="{Binding Conversation.Messages}"
+                      Background="Transparent">
+
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid RowDefinitions="10, Auto, 5, Auto"
+                    ColumnDefinitions="*, Auto">
+                <StackPanel Orientation="Horizontal"
+                            Spacing="4"
+                            IsVisible="{Binding SenderDisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                            Grid.Row="1">
+                  <TextBlock Text="{Binding SenderDisplayName}"/>
+                  <TextBlock Text="{Binding IsHistory, Converter={StaticResource userSaysConverter}}"/>
+                </StackPanel>
+                <TextBlock Text="{Binding Text}"
+                           TextWrapping="Wrap"
+                           Grid.Row="3"/>
+                <TextBlock Text="{Binding DateTime, StringFormat={}{0:dd MMM yyyy HH:mm}}"
+                           Grid.Row="3"
+                           Grid.Column="2"/>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+
+    <TextBlock Grid.Row="4"
+               Text="{Binding Conversation.Contact.DisplayName, StringFormat='{}{0} is typing...'}"
+               IsVisible="{Binding Conversation.TypingUser}"></TextBlock>
+
+    <TextBox Grid.Row="6"
+             Text="{Binding Message}"
+             TextWrapping="Wrap"
+             Height="75"
+             KeyDown="TextBox_KeyDown">
+      <i:Interaction.Behaviors>
+        <ia:EventTriggerBehavior EventName="TextChanged">
+          <InvokeCommandAction Command="{Binding TypingUserCommand}"/>
+        </ia:EventTriggerBehavior>
+      </i:Interaction.Behaviors>
+    </TextBox>
+
+    <TextBlock Grid.Row="8"
+               Text="{Binding Conversation.Profile.DisplayName}"
+               FontWeight="ExtraBold"
+               FontSize="20"
+               HorizontalAlignment="Left"/>
+
+    <StackPanel Grid.Row="9"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="10">
+      <Button Command="{Binding NudgeCommand}">Send a Nudge</Button>
+
+      <Button Command="{Binding SendCommand}"
+              Name="sendButton">Send</Button>
+    </StackPanel>
+
+  </Grid>
+</UserControl>
