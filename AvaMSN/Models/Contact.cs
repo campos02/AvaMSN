@@ -9,6 +9,7 @@ public class Contact : ReactiveObject
     private string personalMessage = string.Empty;
     private string presence = string.Empty;
     private string color = string.Empty;
+    private bool newMessages;
 
     public string DisplayName
     {
@@ -38,5 +39,11 @@ public class Contact : ReactiveObject
     {
         get => color;
         set => this.RaiseAndSetIfChanged(ref color, value);
+    }
+
+    public bool NewMessages
+    {
+        get => newMessages;
+        set => this.RaiseAndSetIfChanged(ref newMessages, value);
     }
 }

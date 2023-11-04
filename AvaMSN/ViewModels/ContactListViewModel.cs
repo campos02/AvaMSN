@@ -43,6 +43,7 @@ public class ContactListViewModel : ConnectedViewModelBase
     public string PersonalMessage { get; set; } = string.Empty;
 
     public Database? Database { get; set; }
+    public event EventHandler<NewMessageEventArgs>? NewMessage;
 
     public ContactListViewModel()
     {
@@ -139,10 +140,10 @@ public class ContactListViewModel : ConnectedViewModelBase
             }
 
             CurrentConversation.SubscribeToMessageEvent();
+            CurrentConversation.NewMessage += Conversation_NewMessage;
         }
 
         NotificationServer.SwitchboardChanged += CurrentConversation.NotificationServer_SwitchboardChanged;
-        CurrentConversation.NotificationTapped += Conversation_NotificationTapped;
 
         Chatting = true;
     }
@@ -174,31 +175,8 @@ public class ContactListViewModel : ConnectedViewModelBase
             };
 
             conversation.SubscribeToMessageEvent();
-            conversation.NotificationTapped += Conversation_NotificationTapped;
+            conversation.NewMessage += Conversation_NewMessage;
         }
-    }
-
-    private async void Conversation_NotificationTapped(object? sender, EventArgs e)
-    {
-        Conversation? conversation = (Conversation?)sender;
-
-        if (conversation != null && CurrentConversation != null)
-        {
-            if (conversation.Contact == CurrentConversation.Contact)
-            {
-                Chatting = true;
-                return;
-            }
-            else
-                Chatting = false;
-        }
-
-        conversation!.UnsubscribeToEvents();
-        NotificationServer!.SwitchboardChanged -= conversation.NotificationServer_SwitchboardChanged;
-        conversation!.NotificationTapped -= Conversation_NotificationTapped;
-
-        SelectedContact = conversation!.Contact;
-        await Chat();
     }
 
     public void NotificationServer_Disconnected(object? sender, EventArgs e)
@@ -208,9 +186,10 @@ public class ContactListViewModel : ConnectedViewModelBase
 
         if (CurrentConversation != null)
         {
-            CurrentConversation?.UnsubscribeToEvents();
+            CurrentConversation.UnsubscribeToEvents();
             NotificationServer.SwitchboardChanged -= CurrentConversation!.NotificationServer_SwitchboardChanged;
-            CurrentConversation.NotificationTapped -= Conversation_NotificationTapped;
+            CurrentConversation.NewMessage -= Conversation_NewMessage;
+
             CurrentConversation = null;
         }
 
@@ -219,5 +198,10 @@ public class ContactListViewModel : ConnectedViewModelBase
         ListData = new();
 
         LoggedIn = false;
+    }
+
+    private void Conversation_NewMessage(object? sender, NewMessageEventArgs e)
+    {
+        NewMessage?.Invoke(this, e);
     }
 }

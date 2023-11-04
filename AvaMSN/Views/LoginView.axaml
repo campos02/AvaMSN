@@ -39,7 +39,7 @@
       <Grid Grid.Row="2"
             ColumnDefinitions="*, Auto">
         <TextBox Watermark="Enter your email"
-         Text="{Binding Email}"/>
+                 Text="{Binding Email}"/>
 
         <ComboBox ItemsSource="{Binding Users}"
                   Grid.Column="1"

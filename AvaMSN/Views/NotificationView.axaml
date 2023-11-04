@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:AvaMSN.Models;assembly=AvaMSN"
+             xmlns:vm="clr-namespace:AvaMSN.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
+             x:Class="AvaMSN.Views.NotificationView"
+             x:DataType="vm:NotificationViewModel">
+  
+  <Border BorderThickness="2"
+          CornerRadius="3"
+          BorderBrush="White"
+          Padding="10"
+          Background="DarkGray">
+    
+    <Grid RowDefinitions="Auto, 5, Auto, 10, Auto">
+      
+      <TextBlock Text="{ReflectionBinding Message.SenderDisplayName, StringFormat='{}{0} says:'}"
+                 TextWrapping="Wrap"
+                 HorizontalAlignment="Center"/>
+      
+      <TextBlock Text="{ReflectionBinding Message.Text}"
+                 TextWrapping="Wrap"
+                 HorizontalAlignment="Center"
+                 Grid.Row="2"/>
+      
+      <StackPanel Orientation="Horizontal"
+                  Spacing="5"
+                  HorizontalAlignment="Center"
+                  Grid.Row="4">
+        <Button Command="{Binding ReplyCommand}">Reply</Button>
+        <Button Command="{Binding DismissCommand}">Dismiss</Button>
+      </StackPanel>
+    </Grid>
+  </Border>
+</UserControl>

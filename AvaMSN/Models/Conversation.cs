@@ -27,7 +27,7 @@ public class Conversation : ReactiveObject
 
     public Switchboard? Switchboard { get; set; }
 
-    public event EventHandler? NotificationTapped;
+    public event EventHandler<NewMessageEventArgs>? NewMessage;
 
     public Conversation(Contact contact, Profile profile, Database database)
     {
@@ -200,5 +200,11 @@ public class Conversation : ReactiveObject
             return;
 
         Database.SaveMessage(message);
+
+        NewMessage?.Invoke(this, new NewMessageEventArgs()
+        {
+            Sender = Contact,
+            Message = message
+        });
     }
 }

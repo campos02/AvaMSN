@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:AvaMSN.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
              x:Class="AvaMSN.Views.MainView"
              x:DataType="vm:MainViewModel">
   <Design.DataContext>
@@ -11,6 +11,25 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
     <vm:MainViewModel />
   </Design.DataContext>
+  
+  <Grid>
+    <TransitioningContentControl Content="{Binding CurrentPage}"/>
 
-  <TransitioningContentControl Content="{Binding CurrentPage}"/>
+    <TransitioningContentControl Content="{Binding NotificationPage}"
+                                 VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Right"
+                                 MaxWidth="400"
+                                 MaxHeight="400"
+                                 ZIndex="1"
+                                 Margin="20">
+      
+      <TransitioningContentControl.PageTransition>
+        <CompositePageTransition>
+          <CrossFade Duration="0:0:0.3"/>
+          <PageSlide Orientation="Vertical"
+                     Duration="0:0:0.2"/>
+        </CompositePageTransition>
+      </TransitioningContentControl.PageTransition>
+    </TransitioningContentControl>
+  </Grid>
 </UserControl>

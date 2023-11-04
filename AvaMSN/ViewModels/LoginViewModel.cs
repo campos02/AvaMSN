@@ -27,7 +27,13 @@ public class LoginViewModel : ConnectedViewModelBase
     public bool RememberPassword
     {
         get => rememberPassword;
-        set => this.RaiseAndSetIfChanged(ref rememberPassword, value);
+        set
+        {
+            if (!RememberMe)
+                RememberMe = value;
+
+            this.RaiseAndSetIfChanged(ref rememberPassword, value);
+        }
     }
 
     public string Email
@@ -69,9 +75,15 @@ public class LoginViewModel : ConnectedViewModelBase
 
     public void GetUsers()
     {
-        Users = new ObservableCollection<User>(Database.GetUsers());
+        Users = new ObservableCollection<User>(Database.GetUsers())
+        {
+            new User
+            {
+                UserEmail = "New User"
+            }
+        };
 
-        if (Users.Any())
+        if (Users.Count > 1)
         {
             User user = Users[0];
 
@@ -90,6 +102,17 @@ public class LoginViewModel : ConnectedViewModelBase
 
     public void ChangeUser(string email)
     {
+        if (email == "New User")
+        {
+            Email = string.Empty;
+            Password = string.Empty;
+
+            RememberMe = false;
+            RememberPassword = false;
+
+            return;
+        }
+
         User? user = Users!.FirstOrDefault(user => user.UserEmail == email);
 
         if (user == null)

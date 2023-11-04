@@ -1,6 +1,7 @@
 ﻿using ReactiveUI;
 using System.Reactive.Linq;
 using System;
+using System.Threading.Tasks;
 
 namespace AvaMSN.ViewModels;
 
@@ -12,6 +13,14 @@ public class MainViewModel : ViewModelBase
     {
         get => currentPage;
         set => this.RaiseAndSetIfChanged(ref currentPage, value);
+    }
+
+    private NotificationViewModel? notificationPage;
+
+    public NotificationViewModel? NotificationPage
+    {
+        get => notificationPage;
+        set => this.RaiseAndSetIfChanged(ref notificationPage, value);
     }
 
     private LoginViewModel loginPage = new();
@@ -29,6 +38,8 @@ public class MainViewModel : ViewModelBase
         this.WhenAnyValue(cvm => cvm.contactListPage.Chatting).Where(chatting => chatting).Subscribe(_ => GoToConversationPage());
         this.WhenAnyValue(cvm => cvm.contactListPage.Chatting).Where(chatting => !chatting).Subscribe(_ => ReturnToContactList());
         this.WhenAnyValue(cvm => cvm.conversationPage.Chatting).Where(chatting => !chatting).Subscribe(_ => ReturnToContactList());
+
+        contactListPage.NewMessage += ConversationPage_NewMessage;
     }
 
     private void GoToContactList()
@@ -73,5 +84,46 @@ public class MainViewModel : ViewModelBase
         contactListPage.Chatting = false;
         conversationPage.Chatting = false;
         CurrentPage = contactListPage;
+    }
+
+    private async void ConversationPage_NewMessage(object? sender, Models.NewMessageEventArgs e)
+    {
+        if (NotificationPage != null)
+            return;
+
+        NotificationPage = new NotificationViewModel()
+        {
+            Sender = e.Sender,
+            Message = e.Message
+        };
+
+        NotificationPage.ReplyTapped += NotificationPage_ReplyTapped;
+        NotificationPage.DismissTapped += NotificationPage_DismissTapped;
+
+        await Task.Delay(5000);
+
+        if (NotificationPage == null)
+            return;
+
+        NotificationPage.ReplyTapped -= NotificationPage_ReplyTapped;
+        NotificationPage.DismissTapped -= NotificationPage_DismissTapped;
+        NotificationPage = null;
+    }
+
+    private async void NotificationPage_ReplyTapped(object? sender, EventArgs e)
+    {
+        contactListPage.SelectedContact = NotificationPage!.Sender;
+        await contactListPage.Chat();
+
+        NotificationPage!.ReplyTapped -= NotificationPage_ReplyTapped;
+        NotificationPage.DismissTapped -= NotificationPage_DismissTapped;
+        NotificationPage = null;
+    }
+
+    private void NotificationPage_DismissTapped(object? sender, EventArgs e)
+    {
+        NotificationPage!.ReplyTapped -= NotificationPage_ReplyTapped;
+        NotificationPage.DismissTapped -= NotificationPage_DismissTapped;
+        NotificationPage = null;
     }
 }
