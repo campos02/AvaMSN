@@ -105,9 +105,7 @@ public class MainViewModel : ViewModelBase
         if (NotificationPage == null)
             return;
 
-        NotificationPage.ReplyTapped -= NotificationPage_ReplyTapped;
-        NotificationPage.DismissTapped -= NotificationPage_DismissTapped;
-        NotificationPage = null;
+        CloseNotification();
     }
 
     private async void NotificationPage_ReplyTapped(object? sender, EventArgs e)
@@ -115,12 +113,15 @@ public class MainViewModel : ViewModelBase
         contactListPage.SelectedContact = NotificationPage!.Sender;
         await contactListPage.Chat();
 
-        NotificationPage!.ReplyTapped -= NotificationPage_ReplyTapped;
-        NotificationPage.DismissTapped -= NotificationPage_DismissTapped;
-        NotificationPage = null;
+        CloseNotification();
     }
 
     private void NotificationPage_DismissTapped(object? sender, EventArgs e)
+    {
+        CloseNotification();
+    }
+
+    private void CloseNotification()
     {
         NotificationPage!.ReplyTapped -= NotificationPage_ReplyTapped;
         NotificationPage.DismissTapped -= NotificationPage_DismissTapped;
