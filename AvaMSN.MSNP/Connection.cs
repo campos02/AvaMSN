@@ -6,7 +6,7 @@ namespace AvaMSN.MSNP;
 
 public class Connection
 {
-    public Socket Client { get; private set; }
+    public Socket? Client { get; private set; }
     public string Host { get; set; } = string.Empty;
     public int Port { get; set; } = 1863;
     public int TransactionID { get; protected set; }
@@ -35,13 +35,13 @@ public class Connection
     protected void Send(string message)
     {
         var messageBytes = Encoding.UTF8.GetBytes(message);
-        Client.Send(messageBytes, SocketFlags.None);
+        Client!.Send(messageBytes, SocketFlags.None);
     }
 
     protected async Task SendAsync(string message)
     {
         var messageBytes = Encoding.UTF8.GetBytes(message);
-        await Client.SendAsync(messageBytes, SocketFlags.None);
+        await Client!.SendAsync(messageBytes, SocketFlags.None);
     }
 
     protected async Task<string> ReceiveAsync()
@@ -51,7 +51,7 @@ public class Connection
         ReceiveSource.CancelAfter(5000);
 
         var buffer = new byte[1664];
-        var received = await Client.ReceiveAsync(buffer, SocketFlags.None, ReceiveSource.Token);
+        var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, ReceiveSource.Token);
 
         return Encoding.UTF8.GetString(buffer, 0, received);
     }
@@ -66,7 +66,7 @@ public class Connection
             while (true)
             {
                 var buffer = new byte[1160];
-                var received = await Client.ReceiveAsync(buffer, SocketFlags.None, ReceiveSource.Token);
+                var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, ReceiveSource.Token);
 
                 string response = Encoding.UTF8.GetString(buffer, 0, received);
                 HandleIncoming(response);
@@ -111,7 +111,7 @@ public class Connection
     public virtual async Task DisconnectAsync()
     {
         await SendAsync("OUT\r\n");
-        Client.Shutdown(SocketShutdown.Both);
+        Client!.Shutdown(SocketShutdown.Both);
         Client.Dispose();
         Connected = false;
 

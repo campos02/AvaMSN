@@ -93,10 +93,7 @@ public class ContactListViewModel : ConnectedViewModelBase
         ListData.Profile.PersonalMessage = PersonalMessage;
         await NotificationServer.SendUUX();
 
-        if (Database == null)
-            return;
-
-        Database.SavePersonalMessage(ListData.Profile.Email, ListData.Profile.PersonalMessage);
+        Database?.SavePersonalMessage(ListData.Profile.Email, ListData.Profile.PersonalMessage);
     }
 
     public async Task Chat()

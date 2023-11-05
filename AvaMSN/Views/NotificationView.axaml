@@ -12,7 +12,7 @@
           CornerRadius="3"
           BorderBrush="White"
           Padding="10"
-          Background="DarkGray">
+          Background="#404245">
     
     <Grid RowDefinitions="Auto, 5, Auto, 10, Auto">
       

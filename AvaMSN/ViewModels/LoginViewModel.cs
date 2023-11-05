@@ -113,7 +113,7 @@ public class LoginViewModel : ConnectedViewModelBase
             return;
         }
 
-        User? user = Users!.FirstOrDefault(user => user.UserEmail == email);
+        User? user = Users?.FirstOrDefault(user => user.UserEmail == email);
 
         if (user == null)
             return;
@@ -135,7 +135,7 @@ public class LoginViewModel : ConnectedViewModelBase
         NotificationServer.ContactList.Profile.Presence = SelectedStatus.ShortName;
         NotificationServer.ContactList.Profile.Email = Email;
 
-        User user = Users!.FirstOrDefault(user => user.UserEmail == Email) ?? new User();
+        User user = Users?.FirstOrDefault(user => user.UserEmail == Email) ?? new User();
 
         await NotificationServer.SendVersion();
 
@@ -172,7 +172,7 @@ public class LoginViewModel : ConnectedViewModelBase
         }
 
         if (RememberMe)
-            Database!.SaveUser(user);
+            Database?.SaveUser(user);
 
         Email = string.Empty;
         Password = string.Empty;
@@ -180,7 +180,7 @@ public class LoginViewModel : ConnectedViewModelBase
 
     public void ForgetMe()
     {
-        User? user = Users!.FirstOrDefault(user => user.UserEmail == Email);
+        User? user = Users?.FirstOrDefault(user => user.UserEmail == Email);
 
         if (user == null)
             return;
@@ -188,7 +188,7 @@ public class LoginViewModel : ConnectedViewModelBase
         Email = string.Empty;
         Password = string.Empty;
 
-        Database.DeleteUser(user);
-        Users!.Remove(user);
+        Database?.DeleteUser(user);
+        Users?.Remove(user);
     }
 }

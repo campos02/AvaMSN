@@ -74,11 +74,7 @@ public class Conversation : ReactiveObject
             };
 
             Messages.Add(message);
-
-            if (Database == null)
-                return;
-
-            Database.SaveMessage(message);
+            Database?.SaveMessage(message);
         }
         catch (Exception)
         {
@@ -113,11 +109,7 @@ public class Conversation : ReactiveObject
             };
 
             Messages.Add(message);
-
-            if (Database == null)
-                return;
-
-            Database.SaveMessage(message);
+            Database?.SaveMessage(message);
         }
         catch (Exception)
         {
@@ -195,11 +187,7 @@ public class Conversation : ReactiveObject
         }
 
         Messages.Add(message);
-
-        if (Database == null)
-            return;
-
-        Database.SaveMessage(message);
+        Database?.SaveMessage(message);
 
         NewMessage?.Invoke(this, new NewMessageEventArgs()
         {

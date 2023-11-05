@@ -2,11 +2,20 @@
 using System.Reactive.Linq;
 using System;
 using System.Threading.Tasks;
+using System.Threading;
+using LibVLCSharp.Shared;
+using Avalonia.Platform;
 
 namespace AvaMSN.ViewModels;
 
 public class MainViewModel : ViewModelBase
 {
+    private LoginViewModel loginPage = new();
+    private ContactListViewModel contactListPage = new();
+    private ConversationViewModel conversationPage = new();
+
+    private readonly MediaPlayer mediaPlayer;
+    private CancellationTokenSource? notificationSource;
     private ViewModelBase currentPage;
 
     public ViewModelBase CurrentPage
@@ -23,10 +32,6 @@ public class MainViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref notificationPage, value);
     }
 
-    private LoginViewModel loginPage = new();
-    private ContactListViewModel contactListPage = new();
-    private ConversationViewModel conversationPage = new();
-
     public MainViewModel()
     {
         currentPage = loginPage;
@@ -40,6 +45,12 @@ public class MainViewModel : ViewModelBase
         this.WhenAnyValue(cvm => cvm.conversationPage.Chatting).Where(chatting => !chatting).Subscribe(_ => ReturnToContactList());
 
         contactListPage.NewMessage += ConversationPage_NewMessage;
+
+        LibVLC libVLC = new LibVLC();
+
+        mediaPlayer = new MediaPlayer(libVLC);
+        using (Media media = new Media(libVLC, new StreamMediaInput(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/type.wav")))))
+            mediaPlayer.Media = media;
     }
 
     private void GoToContactList()
@@ -91,6 +102,12 @@ public class MainViewModel : ViewModelBase
         if (NotificationPage != null)
             return;
 
+        mediaPlayer.Stop();
+        mediaPlayer.Play();
+
+        if (conversationPage.Conversation?.Contact.Email == e.Sender?.Email && conversationPage.Chatting)
+            return;
+
         NotificationPage = new NotificationViewModel()
         {
             Sender = e.Sender,
@@ -100,29 +117,34 @@ public class MainViewModel : ViewModelBase
         NotificationPage.ReplyTapped += NotificationPage_ReplyTapped;
         NotificationPage.DismissTapped += NotificationPage_DismissTapped;
 
-        await Task.Delay(5000);
-
-        if (NotificationPage == null)
-            return;
+        notificationSource = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(5000, notificationSource.Token);
+        }
+        catch (OperationCanceledException) { }
 
         CloseNotification();
     }
 
     private async void NotificationPage_ReplyTapped(object? sender, EventArgs e)
     {
-        contactListPage.SelectedContact = NotificationPage!.Sender;
+        contactListPage.SelectedContact = NotificationPage?.Sender;
         await contactListPage.Chat();
 
-        CloseNotification();
+        notificationSource?.Cancel();
     }
 
     private void NotificationPage_DismissTapped(object? sender, EventArgs e)
     {
-        CloseNotification();
+        notificationSource?.Cancel();
     }
 
     private void CloseNotification()
     {
+        if (NotificationPage == null)
+            return;
+
         NotificationPage!.ReplyTapped -= NotificationPage_ReplyTapped;
         NotificationPage.DismissTapped -= NotificationPage_DismissTapped;
         NotificationPage = null;
