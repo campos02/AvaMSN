@@ -15,7 +15,7 @@
   </UserControl.Resources>
 
   <Grid Margin="30"
-        RowDefinitions="Auto, 10, *, 10, Auto, 5, Auto, 5, Auto">
+        RowDefinitions="Auto, 10, *, 10, 20, 5, Auto, 5, Auto">
 
     <TextBlock Text="{Binding Conversation.Contact.DisplayName}"
                FontWeight="ExtraBold"
@@ -24,7 +24,8 @@
     <Button HorizontalAlignment="Right"
             Command="{Binding BackCommand}">Go Back</Button>
 
-    <ScrollViewer Grid.Row="2">
+    <ScrollViewer Grid.Row="2"
+                  Name="scrollViewer">
       <StackPanel Spacing="10">
         <ItemsControl ItemsSource="{Binding Conversation.MessageHistory}"
                       Background="Transparent">
@@ -59,7 +60,8 @@
         <Separator/>
 
         <ItemsControl ItemsSource="{Binding Conversation.Messages}"
-                      Background="Transparent">
+                      Background="Transparent"
+                      PropertyChanged="ItemsControl_PropertyChanged">
 
           <ItemsControl.ItemTemplate>
             <DataTemplate>
@@ -87,8 +89,8 @@
     </ScrollViewer>
 
     <TextBlock Grid.Row="4"
-               Text="{Binding Conversation.Contact.DisplayName, StringFormat='{}{0} is typing...'}"
-               IsVisible="{Binding Conversation.TypingUser}"></TextBlock>
+               Text="{Binding Conversation.Contact.DisplayName, StringFormat='{}{0} is writing...'}"
+               IsVisible="{Binding Conversation.TypingUser}"/>
 
     <TextBox Grid.Row="6"
              Text="{Binding Message}"

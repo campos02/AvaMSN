@@ -37,7 +37,7 @@ public static partial class RequestObjects
                             MemberRole = "",
                             Members = new DeleteMemberMembershipsMembershipMembers
                             {
-                                Member = new DeleteMemberMembershipsMembershipMembersMember
+                                Member = new PassportMember
                                 {
                                     Type = "Passport",
                                     State = "Accepted",

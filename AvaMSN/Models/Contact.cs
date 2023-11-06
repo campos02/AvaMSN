@@ -10,6 +10,7 @@ public class Contact : ReactiveObject
     private string presence = string.Empty;
     private string color = string.Empty;
     private bool newMessages;
+    private bool blocked;
 
     public string DisplayName
     {
@@ -45,5 +46,11 @@ public class Contact : ReactiveObject
     {
         get => newMessages;
         set => this.RaiseAndSetIfChanged(ref newMessages, value);
+    }
+
+    public bool Blocked
+    {
+        get => blocked;
+        set => this.RaiseAndSetIfChanged(ref blocked, value);
     }
 }

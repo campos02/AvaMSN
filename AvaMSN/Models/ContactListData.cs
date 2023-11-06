@@ -68,7 +68,7 @@ public class ContactListData
 
         foreach (MSNP.Contact contact in NotificationServer.ContactList.Contacts)
         {
-            if (!contact.InForward)
+            if (!contact.InLists.Forward)
                 continue;
 
             if (contact.Presence != PresenceStatus.Offline)

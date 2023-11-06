@@ -18,4 +18,9 @@ public partial class ConversationView : UserControl
 
         sendButton.Command.Execute(new Unit { });
     }
+
+    private void ItemsControl_PropertyChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
+    {
+        scrollViewer?.ScrollToEnd();
+    }
 }

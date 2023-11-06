@@ -1,6 +1,6 @@
 ﻿namespace AvaMSN.MSNP.PresenceStatus;
 
-public static class PresenceStatus
+public struct PresenceStatus
 {
     public const string Available = "NLN";
 

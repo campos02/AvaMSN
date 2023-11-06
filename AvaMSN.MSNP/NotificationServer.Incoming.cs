@@ -132,9 +132,11 @@ public partial class NotificationServer : Connection
 
         Contact contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email) ?? new Contact()
         {
-            Email = email,
-            DisplayName = HttpUtility.UrlDecode(displayName)
+            Email = email
         };
+
+        if (string.IsNullOrEmpty(contact.DisplayName))
+            contact.DisplayName = HttpUtility.UrlDecode(displayName);
 
         Switchboard switchboard = new Switchboard()
         {

@@ -38,7 +38,7 @@ public partial class NotificationServer : Connection
         await ContactList.ABFindAll();
 
         await SendBLP();
-        await SendADL(ContactList.ADLPayload());
+        await SendInitialADL(ContactList.InitialListPayload());
         await SendPRP();
     }
 
@@ -81,7 +81,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Send CVR
-            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.1 msmsgs\r\n";
+            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.8 msmsgs\r\n";
             await SendAsync(message);
 
             // Receive CVR
@@ -257,7 +257,7 @@ public partial class NotificationServer : Connection
         }
     }
 
-    public async Task SendADL(string payload)
+    public async Task SendInitialADL(string payload)
     {
         int length = Encoding.UTF8.GetByteCount(payload);
 
@@ -277,6 +277,64 @@ public partial class NotificationServer : Connection
             string response = await ReceiveAsync();
 
             if (response.StartsWith("ADL")
+                && response.Split(" ")[1] == TransactionID.ToString()
+                && response.Contains("OK"))
+            {
+                break;
+            }
+        }
+    }
+
+    private async Task SendADL(string payload)
+    {
+        int length = Encoding.UTF8.GetByteCount(payload);
+
+        if (length > 1160)
+            throw new PayloadException("Payload too big");
+
+        TransactionID++;
+
+        string message = $"ADL {TransactionID} {length}\r\n";
+
+        // Send ADL and payload
+        await SendAsync(message + payload);
+    }
+
+    private async Task SendFQY(string payload)
+    {
+        int length = Encoding.UTF8.GetByteCount(payload);
+
+        if (length > 1160)
+            throw new PayloadException("Payload too big");
+
+        TransactionID++;
+
+        string message = $"FQY {TransactionID} {length}\r\n";
+
+        // Send ADL and payload
+        await SendAsync(message + payload);
+    }
+
+    private async Task SendRML(string payload)
+    {
+        int length = Encoding.UTF8.GetByteCount(payload);
+
+        if (length > 1160)
+            throw new PayloadException("Payload too big");
+
+        TransactionID++;
+
+        string message = $"RML {TransactionID} {length}\r\n";
+
+        // Send RML and payload
+        await SendAsync(message + payload);
+
+        while (true)
+        {
+            // Receive RML
+            string response = await ReceiveAsync();
+
+            if (response.StartsWith("RML")
                 && response.Split(" ")[1] == TransactionID.ToString()
                 && response.Contains("OK"))
             {

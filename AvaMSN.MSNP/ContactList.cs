@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using AvaMSN.MSNP.Exceptions;
 using AvaMSN.MSNP.SOAP;
 using AvaMSN.MSNP.SOAP.RequestObjects;
 using AvaMSN.MSNP.XML.SerializableClasses;
@@ -41,7 +42,7 @@ public class ContactList
         {
             var responseEnvelope = (SOAP.SerializableClasses.FindMembershipResponse.Envelope?)responseSerializer.Deserialize(reader);
 
-            foreach (var membership in responseEnvelope.Body.FindMembershipResponse.FindMembershipResult.Services.Service.Memberships)
+            foreach (var membership in responseEnvelope!.Body.FindMembershipResponse.FindMembershipResult.Services.Service.Memberships)
             {
                 foreach(var member in membership.Members)
                 {
@@ -50,9 +51,9 @@ public class ContactList
 
                     string contactID = member.MembershipId.Replace($"{membership.MemberRole}/", "");
 
-                    Contact? contact = Contacts.FirstOrDefault(c => c.ContactID == contactID) ?? new Contact();
+                    Contact contact = Contacts.FirstOrDefault(c => c.ContactID == contactID) ?? new Contact();
 
-                    contact.SetMembershipList(membership.MemberRole);
+                    contact.InLists.SetMembershipLists(membership.MemberRole);
 
                     contact.Email = member.PassportName;
                     contact.ContactID = contactID;
@@ -92,7 +93,7 @@ public class ContactList
         {
             var responseEnvelope = (SOAP.SerializableClasses.ABFindAllResponse.Envelope?)responseSerializer.Deserialize(reader);
 
-            foreach (var addressBookContact in responseEnvelope.Body.ABFindAllResponse.ABFindAllResult.contacts)
+            foreach (var addressBookContact in responseEnvelope!.Body.ABFindAllResponse.ABFindAllResult.contacts)
             {
                 var contactInfo = addressBookContact.contactInfo;
 
@@ -102,9 +103,9 @@ public class ContactList
                     continue;
                 }
 
-                Contact? contact = Contacts.FirstOrDefault(c => c.ContactID == addressBookContact.contactId) ?? new Contact();
+                Contact contact = Contacts.FirstOrDefault(c => c.ContactID == addressBookContact.contactId) ?? new Contact();
 
-                contact.InForward = true;
+                contact.InLists.Forward = true;
 
                 contact.DisplayName = contactInfo.displayName;
                 contact.Email = contactInfo.passportName;
@@ -148,10 +149,8 @@ public class ContactList
 
         using (StringReader reader = new StringReader(response))
         {
-            var responseEnvelope = (SOAP.SerializableClasses.ABContactUpdateResponse.Envelope?)responseSerializer.Deserialize(reader);
-
-            if (responseEnvelope == null)
-                throw new Exception("Contact update failure");
+            var responseEnvelope = (SOAP.SerializableClasses.ABContactUpdateResponse.Envelope?)responseSerializer.Deserialize(reader)
+                ?? throw new ContactException("Contact update failure");
         }
     }
 
@@ -177,10 +176,8 @@ public class ContactList
 
         using (StringReader reader = new StringReader(response))
         {
-            var responseEnvelope = (SOAP.SerializableClasses.AddMemberResponse.Envelope?)responseSerializer.Deserialize(reader);
-
-            if (responseEnvelope == null)
-                throw new Exception("Member add failure");
+            var responseEnvelope = (SOAP.SerializableClasses.AddMemberResponse.Envelope?)responseSerializer.Deserialize(reader)
+                ?? throw new ContactException("Member add failure");
         }
     }
 
@@ -206,10 +203,8 @@ public class ContactList
 
         using (StringReader reader = new StringReader(response))
         {
-            var responseEnvelope = (SOAP.SerializableClasses.DeleteMemberResponse.Envelope?)responseSerializer.Deserialize(reader);
-
-            if (responseEnvelope == null)
-                throw new Exception("Member delete failure");
+            var responseEnvelope = (SOAP.SerializableClasses.DeleteMemberResponse.Envelope?)responseSerializer.Deserialize(reader)
+                ?? throw new ContactException("Member delete failure");
         }
     }
 
@@ -232,10 +227,8 @@ public class ContactList
 
         using (StringReader reader = new StringReader(response))
         {
-            var responseEnvelope = (SOAP.SerializableClasses.ABContactAddResponse.Envelope?)responseSerializer.Deserialize(reader);
-
-            if (responseEnvelope == null)
-                throw new Exception("Contact add failure");
+            var responseEnvelope = (SOAP.SerializableClasses.ABContactAddResponse.Envelope?)responseSerializer.Deserialize(reader)
+                ?? throw new ContactException("Contact add failure");
         }
     }
 
@@ -258,10 +251,8 @@ public class ContactList
 
         using (StringReader reader = new StringReader(response))
         {
-            var responseEnvelope = (SOAP.SerializableClasses.ABContactDeleteResponse.Envelope?)responseSerializer.Deserialize(reader);
-
-            if (responseEnvelope == null)
-                throw new Exception("Contact delete failure");
+            var responseEnvelope = (SOAP.SerializableClasses.ABContactDeleteResponse.Envelope?)responseSerializer.Deserialize(reader)
+                ?? throw new ContactException("Contact delete failure");
         }
     }
 
@@ -290,24 +281,24 @@ public class ContactList
         Profile.ABLastChanged = profile.lastChange;
     }
 
-    public string ADLPayload()
+    public string InitialListPayload()
     {
-        ml ml = new()
+        XML.SerializableClasses.InitialListPayload.ml ml = new()
         {
             l = 1
         };
 
-        List<mlD> domains = new List<mlD>();
+        List<XML.SerializableClasses.InitialListPayload.mlD> domains = new List<XML.SerializableClasses.InitialListPayload.mlD>();
 
         foreach (Contact contact in Contacts)
         {
-            domains.Add(new mlD()
+            domains.Add(new XML.SerializableClasses.InitialListPayload.mlD()
             {
                 n = contact.Email.Split("@")[1],
-                c = new mlDC()
+                c = new XML.SerializableClasses.InitialListPayload.mlDC()
                 {
                     n = contact.Email.Split("@")[0],
-                    l = (byte)contact.ListsNumber(),
+                    l = (byte)contact.InLists.ListsNumber(),
                     t = (byte)(contact.Type == "Passport" ? 1 : 4),
                 }
             });
@@ -322,7 +313,79 @@ public class ContactList
 
         var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
 
-        XmlSerializer mlSerializer = new(typeof(ml));
+        XmlSerializer mlSerializer = new(typeof(XML.SerializableClasses.InitialListPayload.ml));
+
+        using (StringWriter stream = new StringWriter())
+        using (XmlWriter writer = XmlWriter.Create(stream, settings))
+        {
+            mlSerializer.Serialize(writer, ml, namespaces);
+            return stream.ToString();
+        }
+    }
+
+    public string ListPayload(Contact contact, Lists lists)
+    {
+        XML.SerializableClasses.ListPayload.ml ml = new();
+
+        List<XML.SerializableClasses.ListPayload.mlD> domains = new List<XML.SerializableClasses.ListPayload.mlD>
+        {
+            new XML.SerializableClasses.ListPayload.mlD()
+            {
+                n = contact.Email.Split("@")[1],
+                c = new XML.SerializableClasses.ListPayload.mlDC()
+                {
+                    n = contact.Email.Split("@")[0],
+                    l = (byte)lists.ListsNumber(),
+                    t = (byte)(contact.Type == "Passport" ? 1 : 4),
+                }
+            }
+        };
+
+        ml.d = domains.ToArray();
+
+        var settings = new XmlWriterSettings()
+        {
+            OmitXmlDeclaration = true,
+        };
+
+        var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+
+        XmlSerializer mlSerializer = new(typeof(XML.SerializableClasses.ListPayload.ml));
+
+        using (StringWriter stream = new StringWriter())
+        using (XmlWriter writer = XmlWriter.Create(stream, settings))
+        {
+            mlSerializer.Serialize(writer, ml, namespaces);
+            return stream.ToString();
+        }
+    }
+
+    public string ContactPayload(Contact contact)
+    {
+        XML.SerializableClasses.ContactPayload.ml ml = new();
+
+        List<XML.SerializableClasses.ContactPayload.mlD> domains = new List<XML.SerializableClasses.ContactPayload.mlD>
+        {
+            new XML.SerializableClasses.ContactPayload.mlD()
+            {
+                n = contact.Email.Split("@")[1],
+                c = new XML.SerializableClasses.ContactPayload.mlDC()
+                {
+                    n = contact.Email.Split("@")[0]
+                }
+            }
+        };
+
+        ml.d = domains.ToArray();
+
+        var settings = new XmlWriterSettings()
+        {
+            OmitXmlDeclaration = true,
+        };
+
+        var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+
+        XmlSerializer mlSerializer = new(typeof(XML.SerializableClasses.ContactPayload.ml));
 
         using (StringWriter stream = new StringWriter())
         using (XmlWriter writer = XmlWriter.Create(stream, settings))

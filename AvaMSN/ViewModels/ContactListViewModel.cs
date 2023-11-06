@@ -18,6 +18,11 @@ public class ContactListViewModel : ConnectedViewModelBase
     public ReactiveCommand<Unit, Unit> ChangePersonalMessageCommand { get; }
     public ReactiveCommand<Unit, Unit> ChatCommand { get; }
 
+    public ReactiveCommand<Unit, Unit> AddContactCommand { get; }
+    public ReactiveCommand<Unit, Unit> RemoveContactCommand { get; }
+    public ReactiveCommand<Unit, Unit> BlockContactCommand { get; }
+    public ReactiveCommand<Unit, Unit> UnblockContactCommand { get; }
+
     public ContactListData ListData { get; set; } = new();
     public ObservableCollection<ContactGroup>? ContactGroups => ListData.ContactGroups;
     public Presence[] Statuses => ContactListData.Statuses;
@@ -42,6 +47,9 @@ public class ContactListViewModel : ConnectedViewModelBase
     public string DisplayName { get; set; } = string.Empty;
     public string PersonalMessage { get; set; } = string.Empty;
 
+    public string NewContactEmail { get; set; } = string.Empty;
+    public string NewContactDisplayName { get; set; } = string.Empty;
+
     public Database? Database { get; set; }
     public event EventHandler<NewMessageEventArgs>? NewMessage;
 
@@ -52,11 +60,15 @@ public class ContactListViewModel : ConnectedViewModelBase
         SignOutCommand = ReactiveCommand.CreateFromTask(SignOut);
         ChangeNameCommand = ReactiveCommand.CreateFromTask(ChangeName);
         ChangePersonalMessageCommand = ReactiveCommand.CreateFromTask(ChangePersonalMessage);
-
         ChatCommand = ReactiveCommand.CreateFromTask(Chat);
+
+        AddContactCommand = ReactiveCommand.CreateFromTask(AddContact);
+        RemoveContactCommand = ReactiveCommand.CreateFromTask(RemoveContact);
+        BlockContactCommand = ReactiveCommand.CreateFromTask(BlockContact);
+        UnblockContactCommand = ReactiveCommand.CreateFromTask(UnblockContact);
     }
 
-    public async Task ChangePresence(string presence)
+    private async Task ChangePresence(string presence)
     {
         if (NotificationServer == null)
             return;
@@ -70,7 +82,7 @@ public class ContactListViewModel : ConnectedViewModelBase
         SelectedOptionIndex = 0;
     }
 
-    public async Task ChangeName()
+    private async Task ChangeName()
     {
         if (NotificationServer == null)
             return;
@@ -84,7 +96,7 @@ public class ContactListViewModel : ConnectedViewModelBase
         SelectedOptionIndex = 0;
     }
 
-    public async Task ChangePersonalMessage()
+    private async Task ChangePersonalMessage()
     {
         if (NotificationServer == null)
             return;
@@ -94,6 +106,57 @@ public class ContactListViewModel : ConnectedViewModelBase
         await NotificationServer.SendUUX();
 
         Database?.SavePersonalMessage(ListData.Profile.Email, ListData.Profile.PersonalMessage);
+    }
+
+    private async Task AddContact()
+    {
+        if (NotificationServer == null || ListData.ContactGroups == null)
+            return;
+
+        ListData.ContactGroups[(int)ContactListData.DefaultGroupIndex.Offline].Contacts.Add(new Contact
+        {
+            Email = NewContactEmail,
+            DisplayName = NewContactDisplayName
+        });
+
+        await NotificationServer.AddContact(NewContactEmail, NewContactDisplayName);
+    }
+
+    private async Task RemoveContact()
+    {
+        if (SelectedContact == null
+            || NotificationServer == null
+            || ListData.ContactGroups == null)
+            return;
+
+        string email = SelectedContact.Email;
+
+        foreach (ContactGroup group in ListData.ContactGroups)
+        {
+            group.Contacts.Remove(SelectedContact);
+        }
+
+        await NotificationServer.RemoveContact(email);
+    }
+
+    private async Task BlockContact()
+    {
+        if (SelectedContact == null
+            || NotificationServer == null)
+            return;
+
+        await NotificationServer.BlockContact(SelectedContact.Email);
+        SelectedContact.Blocked = true;
+    }
+
+    private async Task UnblockContact()
+    {
+        if (SelectedContact == null
+            || NotificationServer == null)
+            return;
+
+        await NotificationServer.UnblockContact(SelectedContact.Email);
+        SelectedContact.Blocked = false;
     }
 
     public async Task Chat()
@@ -145,7 +208,7 @@ public class ContactListViewModel : ConnectedViewModelBase
         Chatting = true;
     }
 
-    public async Task SignOut()
+    private async Task SignOut()
     {
         if (NotificationServer == null)
             return;

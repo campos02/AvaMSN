@@ -1,4 +1,4 @@
-﻿namespace AvaMSN.MSNP.XML.SerializableClasses;
+﻿namespace AvaMSN.MSNP.XML.SerializableClasses.ContactPayload;
 
 // NOTE: Generated code may require at least .NET Framework 4.5 or .NET Core/Standard 2.0.
 /// <remarks/>
@@ -11,8 +11,6 @@ public partial class ml
 
     private mlD[] dField;
 
-    private byte lField;
-
     /// <remarks/>
     [System.Xml.Serialization.XmlElementAttribute("d")]
     public mlD[] d
@@ -24,20 +22,6 @@ public partial class ml
         set
         {
             this.dField = value;
-        }
-    }
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte l
-    {
-        get
-        {
-            return this.lField;
-        }
-        set
-        {
-            this.lField = value;
         }
     }
 }
@@ -90,10 +74,6 @@ public partial class mlDC
 
     private string nField;
 
-    private byte lField;
-
-    private byte tField;
-
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
     public string n
@@ -105,34 +85,6 @@ public partial class mlDC
         set
         {
             this.nField = value;
-        }
-    }
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte l
-    {
-        get
-        {
-            return this.lField;
-        }
-        set
-        {
-            this.lField = value;
-        }
-    }
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte t
-    {
-        get
-        {
-            return this.tField;
-        }
-        set
-        {
-            this.tField = value;
         }
     }
 }

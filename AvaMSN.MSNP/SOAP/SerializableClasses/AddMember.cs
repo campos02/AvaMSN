@@ -1,4 +1,6 @@
-﻿namespace AvaMSN.MSNP.SOAP.SerializableClasses.AddMember;
+﻿using System.Xml.Serialization;
+
+namespace AvaMSN.MSNP.SOAP.SerializableClasses.AddMember;
 
 // NOTE: Generated code may require at least .NET Framework 4.5 or .NET Core/Standard 2.0.
 /// <remarks/>
@@ -374,6 +376,7 @@ public partial class AddMemberMembershipsMembershipMembers
 }
 
 /// <remarks/>
+[XmlInclude(typeof(PassportMember))]
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(TypeName = "PassportMember", Namespace = "http://www.msn.com/webservices/AddressBook")]
@@ -425,4 +428,6 @@ public partial class AddMemberMembershipsMembershipMembersMember
         }
     }
 }
+
+public class PassportMember : AddMemberMembershipsMembershipMembersMember { }
 
