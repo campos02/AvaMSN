@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace AvaMSN.ViewModels;
 
-public class ContactListViewModel : ConnectedViewModelBase
+public class ContactListViewModel : ViewModelBase
 {
     public ReactiveCommand<string, Unit> ChangePresenceCommand { get; }
 
@@ -17,6 +17,7 @@ public class ContactListViewModel : ConnectedViewModelBase
     public ReactiveCommand<Unit, Unit> ChangeNameCommand { get; }
     public ReactiveCommand<Unit, Unit> ChangePersonalMessageCommand { get; }
     public ReactiveCommand<Unit, Unit> ChatCommand { get; }
+    public ReactiveCommand<Unit, Unit> OptionsCommand { get; }
 
     public ReactiveCommand<Unit, Unit> AddContactCommand { get; }
     public ReactiveCommand<Unit, Unit> RemoveContactCommand { get; }
@@ -51,6 +52,11 @@ public class ContactListViewModel : ConnectedViewModelBase
     public string NewContactDisplayName { get; set; } = string.Empty;
 
     public Database? Database { get; set; }
+
+    public event EventHandler? Disconnected;
+    public event EventHandler? OptionsButtonPressed;
+
+    public event EventHandler? ChatStarted;
     public event EventHandler<NewMessageEventArgs>? NewMessage;
 
     public ContactListViewModel()
@@ -61,6 +67,7 @@ public class ContactListViewModel : ConnectedViewModelBase
         ChangeNameCommand = ReactiveCommand.CreateFromTask(ChangeName);
         ChangePersonalMessageCommand = ReactiveCommand.CreateFromTask(ChangePersonalMessage);
         ChatCommand = ReactiveCommand.CreateFromTask(Chat);
+        OptionsCommand = ReactiveCommand.Create(Options);
 
         AddContactCommand = ReactiveCommand.CreateFromTask(AddContact);
         RemoveContactCommand = ReactiveCommand.CreateFromTask(RemoveContact);
@@ -169,7 +176,7 @@ public class ContactListViewModel : ConnectedViewModelBase
         {
             if (SelectedContact == CurrentConversation.Contact)
             {
-                Chatting = true;
+                ChatStarted?.Invoke(this, EventArgs.Empty);
                 return;
             }
         }
@@ -205,7 +212,12 @@ public class ContactListViewModel : ConnectedViewModelBase
 
         NotificationServer.SwitchboardChanged += CurrentConversation.NotificationServer_SwitchboardChanged;
 
-        Chatting = true;
+        ChatStarted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void Options()
+    {
+        OptionsButtonPressed?.Invoke(this, EventArgs.Empty);
     }
 
     private async Task SignOut()
@@ -257,7 +269,7 @@ public class ContactListViewModel : ConnectedViewModelBase
         SelectedContact = null;
         ListData = new();
 
-        LoggedIn = false;
+        Disconnected?.Invoke(this, EventArgs.Empty);
     }
 
     private void Conversation_NewMessage(object? sender, NewMessageEventArgs e)

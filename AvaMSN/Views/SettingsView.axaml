@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:AvaMSN.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+             x:Class="AvaMSN.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+  <UserControl.Resources>
+    <StreamGeometry x:Key="arrow_previous_regular">M5.75,3 C5.37030423,3 5.05650904,3.28215388 5.00684662,3.64822944 L5,3.75 L5,20.25 C5,20.6642136 5.33578644,21 5.75,21 C6.12969577,21 6.44349096,20.7178461 6.49315338,20.3517706 L6.5,20.25 L6.5,3.75 C6.5,3.33578644 6.16421356,3 5.75,3 Z M18.7803301,3.21966991 C18.5140635,2.95340335 18.0973998,2.9291973 17.8037883,3.14705176 L17.7196699,3.21966991 L9.46966991,11.4696699 C9.20340335,11.7359365 9.1791973,12.1526002 9.39705176,12.4462117 L9.46966991,12.5303301 L17.7196699,20.7803301 C18.0125631,21.0732233 18.4874369,21.0732233 18.7803301,20.7803301 C19.0465966,20.5140635 19.0708027,20.0973998 18.8529482,19.8037883 L18.7803301,19.7196699 L11.0606602,12 L18.7803301,4.28033009 C19.0732233,3.98743687 19.0732233,3.51256313 18.7803301,3.21966991 Z</StreamGeometry>
+  </UserControl.Resources>
+
+  <Grid RowDefinitions="10, Auto, *, 20, Auto"
+        Margin="30">
+
+    <TextBlock Grid.Row="1"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Bottom"
+               FontWeight="ExtraBold"
+               FontSize="20">Settings</TextBlock>
+
+    <Button Grid.Row="1"
+            Command="{Binding BackCommand}">
+      <PathIcon Data="{StaticResource arrow_previous_regular}"/>
+    </Button>
+
+    <Grid Grid.Row="2"
+          RowDefinitions="Auto, 3, Auto"
+          VerticalAlignment="Center">
+
+      <TextBlock Grid.ColumnSpan="3"
+                 HorizontalAlignment="Center"
+                 FontSize="15">
+        Server:
+      </TextBlock>
+
+      <TextBox Grid.Row="2"
+               Text="{Binding Server}"/>
+
+    </Grid>
+
+    <StackPanel Grid.Row="4"
+                HorizontalAlignment="Center"
+                Spacing="5">
+
+      <TransitioningContentControl Content="{Binding SuccessText}"/>
+
+      <Button Command="{Binding SaveCommand}"
+              HorizontalAlignment="Center">Save</Button>
+
+    </StackPanel>
+
+  </Grid>
+</UserControl>

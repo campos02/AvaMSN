@@ -9,6 +9,7 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="AvaMSN"
         MinWidth="300"
+        MinHeight="450"
         Width="500"
         WindowStartupLocation="CenterScreen">
         <views:MainView />

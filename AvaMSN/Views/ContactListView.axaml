@@ -123,6 +123,16 @@
       <ComboBoxItem>
         <Button Classes="presence-button"
                 Tapped="Button_Tapped"
+                Command="{Binding OptionsCommand}">
+          <TextBlock>Options</TextBlock>
+        </Button>
+      </ComboBoxItem>
+
+      <Separator/>
+
+      <ComboBoxItem>
+        <Button Classes="presence-button"
+                Tapped="Button_Tapped"
                 Command="{Binding SignOutCommand}">
           <TextBlock>Sign Out</TextBlock>
         </Button>

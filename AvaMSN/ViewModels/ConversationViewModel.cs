@@ -1,11 +1,12 @@
 ﻿using AvaMSN.Models;
 using ReactiveUI;
+using System;
 using System.Reactive;
 using System.Threading.Tasks;
 
 namespace AvaMSN.ViewModels;
 
-public class ConversationViewModel : ConnectedViewModelBase
+public class ConversationViewModel : ViewModelBase
 {
     private Conversation? conversation;
 
@@ -29,6 +30,8 @@ public class ConversationViewModel : ConnectedViewModelBase
     public ReactiveCommand<Unit, Unit> BackCommand { get; }
 
     public Database? Database { get; set; }
+
+    public event EventHandler? BackButtonPressed;
 
     public ConversationViewModel() 
     {
@@ -65,6 +68,6 @@ public class ConversationViewModel : ConnectedViewModelBase
 
     private void Back()
     {
-        Chatting = false;
+        BackButtonPressed?.Invoke(this, EventArgs.Empty);
     }
 }

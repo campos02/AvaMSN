@@ -5,10 +5,11 @@ using AvaMSN.Models;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System;
 
 namespace AvaMSN.ViewModels;
 
-public class LoginViewModel : ConnectedViewModelBase
+public class LoginViewModel : ViewModelBase
 {
     private string email = string.Empty;
     private string password = string.Empty;
@@ -58,6 +59,9 @@ public class LoginViewModel : ConnectedViewModelBase
     public Database Database { get; set; } = new Database();
     public ObservableCollection<User>? Users { get; set; }
 
+    public event EventHandler? LoggedIn;
+    public event EventHandler? OptionsButtonPressed;
+
     public LoginViewModel()
     {
         LoginCommand = ReactiveCommand.CreateFromTask(Login);
@@ -71,6 +75,8 @@ public class LoginViewModel : ConnectedViewModelBase
         {
             Port = 1863
         };
+
+        GetUsers();
     }
 
     public void GetUsers()
@@ -80,6 +86,10 @@ public class LoginViewModel : ConnectedViewModelBase
             new User
             {
                 UserEmail = "New User"
+            },
+            new User
+            {
+                UserEmail = "Options"
             }
         };
 
@@ -100,20 +110,25 @@ public class LoginViewModel : ConnectedViewModelBase
         }
     }
 
-    public void ChangeUser(string email)
+    public void ChangeUser(string option)
     {
-        if (email == "New User")
+        switch (option)
         {
-            Email = string.Empty;
-            Password = string.Empty;
+            case "New User":
+                Email = string.Empty;
+                Password = string.Empty;
 
-            RememberMe = false;
-            RememberPassword = false;
+                RememberMe = false;
+                RememberPassword = false;
 
-            return;
+                return;
+
+            case "Options":
+                OptionsButtonPressed?.Invoke(this, EventArgs.Empty);
+                return;
         }
 
-        User? user = Users?.FirstOrDefault(user => user.UserEmail == email);
+        User? user = Users?.FirstOrDefault(user => user.UserEmail == option);
 
         if (user == null)
             return;
@@ -159,7 +174,7 @@ public class LoginViewModel : ConnectedViewModelBase
         await NotificationServer.SendUUX();
         await NotificationServer.SendCHG();
 
-        LoggedIn = true;
+        LoggedIn?.Invoke(this, EventArgs.Empty);
 
         if (RememberMe)
             user.UserEmail = Email;
