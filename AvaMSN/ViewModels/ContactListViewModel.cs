@@ -196,18 +196,13 @@ public class ContactListViewModel : ViewModelBase
             MSNP.Switchboard? switchboard = NotificationServer.Switchboards.FirstOrDefault(sb => sb.Contact.Email == contact.Email && sb.Connected);
 
             if (switchboard == null)
-            {
                 CurrentConversation.Switchboard = await NotificationServer!.SendXFR(contact);
-                await CurrentConversation.Invite();
-            }
-
             else
-            {
                 CurrentConversation.Switchboard = switchboard;
-            }
 
-            CurrentConversation.SubscribeToMessageEvent();
+            CurrentConversation.SubscribeToSwitchboardsEvents();
             CurrentConversation.NewMessage += Conversation_NewMessage;
+            CurrentConversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
         }
 
         NotificationServer.SwitchboardChanged += CurrentConversation.NotificationServer_SwitchboardChanged;
@@ -246,8 +241,9 @@ public class ContactListViewModel : ViewModelBase
                 Switchboard = e.Switchboard
             };
 
-            conversation.SubscribeToMessageEvent();
+            conversation.SubscribeToSwitchboardsEvents();
             conversation.NewMessage += Conversation_NewMessage;
+            conversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
         }
     }
 
@@ -261,6 +257,7 @@ public class ContactListViewModel : ViewModelBase
             CurrentConversation.UnsubscribeToEvents();
             NotificationServer.SwitchboardChanged -= CurrentConversation!.NotificationServer_SwitchboardChanged;
             CurrentConversation.NewMessage -= Conversation_NewMessage;
+            CurrentConversation.DisplayPictureUpdated -= Conversation_DisplayPictureUpdated;
 
             CurrentConversation = null;
         }
@@ -275,5 +272,22 @@ public class ContactListViewModel : ViewModelBase
     private void Conversation_NewMessage(object? sender, NewMessageEventArgs e)
     {
         NewMessage?.Invoke(this, e);
+    }
+
+    private void Conversation_DisplayPictureUpdated(object? sender, EventArgs e)
+    {
+        if (ContactGroups == null)
+            return;
+
+        if (sender is not Conversation conversation)
+            return;
+
+        foreach (ContactGroup group in ContactGroups)
+        {
+            Contact? contact = group.Contacts.FirstOrDefault(contact => contact.Email == conversation.Contact.Email);
+
+            if (contact != null)
+                contact.DisplayPicture = conversation.Contact.DisplayPicture;
+        }
     }
 }

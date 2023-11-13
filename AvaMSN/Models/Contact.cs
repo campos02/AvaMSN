@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using Avalonia.Media.Imaging;
+using ReactiveUI;
 
 namespace AvaMSN.Models;
 
@@ -11,6 +12,7 @@ public class Contact : ReactiveObject
     private string color = string.Empty;
     private bool newMessages;
     private bool blocked;
+    private Bitmap? displayPicture;
 
     public string DisplayName
     {
@@ -52,5 +54,11 @@ public class Contact : ReactiveObject
     {
         get => blocked;
         set => this.RaiseAndSetIfChanged(ref blocked, value);
+    }
+
+    public Bitmap? DisplayPicture
+    {
+        get => displayPicture;
+        set => this.RaiseAndSetIfChanged(ref displayPicture, value);
     }
 }

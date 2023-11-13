@@ -5,6 +5,9 @@ public class Contact
     // Presence info
     public string Presence { get; set; } = string.Empty;
     public string PersonalMessage { get; set; } = string.Empty;
+    public byte[] DisplayPicture { get; set; } = Array.Empty<byte>();
+    public string DisplayPictureObject { get; set; } = string.Empty;
+    public bool HasJoinedSession { get; set; }
 
     // List info
     public Lists InLists { get; set; } = new();

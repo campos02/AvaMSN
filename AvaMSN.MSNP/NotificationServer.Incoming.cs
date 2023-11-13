@@ -1,6 +1,5 @@
 ﻿using AvaMSN.MSNP.XML.SerializableClasses;
 using System.Text;
-using System.Web;
 using System.Xml.Serialization;
 
 namespace AvaMSN.MSNP;
@@ -11,8 +10,9 @@ public partial class NotificationServer : Connection
     public event EventHandler<PersonalMessageEventArgs>? PersonalMessageChanged;
     public event EventHandler<SwitchboardEventArgs>? SwitchboardChanged;
 
-    protected override async Task HandleIncoming(string response)
+    protected override async Task HandleIncoming(byte[] responseBytes)
     {
+        string response = Encoding.UTF8.GetString(responseBytes);
         string command = response.Split(" ")[0];
 
         await (command switch
@@ -36,6 +36,8 @@ public partial class NotificationServer : Connection
             return;
 
         contact.Presence = parameters[2];
+        contact.DisplayName = parameters[5];
+        contact.DisplayPictureObject = Uri.UnescapeDataString(parameters[7]);
 
         PresenceEventArgs eventArgs = new PresenceEventArgs()
         {
@@ -136,7 +138,7 @@ public partial class NotificationServer : Connection
         };
 
         if (string.IsNullOrEmpty(contact.DisplayName))
-            contact.DisplayName = HttpUtility.UrlDecode(displayName);
+            contact.DisplayName = Uri.UnescapeDataString(displayName);
 
         Switchboard switchboard = new Switchboard()
         {

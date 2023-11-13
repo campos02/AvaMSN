@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Media.Imaging;
 using AvaMSN.MSNP;
+using AvaMSN.MSNP.Messages;
 using ReactiveUI;
 
 namespace AvaMSN.Models;
@@ -28,6 +31,7 @@ public class Conversation : ReactiveObject
     public Switchboard? Switchboard { get; set; }
 
     public event EventHandler<NewMessageEventArgs>? NewMessage;
+    public event EventHandler? DisplayPictureUpdated;
 
     public Conversation(Contact contact, Profile profile, Database database)
     {
@@ -45,14 +49,6 @@ public class Conversation : ReactiveObject
         MessageHistory = new ObservableCollection<Message>(history.Skip(history.Count - 4));
     }
 
-    public async Task Invite()
-    {
-        if (Switchboard == null)
-            return;
-
-        await Switchboard.SendCAL();
-    }
-
     public async Task SendTextMessage(string messageText)
     {
         if (Switchboard == null || Profile == null || Contact == null || string.IsNullOrEmpty(messageText))
@@ -60,7 +56,12 @@ public class Conversation : ReactiveObject
 
         try
         {
-            await Switchboard.SendTextMessage(messageText);
+            await Switchboard.SendMessage(new TextPlain()
+            {
+                FontName = "Segoe UI",
+                Content = messageText
+            });
+
             TypingUser = false;
 
             Message message = new Message
@@ -125,12 +126,13 @@ public class Conversation : ReactiveObject
         await Switchboard.DisconnectAsync();
     }
 
-    public void SubscribeToMessageEvent()
+    public void SubscribeToSwitchboardsEvents()
     {
         if (Switchboard == null)
             return;
 
         Switchboard.MessageReceived += Switchboard_MessageReceived;
+        Switchboard.DisplayPictureUpdated += Switchboard_DisplayPictureUpdated;
     }
 
     public void UnsubscribeToEvents()
@@ -150,7 +152,7 @@ public class Conversation : ReactiveObject
             await Switchboard.DisconnectAsync();
 
         Switchboard = e.Switchboard;
-        SubscribeToMessageEvent();
+        SubscribeToSwitchboardsEvents();
     }
 
     private async void Switchboard_MessageReceived(object? sender, MessageEventArgs e)
@@ -194,5 +196,18 @@ public class Conversation : ReactiveObject
             Sender = Contact,
             Message = message
         });
+    }
+
+    private void Switchboard_DisplayPictureUpdated(object? sender, DisplayPictureEventArgs e)
+    {
+        if (e.DisplayPicture == null)
+            return;
+
+        using (MemoryStream ms = new MemoryStream(e.DisplayPicture))
+        {
+            Contact.DisplayPicture = new Bitmap(ms);
+        }
+
+        DisplayPictureUpdated?.Invoke(this, EventArgs.Empty);
     }
 }

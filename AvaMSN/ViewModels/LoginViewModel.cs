@@ -6,6 +6,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using System.IO;
+using Avalonia.Platform;
+using Avalonia.Media.Imaging;
 
 namespace AvaMSN.ViewModels;
 
@@ -150,9 +153,9 @@ public class LoginViewModel : ViewModelBase
         NotificationServer.ContactList.Profile.Presence = SelectedStatus.ShortName;
         NotificationServer.ContactList.Profile.Email = Email;
 
-        User user = Users?.FirstOrDefault(user => user.UserEmail == Email) ?? new User();
-
         await NotificationServer.SendVersion();
+
+        User user = Users?.FirstOrDefault(user => user.UserEmail == Email) ?? new User();
 
         if (user.BinarySecret == ""
             || user.TicketToken == ""

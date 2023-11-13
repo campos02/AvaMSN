@@ -1,5 +1,9 @@
 ﻿using AvaMSN.MSNP.Exceptions;
+using AvaMSN.MSNP.XML.SerializableClasses;
+using System.Security.Cryptography;
 using System.Text;
+using System.Xml.Serialization;
+using System.Xml;
 
 namespace AvaMSN.MSNP;
 
@@ -10,7 +14,7 @@ public partial class NotificationServer : Connection
     public ContactList ContactList { get; set; }
     public SingleSignOn SSO { get; set; }
     public List<Switchboard> Switchboards { get; set; } = new List<Switchboard>();
-    public static uint ClientCapabilities => 0x80000000;
+    public readonly uint ClientCapabilities = 0x80000000;
 
     public NotificationServer(string host)
     {
@@ -18,6 +22,11 @@ public partial class NotificationServer : Connection
 
         SSO = new SingleSignOn(Host);
         ContactList = new ContactList(Host);
+
+        if (OperatingSystem.IsIOS() || OperatingSystem.IsAndroid())
+        {
+            ClientCapabilities += 0x400;
+        }
     }
 
     /// <summary>
@@ -58,7 +67,7 @@ public partial class NotificationServer : Connection
             await SendAsync(message);
 
             // Receive version
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
 
             if (response.StartsWith("VER") && response.Split(" ")[1] == TransactionID.ToString())
             {
@@ -85,7 +94,7 @@ public partial class NotificationServer : Connection
             await SendAsync(message);
 
             // Receive CVR
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
 
             if (response.StartsWith("CVR") && response.Split(" ")[1] == TransactionID.ToString())
             {
@@ -113,7 +122,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Receive GCF and USR S
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
             responses += response;
 
             if (responses.Contains("USR") && responses.StartsWith("GCF"))
@@ -144,7 +153,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Receive USR S
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
 
             if (response.StartsWith("USR")
                 && response.Split(" ")[1] == TransactionID.ToString()
@@ -174,7 +183,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Receive GCF and USR S
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
             responses += response;
 
             if (responses.Contains("USR") && responses.StartsWith("GCF"))
@@ -203,7 +212,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Receive USR S
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
 
             if (response.StartsWith("USR")
                 && response.Split(" ")[1] == TransactionID.ToString()
@@ -246,7 +255,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Receive BLP
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
 
             if (response.StartsWith("BLP")
                 && response.Split(" ")[1] == TransactionID.ToString()
@@ -274,7 +283,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Receive ADL
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
 
             if (response.StartsWith("ADL")
                 && response.Split(" ")[1] == TransactionID.ToString()
@@ -332,7 +341,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Receive RML
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
 
             if (response.StartsWith("RML")
                 && response.Split(" ")[1] == TransactionID.ToString()
@@ -354,7 +363,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Receive PRP
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
 
             if (response.StartsWith("PRP")
                 && response.Split(" ")[1] == TransactionID.ToString()
@@ -370,13 +379,13 @@ public partial class NotificationServer : Connection
         TransactionID++;
 
         // Send CHG
-        string message = $"CHG {TransactionID} {ContactList.Profile.Presence} {ClientCapabilities}\r\n";
+        string message = $"CHG {TransactionID} {ContactList.Profile.Presence} {ClientCapabilities} {Uri.EscapeDataString(ContactList.Profile.DisplayPictureObject)}\r\n";
         await SendAsync(message);
 
         while (true)
         {
             // Receive CHG
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
 
             if (response.StartsWith("CHG")
                 && response.Split(" ")[1] == TransactionID.ToString()
@@ -386,7 +395,7 @@ public partial class NotificationServer : Connection
 
                 if (responses[1] != "")
                 {
-                    await HandleIncoming(responses[1]);
+                    await HandleIncoming(Encoding.UTF8.GetBytes(responses[1]));
                 }
 
                 break;
@@ -414,7 +423,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Receive UUX
-            string response = await ReceiveAsync();
+            string response = await ReceiveStringAsync();
 
             if (response.StartsWith("UUX")
                 && response.Split(" ")[1] == TransactionID.ToString())
@@ -437,7 +446,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Receive XFR
-            response = await ReceiveAsync();
+            response = await ReceiveStringAsync();
 
             if (response.StartsWith("XFR")
                 && response.Split(" ")[1] == TransactionID.ToString())
@@ -464,6 +473,7 @@ public partial class NotificationServer : Connection
         };
 
         await switchboard.SendUSR(authString);
+        await switchboard.SendCAL();
 
         SwitchboardChanged?.Invoke(this, new SwitchboardEventArgs
         {
@@ -474,5 +484,34 @@ public partial class NotificationServer : Connection
         Switchboards.Add(switchboard);
 
         return switchboard;
+    }
+
+    public void GenerateMSNObject()
+    {
+        msnobj displayPicture = new msnobj()
+        {
+            Creator = ContactList.Profile.Email,
+            Size = (ushort)ContactList.Profile.DisplayPicture!.Length,
+            Type = 3,
+            Location = 0,
+            Friendly = "AAA",
+            SHA1D = Convert.ToBase64String(SHA1.HashData(ContactList.Profile.DisplayPicture))
+        };
+
+        var settings = new XmlWriterSettings()
+        {
+            OmitXmlDeclaration = true
+        };
+
+        var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+
+        XmlSerializer msnobjectSerializer = new(typeof(msnobj));
+
+        using (StringWriter stream = new StringWriter())
+        using (XmlWriter writer = XmlWriter.Create(stream, settings))
+        {
+            msnobjectSerializer.Serialize(writer, displayPicture, namespaces);
+            ContactList.Profile.DisplayPictureObject = stream.ToString();
+        }
     }
 }

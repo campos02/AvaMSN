@@ -44,16 +44,35 @@ public class Connection
         await Client!.SendAsync(messageBytes, SocketFlags.None);
     }
 
-    protected async Task<string> ReceiveAsync()
+    protected async Task SendAsync(byte[] message)
+    {
+        await Client!.SendAsync(message, SocketFlags.None);
+    }
+
+    protected async Task<string> ReceiveStringAsync()
     {
         ReceiveSource.Cancel();
         ReceiveSource = new CancellationTokenSource();
-        ReceiveSource.CancelAfter(5000);
+        ReceiveSource.CancelAfter(30000);
 
         var buffer = new byte[1664];
         var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, ReceiveSource.Token);
 
         return Encoding.UTF8.GetString(buffer, 0, received);
+    }
+
+    protected async Task<byte[]> ReceiveAsync()
+    {
+        ReceiveSource.Cancel();
+        ReceiveSource = new CancellationTokenSource();
+        ReceiveSource.CancelAfter(30000);
+
+        var buffer = new byte[1664];
+        var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, ReceiveSource.Token);
+
+        byte[] response = new byte[received];
+        Buffer.BlockCopy(buffer, 0, response, 0, received);
+        return response;
     }
 
     protected async Task ReceiveIncomingAsync()
@@ -65,17 +84,18 @@ public class Connection
         {
             while (true)
             {
-                var buffer = new byte[1160];
+                var buffer = new byte[1664];
                 var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, ReceiveSource.Token);
 
-                string response = Encoding.UTF8.GetString(buffer, 0, received);
+                byte[] response = new byte[received];
+                Buffer.BlockCopy(buffer, 0, response, 0, received);
                 HandleIncoming(response);
             }
         }
         catch (OperationCanceledException) { return; }
     }
 
-    protected virtual object HandleIncoming(string response) => response switch
+    protected virtual object HandleIncoming(byte[] response) => response switch
     {
         _ => ""
     };
@@ -92,7 +112,7 @@ public class Connection
             try
             {
                 // Receive version
-                response = await ReceiveAsync();
+                response = await ReceiveStringAsync();
             }
             catch (OperationCanceledException) { break; }
 

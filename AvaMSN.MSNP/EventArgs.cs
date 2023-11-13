@@ -28,3 +28,8 @@ public class SwitchboardEventArgs : ContactEventArgs
 {
     public Switchboard? Switchboard { get; set; }
 }
+
+public class DisplayPictureEventArgs : ContactEventArgs
+{
+    public byte[]? DisplayPicture { get; set; }
+}

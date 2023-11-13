@@ -18,9 +18,9 @@
   <Grid Margin="30"
         RowDefinitions="Auto, 10, *, 10, 20, 5, Auto, 5, Auto">
 
-    <TextBlock Text="{Binding Conversation.Contact.DisplayName}"
-               FontWeight="ExtraBold"
-               FontSize="20"/>
+    <Image Source="{Binding Conversation.Contact.DisplayPicture}"
+           MaxWidth="90"
+           HorizontalAlignment="Left"/>
 
     <Button HorizontalAlignment="Right"
             Command="{Binding BackCommand}">
