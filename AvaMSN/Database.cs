@@ -3,6 +3,7 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace AvaMSN;
 
@@ -22,6 +23,7 @@ public class Database
         connection = new SQLiteConnection(FilePath);
         connection.CreateTable<User>();
         connection.CreateTable<Message>();
+        connection.CreateTable<DisplayPicture>();
     }
 
     public List<User> GetUsers()
@@ -31,11 +33,7 @@ public class Database
 
     public int SaveUser(User user)
     {
-        if (user.ID != 0)
-            return connection.Update(user);
-
-        else
-            return connection.Insert(user);
+        return connection.InsertOrReplace(user);
     }
 
     public int DeleteUser(User user)
@@ -51,17 +49,12 @@ public class Database
     public List<Message> GetMessages(string contact1, string contact2)
     {
         return connection.Table<Message>().Where(message => (message.Sender == contact1 || message.Recipient == contact1)
-                                                 && (message.Recipient == contact2 || message.Sender == contact2))
-                                                 .ToList();
+                                                 && (message.Recipient == contact2 || message.Sender == contact2)).ToList();
     }
 
     public int SaveMessage(Message message)
     {
-        if (message.ID != 0)
-            return connection.Update(message);
-
-        else
-            return connection.Insert(message);
+        return connection.Insert(message);
     }
 
     public int DeleteMessage(Message message)
@@ -87,6 +80,31 @@ public class Database
         {
             user.PersonalMessage = personalMessage;
             SaveUser(user);
+        }
+    }
+
+    public DisplayPicture? GetDisplayPicture(string contactEmail)
+    {
+        return connection.Table<DisplayPicture>().LastOrDefault(picture => picture.ContactEmail == contactEmail);
+    }
+
+    public int SaveDisplayPicture(DisplayPicture picture)
+    {
+        return connection.Insert(picture);
+    }
+
+    public int DeleteDisplayPicture(DisplayPicture picture)
+    {
+        return connection.Delete(picture);
+    }
+
+    public void DeleteDisplayPictures(string contactEmail)
+    {
+        List<DisplayPicture> pictures = connection.Table<DisplayPicture>().Where(picture => picture.ContactEmail == contactEmail).ToList();
+
+        foreach (DisplayPicture picture in pictures)
+        {
+            DeleteDisplayPicture(picture);
         }
     }
 }

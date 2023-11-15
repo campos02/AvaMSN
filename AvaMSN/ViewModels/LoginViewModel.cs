@@ -6,9 +6,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
-using System.IO;
-using Avalonia.Platform;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using System.IO;
 
 namespace AvaMSN.ViewModels;
 
@@ -19,6 +19,8 @@ public class LoginViewModel : ViewModelBase
 
     private bool rememberMe;
     private bool rememberPassword;
+
+    private Bitmap? displayPicture;
 
     public NotificationServer NotificationServer { get; set; }
 
@@ -52,6 +54,12 @@ public class LoginViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref password, value);
     }
 
+    public Bitmap? DisplayPicture
+    {
+        get => displayPicture;
+        set => this.RaiseAndSetIfChanged(ref displayPicture, value);
+    }
+
     public Presence[] Statuses => ContactListData.Statuses;
     public Presence SelectedStatus { get; set; }
 
@@ -79,6 +87,7 @@ public class LoginViewModel : ViewModelBase
             Port = 1863
         };
 
+        DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
         GetUsers();
     }
 
@@ -99,17 +108,7 @@ public class LoginViewModel : ViewModelBase
         if (Users.Count > 1)
         {
             User user = Users[0];
-
-            Email = user.UserEmail;
-            Password = user.BinarySecret;
-
-            if (user.UserEmail != "")
-                RememberMe = true;
-
-            if (user.BinarySecret != "")
-                RememberPassword = true;
-
-            NotificationServer.ContactList.Profile.PersonalMessage = user.PersonalMessage;
+            ChangeUser(user.UserEmail);
         }
     }
 
@@ -124,6 +123,7 @@ public class LoginViewModel : ViewModelBase
                 RememberMe = false;
                 RememberPassword = false;
 
+                DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
                 return;
 
             case "Options":
@@ -145,21 +145,29 @@ public class LoginViewModel : ViewModelBase
         if (user.BinarySecret != "")
             RememberPassword = true;
 
-        NotificationServer.ContactList.Profile.PersonalMessage = user.PersonalMessage;
+        NotificationServer.Profile.PersonalMessage = user.PersonalMessage;
+
+        DisplayPicture? picture = Database?.GetDisplayPicture(user.UserEmail);
+        if (picture != null && picture.PictureData.Length > 0)
+        {
+            using MemoryStream pictureStream = new MemoryStream(picture.PictureData);
+            DisplayPicture = new Bitmap(pictureStream);
+            pictureStream.Position = 0;
+
+            NotificationServer.Profile.DisplayPicture = pictureStream.ToArray();
+        }
     }
 
     public async Task Login()
     {
-        NotificationServer.ContactList.Profile.Presence = SelectedStatus.ShortName;
-        NotificationServer.ContactList.Profile.Email = Email;
+        NotificationServer.Profile.Presence = SelectedStatus.ShortName;
+        NotificationServer.Profile.Email = Email;
 
         await NotificationServer.SendVersion();
 
         User user = Users?.FirstOrDefault(user => user.UserEmail == Email) ?? new User();
 
-        if (user.BinarySecret == ""
-            || user.TicketToken == ""
-            || user.Ticket == "")
+        if (user.BinarySecret == "" || user.TicketToken == "" || user.Ticket == "")
         {
             await NotificationServer.Authenticate(Password);
         }
@@ -175,6 +183,7 @@ public class LoginViewModel : ViewModelBase
 
         await NotificationServer.SendContactList();
         await NotificationServer.SendUUX();
+        NotificationServer.GenerateMSNObject();
         await NotificationServer.SendCHG();
 
         LoggedIn?.Invoke(this, EventArgs.Empty);
@@ -207,6 +216,8 @@ public class LoginViewModel : ViewModelBase
         Password = string.Empty;
 
         Database?.DeleteUser(user);
+        Database?.DeleteDisplayPictures(user.UserEmail);
         Users?.Remove(user);
+        DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
     }
 }

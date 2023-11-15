@@ -14,7 +14,6 @@ public class SettingsManager
     // Default settings, static so they change for all objects when modified
     public static Settings Settings { get; set; } = new Settings()
     {
-        // Use CrossTalk by default
         Server = "crosstalksrv.hiden.pw"
     };
 

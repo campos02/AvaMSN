@@ -12,6 +12,12 @@ public partial class NotificationServer : Connection
     public static string Protocol => "MSNP15";
 
     public ContactList ContactList { get; set; }
+    public Profile Profile
+    {
+        get => ContactList.Profile;
+        set => ContactList.Profile = value;
+    }
+
     public SingleSignOn SSO { get; set; }
     public List<Switchboard> Switchboards { get; set; } = new List<Switchboard>();
     public readonly uint ClientCapabilities = 0x80000000;
@@ -23,9 +29,10 @@ public partial class NotificationServer : Connection
         SSO = new SingleSignOn(Host);
         ContactList = new ContactList(Host);
 
+        // Add mobile device capability if on a mobile OS
         if (OperatingSystem.IsIOS() || OperatingSystem.IsAndroid())
         {
-            ClientCapabilities += 0x400;
+            ClientCapabilities += 0x01;
         }
     }
 
@@ -488,10 +495,13 @@ public partial class NotificationServer : Connection
 
     public void GenerateMSNObject()
     {
+        if (ContactList.Profile.DisplayPicture == null)
+            return;
+
         msnobj displayPicture = new msnobj()
         {
             Creator = ContactList.Profile.Email,
-            Size = (ushort)ContactList.Profile.DisplayPicture!.Length,
+            Size = (ushort)ContactList.Profile.DisplayPicture.Length,
             Type = 3,
             Location = 0,
             Friendly = "AAA",
@@ -507,11 +517,10 @@ public partial class NotificationServer : Connection
 
         XmlSerializer msnobjectSerializer = new(typeof(msnobj));
 
-        using (StringWriter stream = new StringWriter())
-        using (XmlWriter writer = XmlWriter.Create(stream, settings))
-        {
-            msnobjectSerializer.Serialize(writer, displayPicture, namespaces);
-            ContactList.Profile.DisplayPictureObject = stream.ToString();
-        }
+        using StringWriter stream = new StringWriter();
+        using XmlWriter writer = XmlWriter.Create(stream, settings);
+
+        msnobjectSerializer.Serialize(writer, displayPicture, namespaces);
+        ContactList.Profile.DisplayPictureObject = stream.ToString();
     }
 }

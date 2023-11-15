@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:AvaMSN.ViewModels"
              xmlns:models="clr-namespace:AvaMSN.Models;assembly=AvaMSN"
-             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="550"
              x:Class="AvaMSN.Views.LoginView"
              x:DataType="vm:LoginViewModel">
 
@@ -21,16 +21,25 @@
   </UserControl.Styles>
 
   <Grid Margin="30"
-        RowDefinitions="10, Auto, *, 20, Auto"
+        RowDefinitions="10, Auto, 10, Auto, *, 20, Auto"
         ColumnDefinitions="*, 5, Auto">
 
-    <TextBlock Grid.Row="1"
+    <Border Grid.Row="1"
+            CornerRadius="5"
+            ClipToBounds="True"
+            HorizontalAlignment="Center"
+            Grid.ColumnSpan="3">
+      <Image Source="{Binding DisplayPicture}"
+             MaxHeight="110"/>
+    </Border>
+
+    <TextBlock Grid.Row="3"
                Grid.ColumnSpan="3"
                HorizontalAlignment="Center"
                FontWeight="ExtraBold"
                FontSize="20">Welcome!</TextBlock>
 
-    <Grid Grid.Row="2"
+    <Grid Grid.Row="4"
           RowDefinitions="Auto, 3, Auto, 30, Auto, 3, Auto, 15, Auto, 5, Auto, 15, Auto"
           VerticalAlignment="Center">
 
@@ -106,7 +115,7 @@
 
     </Grid>
 
-    <Button Grid.Row="4"
+    <Button Grid.Row="6"
             Grid.ColumnSpan="3"
             HorizontalAlignment="Center"
             Command="{Binding LoginCommand}">Sign in</Button>

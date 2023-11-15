@@ -1,6 +1,4 @@
-﻿using System.Web;
-
-namespace AvaMSN.MSNP.Messages;
+﻿namespace AvaMSN.MSNP.Messages;
 
 public class TextPlain
 {

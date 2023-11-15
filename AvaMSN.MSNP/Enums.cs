@@ -1,6 +1,6 @@
 ﻿namespace AvaMSN.MSNP;
 
-// List numbers of MSNP https://wiki.nina.chat/wiki/Protocols/MSNP/MSNP8/Getting_Details#List_numbers
+// List numbers of MSNP http://web.archive.org/web/20130103003211/http://msnpiki.msnfanatic.com/index.php/MSNP8:Getting_Details#List_numbers
 public enum ListNumbers
 {
     Forward = 1,

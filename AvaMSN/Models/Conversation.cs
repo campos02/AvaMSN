@@ -15,10 +15,10 @@ public class Conversation : ReactiveObject
 {
     public Profile Profile { get; private set; }
     public Contact Contact { get; private set; }
-    private Database Database { get; set; }
+    private Database? Database { get; set; }
 
     public ObservableCollection<Message> Messages { get; set; } = new ObservableCollection<Message>();
-    public ObservableCollection<Message> MessageHistory { get; set; }
+    public ObservableCollection<Message>? MessageHistory { get; set; }
 
     private bool typingUser;
 
@@ -33,11 +33,14 @@ public class Conversation : ReactiveObject
     public event EventHandler<NewMessageEventArgs>? NewMessage;
     public event EventHandler? DisplayPictureUpdated;
 
-    public Conversation(Contact contact, Profile profile, Database database)
+    public Conversation(Contact contact, Profile profile, Database? database = null)
     {
         Contact = contact;
         Profile = profile;
         Database = database;
+
+        if (Database == null)
+            return;
 
         List<Message> history = Database.GetMessages(Contact.Email, Profile.Email);
 
@@ -47,6 +50,13 @@ public class Conversation : ReactiveObject
         }
 
         MessageHistory = new ObservableCollection<Message>(history.Skip(history.Count - 4));
+
+        DisplayPicture? displayPicture = Database.GetDisplayPicture(Contact.Email);
+        if (displayPicture != null)
+        {
+            using MemoryStream pictureStream = new MemoryStream(displayPicture.PictureData);
+            Contact.DisplayPicture = new Bitmap(pictureStream);
+        }
     }
 
     public async Task SendTextMessage(string messageText)
@@ -143,13 +153,10 @@ public class Conversation : ReactiveObject
         Switchboard.MessageReceived -= Switchboard_MessageReceived;
     }
 
-    public async void NotificationServer_SwitchboardChanged(object? sender, SwitchboardEventArgs e)
+    public void NotificationServer_SwitchboardChanged(object? sender, SwitchboardEventArgs e)
     {
-        if (Switchboard == null || e.Switchboard == null || Contact.Email != e.Switchboard.Contact.Email)
+        if (Contact.Email != e.Switchboard?.Contact.Email)
             return;
-
-        if (Switchboard.Connected)
-            await Switchboard.DisconnectAsync();
 
         Switchboard = e.Switchboard;
         SubscribeToSwitchboardsEvents();
@@ -157,9 +164,6 @@ public class Conversation : ReactiveObject
 
     private async void Switchboard_MessageReceived(object? sender, MessageEventArgs e)
     {
-        if (Contact == null || Profile == null)
-            return;
-
         if (e.TypingUser)
         {
             TypingUser = true;
@@ -203,10 +207,14 @@ public class Conversation : ReactiveObject
         if (e.DisplayPicture == null)
             return;
 
-        using (MemoryStream ms = new MemoryStream(e.DisplayPicture))
+        using MemoryStream pictureStream = new MemoryStream(e.DisplayPicture);
+        Contact.DisplayPicture = new Bitmap(pictureStream);
+
+        Database?.SaveDisplayPicture(new DisplayPicture()
         {
-            Contact.DisplayPicture = new Bitmap(ms);
-        }
+            ContactEmail = Contact.Email,
+            PictureData = pictureStream.ToArray()
+        });
 
         DisplayPictureUpdated?.Invoke(this, EventArgs.Empty);
     }

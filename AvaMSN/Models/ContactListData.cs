@@ -8,9 +8,7 @@ namespace AvaMSN.Models;
 public class ContactListData
 {
     public NotificationServer? NotificationServer { get; set; }
-
     public Profile Profile { get; set; } = new();
-
     public ObservableCollection<ContactGroup>? ContactGroups { get; set; }
 
     public enum DefaultGroupIndex
@@ -55,16 +53,16 @@ public class ContactListData
         if (NotificationServer == null)
             return;
 
-        Profile.DisplayName = NotificationServer.ContactList.Profile.DisplayName;
-        Profile.Email = NotificationServer.ContactList.Profile.Email;
-        Profile.PersonalMessage = NotificationServer.ContactList.Profile.PersonalMessage;
-        Profile.Presence = PresenceStatus.GetFullName(NotificationServer.ContactList.Profile.Presence);
+        Profile.DisplayName = NotificationServer.Profile.DisplayName;
+        Profile.Email = NotificationServer.Profile.Email;
+        Profile.PersonalMessage = NotificationServer.Profile.PersonalMessage;
+        Profile.Presence = PresenceStatus.GetFullName(NotificationServer.Profile.Presence);
 
-        ContactGroups = new()
-        {
-            new ContactGroup("Available", new ObservableCollection<Contact>()),
-            new ContactGroup("Offline", new ObservableCollection<Contact>())
-        };
+        ContactGroups =
+        [
+            new ContactGroup("Available", []),
+            new ContactGroup("Offline", [])
+        ];
 
         foreach (MSNP.Contact contact in NotificationServer.ContactList.Contacts)
         {
@@ -112,7 +110,7 @@ public class ContactListData
         _ => "Gray"
     };
 
-    private void NotificationServer_PresenceChanged(object? sender, MSNP.PresenceEventArgs e)
+    private void NotificationServer_PresenceChanged(object? sender, PresenceEventArgs e)
     {
         if (NotificationServer == null || ContactGroups == null)
             return;
@@ -157,8 +155,8 @@ public class ContactListData
 
             if (contact != null)
             {
-                contact.Presence = e.Presence;
-                contact.Color = GetStatusColor(contact.Presence);
+                contact.Presence = PresenceStatus.GetFullName(e.Presence);
+                contact.Color = GetStatusColor(e.Presence);
             }
         }
     }

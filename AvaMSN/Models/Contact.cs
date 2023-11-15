@@ -1,5 +1,7 @@
 ﻿using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using ReactiveUI;
+using System;
 
 namespace AvaMSN.Models;
 
@@ -60,5 +62,10 @@ public class Contact : ReactiveObject
     {
         get => displayPicture;
         set => this.RaiseAndSetIfChanged(ref displayPicture, value);
+    }
+
+    public Contact()
+    {
+        DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
     }
 }

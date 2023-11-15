@@ -31,121 +31,154 @@
   <Grid Margin="30"
         RowDefinitions="Auto, 5, Auto, 30, *">
 
-    <ComboBox BorderThickness="0"
-              SelectedIndex="{Binding SelectedOptionIndex}"
-              Name="presenceBox">
+    <StackPanel Spacing="5"
+                Orientation="Horizontal">
+      <Border CornerRadius="5"
+              ClipToBounds="True">
+        <Image Source="{Binding Profile.DisplayPicture}"
+             MaxHeight="90"
+             MaxWidth="90"/>
+      </Border>
 
-      <ComboBoxItem Padding="3"
-                    Height="0">
-        <StackPanel Spacing="3"
-                    Orientation="Horizontal">
-          <TextBlock Text="{Binding ListData.Profile.DisplayName}"
-                     FontSize="20"
-                     FontWeight="ExtraBold"/>
-          <TextBlock Text="{Binding ListData.Profile.Presence, StringFormat='({0})'}"
-                     VerticalAlignment="Bottom"/>
-        </StackPanel>
-      </ComboBoxItem>
+      <StackPanel Spacing="5">
+        <ComboBox BorderThickness="0"
+                  SelectedIndex="{Binding SelectedOptionIndex}"
+                  Name="presenceBox">
 
-      <ComboBoxItem>
-        <Button Classes="presence-button"
-                Tapped="Button_Tapped"
-                Command="{Binding ChangePresenceCommand}"
-                CommandParameter="{Binding Statuses[0].(models:Presence).ShortName}">
-          <StackPanel Spacing="3"
-                      Orientation="Horizontal">
-            <PathIcon Data="{StaticResource person_regular}"
-                      Foreground="{Binding Statuses[0].(models:Presence).Color}"/>
-            <TextBlock Text="{Binding Statuses[0].(models:Presence).Status}"></TextBlock>
-          </StackPanel>
-        </Button>
-      </ComboBoxItem>
+          <ComboBoxItem Padding="3"
+                        Height="0">
+            <StackPanel Spacing="3"
+                        Orientation="Horizontal">
+              <TextBlock Text="{Binding Profile.DisplayName}"
+                         FontSize="20"
+                         FontWeight="ExtraBold"/>
+              <TextBlock Text="{Binding Profile.Presence, StringFormat='({0})'}"
+                         VerticalAlignment="Bottom"/>
+            </StackPanel>
+          </ComboBoxItem>
 
-      <ComboBoxItem>
-        <Button Classes="presence-button"
-                Tapped="Button_Tapped"
-                Command="{Binding ChangePresenceCommand}"
-                CommandParameter="{Binding Statuses[1].(models:Presence).ShortName}">
-          <StackPanel Spacing="3"
-                      Orientation="Horizontal">
-            <PathIcon Data="{StaticResource person_regular}"
-                      Foreground="{Binding Statuses[1].(models:Presence).Color}"/>
-            <TextBlock Text="{Binding Statuses[1].(models:Presence).Status}"></TextBlock>
-          </StackPanel>
-        </Button>
-      </ComboBoxItem>
-
-      <ComboBoxItem>
-        <Button Classes="presence-button"
-                Tapped="Button_Tapped"
-                Command="{Binding ChangePresenceCommand}"
-                CommandParameter="{Binding Statuses[2].(models:Presence).ShortName}">
-          <StackPanel Spacing="3"
-                      Orientation="Horizontal">
-            <PathIcon Data="{StaticResource person_regular}"
-                      Foreground="{Binding Statuses[2].(models:Presence).Color}"/>
-            <TextBlock Text="{Binding Statuses[2].(models:Presence).Status}"></TextBlock>
-          </StackPanel>
-        </Button>
-      </ComboBoxItem>
-
-      <ComboBoxItem>
-        <Button Classes="presence-button"
-                Tapped="Button_Tapped"
-                Command="{Binding ChangePresenceCommand}"
-                CommandParameter="{Binding Statuses[3].(models:Presence).ShortName}">
-          <StackPanel Spacing="3"
-                      Orientation="Horizontal">
-            <PathIcon Data="{StaticResource person_regular}"
-                      Foreground="{Binding Statuses[3].(models:Presence).Color}"/>
-            <TextBlock Text="{Binding Statuses[3].(models:Presence).Status}"></TextBlock>
-          </StackPanel>
-        </Button>
-      </ComboBoxItem>
-
-      <Separator/>
-
-      <ComboBoxItem>
-        <Button Classes="presence-button">
-          <TextBlock>Change Display Name</TextBlock>
-          <Button.Flyout>
-            <Flyout Placement="BottomEdgeAlignedLeft">
-              <StackPanel Spacing="5">
-                <TextBox Text="{Binding DisplayName}"
-                         Watermark="New display name"/>
-                <Button Command="{Binding ChangeNameCommand}">Change</Button>
+          <ComboBoxItem>
+            <Button Classes="presence-button"
+                    Tapped="Button_Tapped"
+                    Command="{Binding ChangePresenceCommand}"
+                    CommandParameter="{Binding Statuses[0].(models:Presence).ShortName}">
+              <StackPanel Spacing="3"
+                          Orientation="Horizontal">
+                <PathIcon Data="{StaticResource person_regular}"
+                          Foreground="{Binding Statuses[0].(models:Presence).Color}"/>
+                <TextBlock Text="{Binding Statuses[0].(models:Presence).Status}"></TextBlock>
               </StackPanel>
-            </Flyout>
-          </Button.Flyout>
-        </Button>
-      </ComboBoxItem>
+            </Button>
+          </ComboBoxItem>
 
-      <ComboBoxItem>
-        <Button Classes="presence-button"
-                Tapped="Button_Tapped"
-                Command="{Binding OptionsCommand}">
-          <TextBlock>Options</TextBlock>
-        </Button>
-      </ComboBoxItem>
+          <ComboBoxItem>
+            <Button Classes="presence-button"
+                    Tapped="Button_Tapped"
+                    Command="{Binding ChangePresenceCommand}"
+                    CommandParameter="{Binding Statuses[1].(models:Presence).ShortName}">
+              <StackPanel Spacing="3"
+                          Orientation="Horizontal">
+                <PathIcon Data="{StaticResource person_regular}"
+                          Foreground="{Binding Statuses[1].(models:Presence).Color}"/>
+                <TextBlock Text="{Binding Statuses[1].(models:Presence).Status}"></TextBlock>
+              </StackPanel>
+            </Button>
+          </ComboBoxItem>
 
-      <Separator/>
+          <ComboBoxItem>
+            <Button Classes="presence-button"
+                    Tapped="Button_Tapped"
+                    Command="{Binding ChangePresenceCommand}"
+                    CommandParameter="{Binding Statuses[2].(models:Presence).ShortName}">
+              <StackPanel Spacing="3"
+                          Orientation="Horizontal">
+                <PathIcon Data="{StaticResource person_regular}"
+                          Foreground="{Binding Statuses[2].(models:Presence).Color}"/>
+                <TextBlock Text="{Binding Statuses[2].(models:Presence).Status}"></TextBlock>
+              </StackPanel>
+            </Button>
+          </ComboBoxItem>
 
-      <ComboBoxItem>
-        <Button Classes="presence-button"
-                Tapped="Button_Tapped"
-                Command="{Binding SignOutCommand}">
-          <TextBlock>Sign Out</TextBlock>
-        </Button>
-      </ComboBoxItem>
+          <ComboBoxItem>
+            <Button Classes="presence-button"
+                    Tapped="Button_Tapped"
+                    Command="{Binding ChangePresenceCommand}"
+                    CommandParameter="{Binding Statuses[3].(models:Presence).ShortName}">
+              <StackPanel Spacing="3"
+                          Orientation="Horizontal">
+                <PathIcon Data="{StaticResource person_regular}"
+                          Foreground="{Binding Statuses[3].(models:Presence).Color}"/>
+                <TextBlock Text="{Binding Statuses[3].(models:Presence).Status}"></TextBlock>
+              </StackPanel>
+            </Button>
+          </ComboBoxItem>
 
-      <ComboBox.Styles>
-        <Style Selector="ComboBoxItem">
-          <Setter Property="Padding" Value="0"/>
-        </Style>
-      </ComboBox.Styles>
+          <Separator/>
 
-    </ComboBox>
+          <ComboBoxItem>
+            <Button Classes="presence-button"
+                    Tapped="Display_Picture_Tapped">
+              Change Display Picture
+            </Button>
+          </ComboBoxItem>
 
+          <ComboBoxItem>
+            <Button Classes="presence-button">
+              <TextBlock>Change Display Name</TextBlock>
+              <Button.Flyout>
+                <Flyout Placement="BottomEdgeAlignedLeft">
+                  <StackPanel Spacing="5">
+                    <TextBox Text="{Binding DisplayName}"
+                             Watermark="New display name"/>
+                    <Button Command="{Binding ChangeNameCommand}">Change</Button>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+          </ComboBoxItem>
+
+          <ComboBoxItem>
+            <Button Classes="presence-button"
+                    Tapped="Button_Tapped"
+                    Command="{Binding OptionsCommand}">
+              <TextBlock>Options</TextBlock>
+            </Button>
+          </ComboBoxItem>
+
+          <Separator/>
+
+          <ComboBoxItem>
+            <Button Classes="presence-button"
+                    Tapped="Button_Tapped"
+                    Command="{Binding SignOutCommand}">
+              <TextBlock>Sign Out</TextBlock>
+            </Button>
+          </ComboBoxItem>
+
+          <ComboBox.Styles>
+            <Style Selector="ComboBoxItem">
+              <Setter Property="Padding" Value="0"/>
+            </Style>
+          </ComboBox.Styles>
+
+        </ComboBox>
+
+        <TextBox Width="250"
+                 Margin="2 0 0 0"
+                 HorizontalAlignment="Left"
+                 BorderThickness="0"
+                 Watermark="Share a quick message"
+                 Text="{Binding PersonalMessage}">
+          <i:Interaction.Behaviors>
+            <ia:EventTriggerBehavior EventName="LostFocus">
+              <InvokeCommandAction Command="{Binding ChangePersonalMessageCommand}"/>
+            </ia:EventTriggerBehavior>
+          </i:Interaction.Behaviors>
+        </TextBox>
+      </StackPanel>
+
+    </StackPanel>
+    
     <Button HorizontalAlignment="Right"
             Background="Transparent"
             ToolTip.Tip="Add a contact">
@@ -165,19 +198,6 @@
         </Flyout>
       </Button.Flyout>
     </Button>
-
-    <TextBox Grid.Row="2"
-             Width="250"
-             HorizontalAlignment="Left"
-             BorderThickness="0"
-             Watermark="Share a quick message"
-             Text="{Binding PersonalMessage}">
-      <i:Interaction.Behaviors>
-        <ia:EventTriggerBehavior EventName="LostFocus">
-          <InvokeCommandAction Command="{Binding ChangePersonalMessageCommand}"/>
-        </ia:EventTriggerBehavior>
-      </i:Interaction.Behaviors>
-    </TextBox>
 
     <TreeView Grid.Row="4"
               ItemsSource="{Binding ContactGroups}"

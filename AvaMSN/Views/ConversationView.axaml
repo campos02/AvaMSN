@@ -3,12 +3,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:AvaMSN.ViewModels"
+             xmlns:dvm="clr-namespace:AvaMSN.ViewModels.Design"
              xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
              xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
              xmlns:conv="clr-namespace:AvaMSN.Converters"
              mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
              x:Class="AvaMSN.Views.ConversationView"
              x:DataType="vm:ConversationViewModel">
+
+  <Design.DataContext>
+    <dvm:DesignConversationViewModel/>
+  </Design.DataContext>
   
   <UserControl.Resources>
     <conv:UserSaysConverter x:Key="userSaysConverter"/>
@@ -16,31 +21,49 @@
   </UserControl.Resources>
 
   <Grid Margin="30"
-        RowDefinitions="Auto, 10, *, 10, 20, 5, Auto, 5, Auto">
+        RowDefinitions="Auto, 10, *, 10, 20, 5, Auto, 5, Auto"
+        ColumnDefinitions="Auto, 15, *">
 
-    <Image Source="{Binding Conversation.Contact.DisplayPicture}"
-           MaxWidth="90"
-           HorizontalAlignment="Left"/>
+    <Border CornerRadius="5"
+            ClipToBounds="True"
+            Grid.RowSpan="3"
+            VerticalAlignment="Top">
+      <Image Source="{Binding Conversation.Contact.DisplayPicture}"
+             MaxHeight="100"
+             MaxWidth="100"/>
+    </Border>
+
+    <StackPanel Spacing="3"
+                Orientation="Horizontal"
+                Grid.Column="2"
+                Height="25">
+      <TextBlock Text="{Binding Conversation.Contact.DisplayName}"
+                 FontSize="20"
+                 FontWeight="ExtraBold"/>
+      <TextBlock Text="{Binding Conversation.Contact.Presence, StringFormat='({0})'}"
+                 VerticalAlignment="Bottom"/>
+    </StackPanel>
 
     <Button HorizontalAlignment="Right"
-            Command="{Binding BackCommand}">
+            Command="{Binding BackCommand}"
+            Grid.Column="2">
       <PathIcon Data="{StaticResource arrow_previous_regular}"/>
     </Button>
 
     <ScrollViewer Grid.Row="2"
+                  Grid.Column="2"
                   Name="scrollViewer">
-      <StackPanel Spacing="10">
+      <StackPanel>
         <ItemsControl ItemsSource="{Binding Conversation.MessageHistory}"
                       Background="Transparent">
 
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Grid RowDefinitions="10, Auto, 5, Auto"
+              <Grid RowDefinitions="Auto, 5, Auto, 10"
                     ColumnDefinitions="*, Auto">
                 <StackPanel Orientation="Horizontal"
                             Spacing="4"
-                            IsVisible="{Binding SenderDisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                            Grid.Row="1">
+                            IsVisible="{Binding SenderDisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                   <TextBlock Text="{Binding SenderDisplayName}"
                              Foreground="Gray"/>
                   <TextBlock Text="{Binding IsHistory, Converter={StaticResource userSaysConverter}}"
@@ -49,10 +72,10 @@
                 <TextBlock Text="{Binding Text}"
                            TextWrapping="Wrap"
                            Foreground="Gray"
-                           Grid.Row="3"/>
+                           Grid.Row="2"/>
                 <TextBlock Text="{Binding DateTime, StringFormat={}{0:dd MMM yyyy HH:mm}}"
                            Foreground="Gray"
-                           Grid.Row="3"
+                           Grid.Row="2"
                            Grid.Column="2"/>
               </Grid>
             </DataTemplate>
@@ -92,35 +115,42 @@
     </ScrollViewer>
 
     <TextBlock Grid.Row="4"
+               Grid.Column="2"
                Text="{Binding Conversation.Contact.DisplayName, StringFormat='{}{0} is writing...'}"
                IsVisible="{Binding Conversation.TypingUser}"/>
 
-    <TextBox Grid.Row="6"
-             Text="{Binding Message}"
-             TextWrapping="Wrap"
-             Height="75"
-             KeyDown="TextBox_KeyDown">
-      <i:Interaction.Behaviors>
-        <ia:EventTriggerBehavior EventName="TextChanged">
-          <InvokeCommandAction Command="{Binding TypingUserCommand}"/>
-        </ia:EventTriggerBehavior>
-      </i:Interaction.Behaviors>
-    </TextBox>
+    <Border CornerRadius="5"
+            ClipToBounds="True"
+            Grid.Row="6"
+            VerticalAlignment="Top">
+      <Image Source="{Binding Conversation.Profile.DisplayPicture}"
+             MaxHeight="100"
+             MaxWidth="100"/>
+    </Border>
 
-    <TextBlock Grid.Row="8"
-               Text="{Binding Conversation.Profile.DisplayName}"
-               FontWeight="ExtraBold"
-               FontSize="20"
-               HorizontalAlignment="Left"/>
+    <StackPanel HorizontalAlignment="Stretch"
+                Spacing="10"
+                Grid.Row="6"
+                Grid.Column="2">
+      <TextBox Text="{Binding Message}"
+               TextWrapping="Wrap"
+               Height="75"
+               KeyDown="TextBox_KeyDown">
+        <i:Interaction.Behaviors>
+          <ia:EventTriggerBehavior EventName="TextChanged">
+            <InvokeCommandAction Command="{Binding TypingUserCommand}"/>
+          </ia:EventTriggerBehavior>
+        </i:Interaction.Behaviors>
+      </TextBox>
 
-    <StackPanel Grid.Row="9"
-                HorizontalAlignment="Right"
-                Orientation="Horizontal"
-                Spacing="10">
-      <Button Command="{Binding NudgeCommand}">Send a Nudge</Button>
+      <StackPanel HorizontalAlignment="Right"
+                  Orientation="Horizontal"
+                  Spacing="10">
+        <Button Command="{Binding NudgeCommand}">Send a Nudge</Button>
 
-      <Button Command="{Binding SendCommand}"
-              Name="sendButton">Send</Button>
+        <Button Command="{Binding SendCommand}"
+                Name="sendButton">Send</Button>
+      </StackPanel>
     </StackPanel>
 
   </Grid>

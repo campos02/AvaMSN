@@ -2,15 +2,9 @@
 
 namespace AvaMSN.Models;
 
-public class ContactGroup
+public class ContactGroup(string name, ObservableCollection<Contact> contacts)
 {
-    public ObservableCollection<Contact> Contacts { get; set; } = new ObservableCollection<Contact>();
+    public ObservableCollection<Contact> Contacts { get; set; } = contacts;
 
-    public string Name { get; set; } = string.Empty;
-
-    public ContactGroup(string name, ObservableCollection<Contact> contacts) 
-    {
-        Contacts = contacts;
-        Name = name;
-    }
+    public string Name { get; set; } = name;
 }
