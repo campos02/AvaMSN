@@ -24,7 +24,6 @@ public partial class Switchboard : Connection
 
     private async Task HandleJOI()
     {
-        Contact.HasJoinedSession = true;
         await SendDisplayPictureInvite();
     }
 
@@ -230,6 +229,8 @@ public partial class Switchboard : Connection
             message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
             await SendAsync(message.Concat(messagePayload).ToArray());
         }
+
+        _ = ReceiveIncomingAsync();
     }
 
     private async Task HandleBYE()

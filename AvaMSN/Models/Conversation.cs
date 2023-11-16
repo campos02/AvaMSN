@@ -51,7 +51,7 @@ public class Conversation : ReactiveObject
 
         MessageHistory = new ObservableCollection<Message>(history.Skip(history.Count - 4));
 
-        DisplayPicture? displayPicture = Database.GetDisplayPicture(Contact.Email);
+        DisplayPicture? displayPicture = Database.GetContactDisplayPicture(Contact.Email);
         if (displayPicture != null)
         {
             using MemoryStream pictureStream = new MemoryStream(displayPicture.PictureData);

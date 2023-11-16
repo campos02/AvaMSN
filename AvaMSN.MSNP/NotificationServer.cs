@@ -248,7 +248,6 @@ public partial class NotificationServer : Connection
     {
         string blp = ContactList.Profile.BLP switch
         {
-            1 => "AL",
             2 => "BL",
             _ => "AL"
         };
@@ -264,12 +263,16 @@ public partial class NotificationServer : Connection
             // Receive BLP
             string response = await ReceiveStringAsync();
 
-            if (response.StartsWith("BLP")
-                && response.Split(" ")[1] == TransactionID.ToString()
+            if (response.Contains("BLP")
                 && response.Contains(blp))
             {
-                break;
+                string blpResponse = response[response.IndexOf("BLP")..];
+
+                if (blpResponse.Split(" ")[1] == TransactionID.ToString())
+                    break;
             }
+
+            await HandleIncoming(response);
         }
     }
 
@@ -292,12 +295,16 @@ public partial class NotificationServer : Connection
             // Receive ADL
             string response = await ReceiveStringAsync();
 
-            if (response.StartsWith("ADL")
-                && response.Split(" ")[1] == TransactionID.ToString()
+            if (response.Contains("ADL")
                 && response.Contains("OK"))
             {
-                break;
+                string adlResponse = response[response.IndexOf("ADL")..];
+
+                if (adlResponse.Split(" ")[1] == TransactionID.ToString())
+                    break;
             }
+
+            await HandleIncoming(response);
         }
     }
 
@@ -356,6 +363,8 @@ public partial class NotificationServer : Connection
             {
                 break;
             }
+
+            await HandleIncoming(response);
         }
     }
 
@@ -378,6 +387,8 @@ public partial class NotificationServer : Connection
             {
                 break;
             }
+
+            await HandleIncoming(response);
         }
     }
 
@@ -394,18 +405,13 @@ public partial class NotificationServer : Connection
             // Receive CHG
             string response = await ReceiveStringAsync();
 
-            if (response.StartsWith("CHG")
-                && response.Split(" ")[1] == TransactionID.ToString()
+            if (response.Contains("CHG")
                 && response.Contains(ContactList.Profile.Presence))
             {
-                string[] responses = response.Split("\r\n");
+                string chgResponse = response[response.IndexOf("CHG")..];
 
-                if (responses[1] != "")
-                {
-                    await HandleIncoming(Encoding.UTF8.GetBytes(responses[1]));
-                }
-
-                break;
+                if (chgResponse.Split(" ")[1] == TransactionID.ToString())
+                    break;
             }
         }
 

@@ -148,7 +148,8 @@ public class ContactListViewModel : ViewModelBase
             Database?.SaveDisplayPicture(new DisplayPicture()
             {
                 ContactEmail = Profile.Email,
-                PictureData = pictureStream.ToArray()
+                PictureData = pictureStream.ToArray(),
+                IsUserPicture = true
             });
 
             if (NotificationServer == null)

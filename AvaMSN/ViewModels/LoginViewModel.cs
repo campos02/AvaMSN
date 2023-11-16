@@ -20,9 +20,7 @@ public class LoginViewModel : ViewModelBase
     private bool rememberMe;
     private bool rememberPassword;
 
-    private Bitmap? displayPicture;
-
-    public NotificationServer NotificationServer { get; set; }
+    public NotificationServer? NotificationServer { get; set; }
 
     public bool RememberMe
     {
@@ -54,11 +52,7 @@ public class LoginViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref password, value);
     }
 
-    public Bitmap? DisplayPicture
-    {
-        get => displayPicture;
-        set => this.RaiseAndSetIfChanged(ref displayPicture, value);
-    }
+    public Models.Profile Profile { get; set; } = new Models.Profile();
 
     public Presence[] Statuses => ContactListData.Statuses;
     public Presence SelectedStatus { get; set; }
@@ -81,13 +75,7 @@ public class LoginViewModel : ViewModelBase
 
         SelectedStatus = Statuses[0];
 
-        SettingsManager manager = new SettingsManager();
-        NotificationServer = new NotificationServer(SettingsManager.Settings.Server)
-        {
-            Port = 1863
-        };
-
-        DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
+        Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
         GetUsers();
     }
 
@@ -123,7 +111,7 @@ public class LoginViewModel : ViewModelBase
                 RememberMe = false;
                 RememberPassword = false;
 
-                DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
+                Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
                 return;
 
             case "Options":
@@ -145,23 +133,30 @@ public class LoginViewModel : ViewModelBase
         if (user.BinarySecret != "")
             RememberPassword = true;
 
-        NotificationServer.Profile.PersonalMessage = user.PersonalMessage;
+        Profile.PersonalMessage = user.PersonalMessage;
 
-        DisplayPicture? picture = Database?.GetDisplayPicture(user.UserEmail);
+        DisplayPicture? picture = Database?.GetUserDisplayPicture(user.UserEmail);
         if (picture != null && picture.PictureData.Length > 0)
         {
             using MemoryStream pictureStream = new MemoryStream(picture.PictureData);
-            DisplayPicture = new Bitmap(pictureStream);
+            Profile.DisplayPicture = new Bitmap(pictureStream);
             pictureStream.Position = 0;
 
-            NotificationServer.Profile.DisplayPicture = pictureStream.ToArray();
+            Profile.DisplayPictureData = pictureStream.ToArray();
         }
     }
 
     public async Task Login()
     {
+        NotificationServer = new NotificationServer(SettingsManager.Settings.Server)
+        {
+            Port = 1863
+        };
+
         NotificationServer.Profile.Presence = SelectedStatus.ShortName;
         NotificationServer.Profile.Email = Email;
+        NotificationServer.Profile.PersonalMessage = Profile.PersonalMessage;
+        NotificationServer.Profile.DisplayPicture = Profile.DisplayPictureData ?? NotificationServer.Profile.DisplayPicture;
 
         await NotificationServer.SendVersion();
 
@@ -218,6 +213,6 @@ public class LoginViewModel : ViewModelBase
         Database?.DeleteUser(user);
         Database?.DeleteDisplayPictures(user.UserEmail);
         Users?.Remove(user);
-        DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
+        Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
     }
 }

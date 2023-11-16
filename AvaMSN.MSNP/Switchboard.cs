@@ -180,9 +180,6 @@ public partial class Switchboard : Connection
 
     public async Task SendDisplayPictureInvite()
     {
-        if (!Contact.HasJoinedSession)
-            throw new ContactException("The contact has not joined the session yet");
-
         ReceiveDisplayPicture displayPicture = new ReceiveDisplayPicture()
         {
             To = Contact.Email,
@@ -354,5 +351,7 @@ public partial class Switchboard : Connection
         // Send MSG and Bye
         message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
         await SendAsync(message.Concat(messagePayload).ToArray());
+
+        _ = ReceiveIncomingAsync();
     }
 }

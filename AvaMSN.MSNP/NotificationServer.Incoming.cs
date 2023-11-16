@@ -1,4 +1,5 @@
-﻿using AvaMSN.MSNP.XML.SerializableClasses;
+﻿using AvaMSN.MSNP.Exceptions;
+using AvaMSN.MSNP.XML.SerializableClasses;
 using System.Text;
 using System.Xml.Serialization;
 
@@ -17,26 +18,37 @@ public partial class NotificationServer : Connection
 
         await (command switch
         {
-            "ILN" => Task.Run(() => HandleILN(response)),
+            "ILN" => HandleILN(response),
             "NLN" => Task.Run(() => HandleNLN(response)),
             "FLN" => Task.Run(() => HandleFLN(response)),
-            "UBX" => Task.Run(() => HandleUBX(response)),
+            "UBX" => HandleUBX(response),
             "RNG" => HandleRNG(response),
             _ => Task.CompletedTask
         });
     }
 
-    private void HandleILN(string response)
+    private async Task HandleIncoming(string response)
+    {
+        string command = response.Split(" ")[0];
+
+        await (command switch
+        {
+            "ILN" => HandleILN(response),
+            "NLN" => Task.Run(() => HandleNLN(response)),
+            "FLN" => Task.Run(() => HandleFLN(response)),
+            "UBX" => HandleUBX(response),
+            "RNG" => HandleRNG(response),
+            _ => Task.CompletedTask
+        });
+    }
+
+    private async Task HandleILN(string response)
     {
         string[] parameters = response.Split(" ");
 
-        Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[3]);
-
-        if (contact == null)
-            return;
-
+        Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[3]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = parameters[2];
-        contact.DisplayName = parameters[5];
+        contact.DisplayName = Uri.UnescapeDataString(parameters[5]);
         contact.DisplayPictureObject = Uri.UnescapeDataString(parameters[7]);
 
         PresenceEventArgs eventArgs = new PresenceEventArgs()
@@ -46,18 +58,22 @@ public partial class NotificationServer : Connection
         };
 
         PresenceChanged?.Invoke(this, eventArgs);
+
+        string[] responses = response.Split("\r\n");
+        string command = response.Replace(responses[0] + "\r\n", "");
+
+        if (command != "")
+            await HandleIncoming(command);
     }
 
     private void HandleNLN(string response)
     {
         string[] parameters = response.Split(" ");
 
-        Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[2]);
-
-        if (contact == null)
-            return;
-
+        Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[2]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = parameters[1];
+        contact.DisplayName = Uri.UnescapeDataString(parameters[4]);
+        contact.DisplayPictureObject = Uri.UnescapeDataString(parameters[6]);
 
         PresenceEventArgs eventArgs = new PresenceEventArgs()
         {
@@ -72,11 +88,7 @@ public partial class NotificationServer : Connection
     {
         string[] parameters = response.Split(" ");
 
-        Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[1]);
-
-        if (contact == null)
-            return;
-
+        Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[1]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = string.Empty;
 
         PresenceEventArgs eventArgs = new PresenceEventArgs()
@@ -88,7 +100,7 @@ public partial class NotificationServer : Connection
         PresenceChanged?.Invoke(this, eventArgs);
     }
 
-    private void HandleUBX(string response)
+    private async Task HandleUBX(string response)
     {
         string[] responses = response.Split("\r\n");
         string[] parameters = responses[0].Split(" ");
@@ -108,7 +120,7 @@ public partial class NotificationServer : Connection
             Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[1]);
 
             if (contact == null || data == null)
-                return;
+                throw new ContactException("Contact does not exist");
 
             contact.PersonalMessage = data.PSM;
 
@@ -118,6 +130,10 @@ public partial class NotificationServer : Connection
                 PersonalMessage = contact.PersonalMessage
             });
         }
+
+        string commandAndPayload = response.Replace(responses[0] + "\r\n" + payload, "");
+        if (commandAndPayload != "")
+            await HandleIncoming(commandAndPayload);
     }
 
     private async Task HandleRNG(string response)
@@ -130,7 +146,7 @@ public partial class NotificationServer : Connection
         string sessionID = parameters[1];
         string authString = parameters[4];
         string email = parameters[5];
-        string displayName = parameters[6];
+        string displayName = Uri.UnescapeDataString(parameters[6]);
 
         Contact contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email) ?? new Contact()
         {
@@ -149,7 +165,6 @@ public partial class NotificationServer : Connection
         };
 
         await switchboard.SendANS(sessionID, authString);
-
         SwitchboardChanged?.Invoke(this, new SwitchboardEventArgs
         {
             Switchboard = switchboard

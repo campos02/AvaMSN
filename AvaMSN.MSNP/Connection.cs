@@ -128,7 +128,7 @@ public class Connection
     /// Send disconnection command
     /// </summary>
     /// <returns></returns>
-    public virtual async Task DisconnectAsync()
+    public async Task DisconnectAsync()
     {
         await SendAsync("OUT\r\n");
         Client!.Shutdown(SocketShutdown.Both);

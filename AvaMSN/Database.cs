@@ -33,7 +33,11 @@ public class Database
 
     public int SaveUser(User user)
     {
-        return connection.InsertOrReplace(user);
+        if (user.ID != 0)
+            return connection.Update(user);
+
+        else
+            return connection.Insert(user);
     }
 
     public int DeleteUser(User user)
@@ -83,9 +87,14 @@ public class Database
         }
     }
 
-    public DisplayPicture? GetDisplayPicture(string contactEmail)
+    public DisplayPicture? GetContactDisplayPicture(string contactEmail)
     {
-        return connection.Table<DisplayPicture>().LastOrDefault(picture => picture.ContactEmail == contactEmail);
+        return connection.Table<DisplayPicture>().LastOrDefault(picture => picture.ContactEmail == contactEmail && !picture.IsUserPicture);
+    }
+
+    public DisplayPicture? GetUserDisplayPicture(string contactEmail)
+    {
+        return connection.Table<DisplayPicture>().LastOrDefault(picture => picture.ContactEmail == contactEmail && picture.IsUserPicture);
     }
 
     public int SaveDisplayPicture(DisplayPicture picture)

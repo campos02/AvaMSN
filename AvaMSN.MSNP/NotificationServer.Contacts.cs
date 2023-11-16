@@ -1,5 +1,4 @@
 ﻿using AvaMSN.MSNP.Exceptions;
-using System.Text;
 
 namespace AvaMSN.MSNP;
 
@@ -46,8 +45,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Receive First ADL
-            byte[] responseBytes = await ReceiveAsync();
-            string response = Encoding.UTF8.GetString(responseBytes);
+            string response = await ReceiveStringAsync();
 
             if (response.StartsWith("ADL")
                 && response.Split(" ")[1] == (TransactionID - 2).ToString()
@@ -58,7 +56,7 @@ public partial class NotificationServer : Connection
 
             else
             {
-                await HandleIncoming(responseBytes);
+                await HandleIncoming(response);
             }
         }
 

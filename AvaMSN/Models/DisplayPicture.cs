@@ -9,4 +9,5 @@ public class DisplayPicture
 
     public string ContactEmail { get; set; } = string.Empty;
     public byte[] PictureData { get; set; } = [];
+    public bool IsUserPicture { get; set; }
 }

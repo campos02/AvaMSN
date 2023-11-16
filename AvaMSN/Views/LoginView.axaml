@@ -29,7 +29,7 @@
             ClipToBounds="True"
             HorizontalAlignment="Center"
             Grid.ColumnSpan="3">
-      <Image Source="{Binding DisplayPicture}"
+      <Image Source="{Binding Profile.DisplayPicture}"
              MaxHeight="110"/>
     </Border>
 

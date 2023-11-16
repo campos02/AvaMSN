@@ -81,8 +81,8 @@ public class MainViewModel : ViewModelBase
     {
         contactListPage.NotificationServer = loginPage.NotificationServer;
         contactListPage.Database = loginPage.Database;
-        contactListPage.PersonalMessage = contactListPage.NotificationServer.Profile.PersonalMessage;
-        contactListPage.Profile.DisplayPicture = loginPage.DisplayPicture;
+        contactListPage.PersonalMessage = contactListPage.NotificationServer!.Profile.PersonalMessage;
+        contactListPage.Profile.DisplayPicture = loginPage.Profile.DisplayPicture;
 
         contactListPage.ListData.GetProperties();
         contactListPage.NotificationServer.Disconnected += contactListPage.NotificationServer_Disconnected;

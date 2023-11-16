@@ -122,6 +122,7 @@ public class ContactList
 
                 contact.Birthdate = contactInfo.birthdate;
                 contact.ABLastChanged = addressBookContact.lastChange;
+                contact.Type = "Passport";
 
                 if (!Contacts.Contains(contact))
                     Contacts.Add(contact);
