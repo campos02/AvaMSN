@@ -31,7 +31,7 @@ public class ContactListViewModel : ViewModelBase
 
     public ContactListData ListData { get; set; } = new();
     public ObservableCollection<ContactGroup>? ContactGroups => ListData.ContactGroups;
-    public Presence[] Statuses => ContactListData.Statuses;
+    public static Presence[] Statuses => ContactListData.Statuses;
 
     public Contact? SelectedContact { get; set; }
     public Conversation? CurrentConversation { get; set; }
@@ -290,7 +290,6 @@ public class ContactListViewModel : ViewModelBase
 
             conversation.SubscribeToSwitchboardsEvents();
             conversation.NewMessage += Conversation_NewMessage;
-            conversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
         }
     }
 

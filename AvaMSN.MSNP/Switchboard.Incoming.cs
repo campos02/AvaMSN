@@ -36,8 +36,8 @@ public partial class Switchboard : Connection
 
         int length = Convert.ToInt32(parameters[3]);
 
-        response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
-        byte[] payload = new Span<byte>(response, 0, length).ToArray();
+        byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+        byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
         string payloadString = Encoding.UTF8.GetString(payload);
 
         string[] payloadParameters = payloadString.Split("\r\n");
@@ -90,6 +90,9 @@ public partial class Switchboard : Connection
                 await HandleP2PInvite(payload);
             }
         }
+
+        if (!displayPictureInviteSent)
+            await SendDisplayPictureInvite();
     }
 
     private async Task HandleP2PInvite(byte[] payload)
@@ -157,8 +160,8 @@ public partial class Switchboard : Connection
 
                 int length = Convert.ToInt32(parameters[3]);
 
-                response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
-                payload = new Span<byte>(response, 0, length).ToArray();
+                byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                 payloadString = Encoding.UTF8.GetString(payload);
 
                 string[] payloadParameters = payloadString.Split("\r\n");
@@ -200,8 +203,8 @@ public partial class Switchboard : Connection
 
                 int length = Convert.ToInt32(parameters[3]);
 
-                response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
-                payload = new Span<byte>(response, 0, length).ToArray();
+                byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                 payloadString = Encoding.UTF8.GetString(payload);
 
                 string[] payloadParameters = payloadString.Split("\r\n");

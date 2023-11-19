@@ -9,6 +9,7 @@ public partial class Switchboard : Connection
     public Profile Profile { get; set; } = new Profile();
     public Contact Contact { get; set; } = new Contact();
     public event EventHandler<DisplayPictureEventArgs>? DisplayPictureUpdated;
+    private bool displayPictureInviteSent;
 
     /// <summary>
     /// Do USR authentication steps
@@ -180,6 +181,11 @@ public partial class Switchboard : Connection
 
     public async Task SendDisplayPictureInvite()
     {
+        if (displayPictureInviteSent)
+            throw new CommandException("Display picture invite has already been sent");
+
+        displayPictureInviteSent = true;
+
         ReceiveDisplayPicture displayPicture = new ReceiveDisplayPicture()
         {
             To = Contact.Email,
@@ -188,7 +194,7 @@ public partial class Switchboard : Connection
 
         TransactionID++;
         byte[] messagePayload = displayPicture.InvitePayload(Contact.DisplayPictureObject);
-        BinaryHeader ackHeader = new BinaryHeader();
+        BinaryHeader ackHeader;
 
         // Send MSG and invitation
         byte[] message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
@@ -210,8 +216,8 @@ public partial class Switchboard : Connection
 
                 int length = Convert.ToInt32(parameters[3]);
 
-                response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
-                byte[] payload = new Span<byte>(response, 0, length).ToArray();
+                byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                 string payloadString = Encoding.UTF8.GetString(payload);
 
                 string[] payloadParameters = payloadString.Split("\r\n");
@@ -257,8 +263,8 @@ public partial class Switchboard : Connection
 
                 int length = Convert.ToInt32(parameters[3]);
 
-                response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
-                byte[] payload = new Span<byte>(response, 0, length).ToArray();
+                byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                 string payloadString = Encoding.UTF8.GetString(payload);
 
                 string[] payloadParameters = payloadString.Split("\r\n");
@@ -301,8 +307,8 @@ public partial class Switchboard : Connection
 
                 int length = Convert.ToInt32(parameters[3]);
 
-                response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
-                byte[] payload = new Span<byte>(response, 0, length).ToArray();
+                byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                 string payloadString = Encoding.UTF8.GetString(payload);
 
                 string[] payloadParameters = payloadString.Split("\r\n");
