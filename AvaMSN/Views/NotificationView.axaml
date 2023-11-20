@@ -7,12 +7,27 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
              x:Class="AvaMSN.Views.NotificationView"
              x:DataType="vm:NotificationViewModel">
+
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="BorderBrush">Gray</SolidColorBrush>
+          <SolidColorBrush x:Key="BackgroundBrush">LightGray</SolidColorBrush>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="BorderBrush">White</SolidColorBrush>
+          <SolidColorBrush x:Key="BackgroundBrush">#262626</SolidColorBrush>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
   
   <Border BorderThickness="2"
           CornerRadius="3"
-          BorderBrush="White"
-          Padding="10"
-          Background="#404245">
+          BorderBrush="{DynamicResource BorderBrush}"
+          Background="{DynamicResource BackgroundBrush}"
+          Padding="10">
     
     <Grid RowDefinitions="Auto, 5, Auto, 10, Auto">
       

@@ -26,11 +26,10 @@
     </Button>
 
     <Grid Grid.Row="2"
-          RowDefinitions="Auto, 3, Auto"
+          RowDefinitions="Auto, 3, Auto, 15, Auto"
           VerticalAlignment="Center">
 
-      <TextBlock Grid.ColumnSpan="3"
-                 HorizontalAlignment="Center"
+      <TextBlock HorizontalAlignment="Center"
                  FontSize="15">
         Server:
       </TextBlock>
@@ -38,13 +37,19 @@
       <TextBox Grid.Row="2"
                Text="{Binding Server}"/>
 
+      <CheckBox Grid.Row="4"
+                HorizontalAlignment="Center"
+                IsChecked="{Binding SaveMessages}">
+        Save messaging history
+      </CheckBox>
+
     </Grid>
 
     <StackPanel Grid.Row="4"
                 HorizontalAlignment="Center"
                 Spacing="5">
 
-      <TransitioningContentControl Content="{Binding SuccessText}"/>
+      <TransitioningContentControl Content="{Binding ResultText}"/>
 
       <Button Command="{Binding SaveCommand}"
               HorizontalAlignment="Center">Save</Button>

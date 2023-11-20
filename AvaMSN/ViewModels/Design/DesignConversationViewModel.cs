@@ -43,7 +43,9 @@ public class DesignConversationViewModel : ConversationViewModel
                     DateTime = DateTime.Now,
                     Text = "test message",
                 }
-            }
+            },
+
+            TypingUser = true
         };
     }
 }

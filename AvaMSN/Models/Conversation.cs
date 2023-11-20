@@ -13,14 +13,19 @@ namespace AvaMSN.Models;
 
 public class Conversation : ReactiveObject
 {
+    private bool typingUser;
+    private ObservableCollection<Message>? messageHistory;
+
     public Profile Profile { get; private set; }
     public Contact Contact { get; private set; }
     private Database? Database { get; set; }
 
     public ObservableCollection<Message> Messages { get; set; } = new ObservableCollection<Message>();
-    public ObservableCollection<Message>? MessageHistory { get; set; }
-
-    private bool typingUser;
+    public ObservableCollection<Message>? MessageHistory
+    {
+        get => messageHistory;
+        set => this.RaiseAndSetIfChanged(ref messageHistory, value);
+    }
 
     public bool TypingUser
     {
@@ -39,24 +44,17 @@ public class Conversation : ReactiveObject
         Profile = profile;
         Database = database;
 
-        if (Database == null)
-            return;
-
-        List<Message> history = Database.GetMessages(Contact.Email, Profile.Email);
-
-        foreach (Message message in history)
+        if (Database != null)
         {
-            message.IsHistory = true;
+            DisplayPicture? displayPicture = Database.GetContactDisplayPicture(Contact.Email);
+            if (displayPicture != null)
+            {
+                using MemoryStream pictureStream = new MemoryStream(displayPicture.PictureData);
+                Contact.DisplayPicture = new Bitmap(pictureStream);
+            }
         }
 
-        MessageHistory = new ObservableCollection<Message>(history.Skip(history.Count - 4));
-
-        DisplayPicture? displayPicture = Database.GetContactDisplayPicture(Contact.Email);
-        if (displayPicture != null)
-        {
-            using MemoryStream pictureStream = new MemoryStream(displayPicture.PictureData);
-            Contact.DisplayPicture = new Bitmap(pictureStream);
-        }
+        GetHistory(4);
     }
 
     public async Task SendTextMessage(string messageText)
@@ -66,7 +64,7 @@ public class Conversation : ReactiveObject
 
         try
         {
-            await Switchboard.SendMessage(new TextPlain()
+            await Switchboard.SendTextMessage(new TextPlain()
             {
                 FontName = "Segoe UI",
                 Content = messageText
@@ -85,7 +83,9 @@ public class Conversation : ReactiveObject
             };
 
             Messages.Add(message);
-            Database?.SaveMessage(message);
+            
+            if (SettingsManager.Settings.SaveMessagingHistory)
+                Database?.SaveMessage(message);
         }
         catch (Exception)
         {
@@ -120,12 +120,37 @@ public class Conversation : ReactiveObject
             };
 
             Messages.Add(message);
-            Database?.SaveMessage(message);
+
+            if (SettingsManager.Settings.SaveMessagingHistory)
+                Database?.SaveMessage(message);
         }
         catch (Exception)
         {
             Messages.Add(new Message { Text = "Failed to send one or more messages" });
         }
+    }
+
+    public void GetHistory(int count = 0)
+    {
+        if (Database == null)
+            return;
+
+        List<Message> history = Database.GetMessages(Contact.Email, Profile.Email);
+        foreach (Message message in history)
+        {
+            message.IsHistory = true;
+        }
+
+        if (count > 0)
+            history = history.Skip(history.Count - count).ToList();
+
+        MessageHistory = new ObservableCollection<Message>(history);
+    }
+
+    public void DeleteHistory()
+    {
+        Database?.DeleteMessages(Profile.Email, Contact.Email);
+        MessageHistory = null;
     }
 
     public async Task Disconnect()
@@ -193,7 +218,9 @@ public class Conversation : ReactiveObject
         }
 
         Messages.Add(message);
-        Database?.SaveMessage(message);
+
+        if (SettingsManager.Settings.SaveMessagingHistory)
+            Database?.SaveMessage(message);
 
         NewMessage?.Invoke(this, new NewMessageEventArgs()
         {

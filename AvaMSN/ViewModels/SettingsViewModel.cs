@@ -12,13 +12,14 @@ public class SettingsViewModel : ViewModelBase
 
     public SettingsManager SettingsManager { get; set; } = new SettingsManager();
     public string Server { get; set; } = string.Empty;
+    public bool SaveMessages { get; set; }
 
-    private string successText = string.Empty;
+    private string resultText = string.Empty;
 
-    public string SuccessText
+    public string ResultText
     {
-        get => successText;
-        set => this.RaiseAndSetIfChanged(ref successText, value);
+        get => resultText;
+        set => this.RaiseAndSetIfChanged(ref resultText, value);
     }
 
     public event EventHandler? BackButtonPressed;
@@ -28,6 +29,7 @@ public class SettingsViewModel : ViewModelBase
         SaveCommand = ReactiveCommand.CreateFromTask(Save);
         BackCommand = ReactiveCommand.Create(Back);
         Server = SettingsManager.Settings.Server;
+        SaveMessages = SettingsManager.Settings.SaveMessagingHistory;
     }
 
     /// <summary>
@@ -41,13 +43,20 @@ public class SettingsViewModel : ViewModelBase
             if (Server != string.Empty)
                 SettingsManager.Settings.Server = Server;
 
+            SettingsManager.Settings.SaveMessagingHistory = SaveMessages;
             SettingsManager.SaveToFile();
-        }
-        catch (Exception) { return; }
 
-        SuccessText = "Saved successfully! Restart the client to apply new settings";
-        await Task.Delay(2000);
-        SuccessText = string.Empty;
+            ResultText = "Saved successfully!";
+            await Task.Delay(2000);
+            ResultText = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            ResultText = ex.Message;
+            
+            await Task.Delay(2000);
+            ResultText = string.Empty;
+        }
     }
 
     private void Back()

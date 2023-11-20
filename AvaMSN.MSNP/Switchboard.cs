@@ -96,7 +96,7 @@ public partial class Switchboard : Connection
         _ = ReceiveIncomingAsync();
     }
 
-    public async Task SendMessage(TextPlain textMessage)
+    public async Task SendTextMessage(TextPlain textMessage)
     {
         if (string.IsNullOrEmpty(textMessage.Content))
             return;

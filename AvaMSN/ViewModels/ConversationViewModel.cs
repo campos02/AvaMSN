@@ -29,6 +29,9 @@ public class ConversationViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit> TypingUserCommand { get; }
     public ReactiveCommand<Unit, Unit> BackCommand { get; }
 
+    public ReactiveCommand<Unit, Unit> CompleteHistoryCommand { get; }
+    public ReactiveCommand<Unit, Unit> DeleteHistoryCommand { get; }
+
     public Database? Database { get; set; }
 
     public event EventHandler? BackButtonPressed;
@@ -39,6 +42,9 @@ public class ConversationViewModel : ViewModelBase
         NudgeCommand = ReactiveCommand.CreateFromTask(SendNudge);
         TypingUserCommand = ReactiveCommand.CreateFromTask(SendTypingUser);
         BackCommand = ReactiveCommand.Create(Back);
+
+        CompleteHistoryCommand = ReactiveCommand.Create(GetCompleteHistory);
+        DeleteHistoryCommand = ReactiveCommand.Create(DeleteHistory);
     }
 
     private async Task Send()
@@ -69,5 +75,15 @@ public class ConversationViewModel : ViewModelBase
     private void Back()
     {
         BackButtonPressed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void GetCompleteHistory()
+    {
+        Conversation?.GetHistory();
+    }
+
+    private void DeleteHistory()
+    {
+        Conversation?.DeleteHistory();
     }
 }
