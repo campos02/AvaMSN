@@ -5,8 +5,8 @@
              xmlns:models="clr-namespace:AvaMSN.Models;assembly=AvaMSN"
              xmlns:vm="clr-namespace:AvaMSN.ViewModels"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
-             x:Class="AvaMSN.Views.NotificationView"
-             x:DataType="vm:NotificationViewModel">
+             x:Class="AvaMSN.Views.ErrorView"
+             x:DataType="vm:ErrorViewModel">
 
   <UserControl.Resources>
     <ResourceDictionary>
@@ -29,24 +29,20 @@
           Background="{DynamicResource BackgroundBrush}"
           Padding="10">
     
-    <Grid RowDefinitions="Auto, 5, Auto, 10, Auto">
+    <Grid RowDefinitions="Auto, 10, Auto">
+
+      <ScrollViewer>
+        <TextBlock Text="{Binding Error}"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"/>
+      </ScrollViewer>
+
+      <Button Command="{Binding CloseCommand}"
+              HorizontalAlignment="Center"
+              Grid.Row="2">
+        Close
+      </Button>
       
-      <TextBlock Text="{Binding Message.SenderDisplayName, StringFormat='{}{0} says:'}"
-                 TextWrapping="Wrap"
-                 HorizontalAlignment="Center"/>
-      
-      <TextBlock Text="{Binding Message.Text}"
-                 TextWrapping="Wrap"
-                 HorizontalAlignment="Center"
-                 Grid.Row="2"/>
-      
-      <StackPanel Orientation="Horizontal"
-                  Spacing="5"
-                  HorizontalAlignment="Center"
-                  Grid.Row="4">
-        <Button Command="{Binding ReplyCommand}">Reply</Button>
-        <Button Command="{Binding DismissCommand}">Dismiss</Button>
-      </StackPanel>
     </Grid>
   </Border>
 </UserControl>

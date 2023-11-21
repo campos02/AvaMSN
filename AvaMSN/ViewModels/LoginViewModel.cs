@@ -176,15 +176,13 @@ public class LoginViewModel : ViewModelBase
             await NotificationServer.AuthenticateWithToken();
         }
 
-        await NotificationServer.SendContactList();
+        await NotificationServer.GetContactList();
+
         await NotificationServer.SendUUX();
         NotificationServer.GenerateMSNObject();
         await NotificationServer.SendCHG();
 
-        LoggedIn?.Invoke(this, EventArgs.Empty);
-
-        if (RememberMe)
-            user.UserEmail = Email;
+        LoggedIn?.Invoke(this, EventArgs.Empty);            
 
         if (RememberPassword)
         {
@@ -194,7 +192,10 @@ public class LoginViewModel : ViewModelBase
         }
 
         if (RememberMe)
+        {
+            user.UserEmail = Email;
             Database?.SaveUser(user);
+        }
 
         Email = string.Empty;
         Password = string.Empty;

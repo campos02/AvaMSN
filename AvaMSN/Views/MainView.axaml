@@ -15,7 +15,7 @@
   <Grid>
     <TransitioningContentControl Content="{Binding CurrentPage}"/>
 
-    <TransitioningContentControl Content="{Binding NotificationPage}"
+    <TransitioningContentControl Content="{Binding NotificationManager.NotificationPage}"
                                  VerticalAlignment="Bottom"
                                  HorizontalAlignment="Right"
                                  MaxWidth="400"
@@ -30,6 +30,16 @@
                      Duration="0:0:0.2"/>
         </CompositePageTransition>
       </TransitioningContentControl.PageTransition>
+    </TransitioningContentControl>
+
+    <TransitioningContentControl Content="{Binding NotificationManager.ErrorPage}"
+                                 VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Center"
+                                 MaxWidth="400"
+                                 MaxHeight="400"
+                                 ZIndex="1"
+                                 Margin="20">
+
     </TransitioningContentControl>
   </Grid>
 </UserControl>

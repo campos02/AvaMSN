@@ -35,8 +35,8 @@ public class Conversation : ReactiveObject
 
     public Switchboard? Switchboard { get; set; }
 
-    public event EventHandler<NewMessageEventArgs>? NewMessage;
     public event EventHandler? DisplayPictureUpdated;
+    public event EventHandler<NewMessageEventArgs>? NewMessage;
 
     public Conversation(Contact contact, Profile profile, Database? database = null)
     {
@@ -161,7 +161,7 @@ public class Conversation : ReactiveObject
         await Switchboard.DisconnectAsync();
     }
 
-    public void SubscribeToSwitchboardsEvents()
+    public void SubscribeToEvents()
     {
         if (Switchboard == null)
             return;
@@ -184,7 +184,7 @@ public class Conversation : ReactiveObject
             return;
 
         Switchboard = e.Switchboard;
-        SubscribeToSwitchboardsEvents();
+        SubscribeToEvents();
     }
 
     private async void Switchboard_MessageReceived(object? sender, MessageEventArgs e)
@@ -224,7 +224,7 @@ public class Conversation : ReactiveObject
 
         NewMessage?.Invoke(this, new NewMessageEventArgs()
         {
-            Sender = Contact,
+            Contact = Contact,
             Message = message
         });
     }

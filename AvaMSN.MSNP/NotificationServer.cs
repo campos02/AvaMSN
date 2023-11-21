@@ -48,7 +48,7 @@ public partial class NotificationServer : Connection
         await SendCVR();
     }
 
-    public async Task SendContactList()
+    public async Task GetContactList()
     {
         await ContactList.FindMembership();
         await ContactList.ABFindAll();
@@ -145,7 +145,14 @@ public partial class NotificationServer : Connection
                 break;
         }
 
-        await SSO.RstRequest(ContactList.Profile.Email, password);
+        try
+        {
+            await SSO.RstRequest(ContactList.Profile.Email, password);
+        }
+        catch (NullReferenceException)
+        {
+            throw new AuthException("Could not get authentication token. Make sure email and password are correct.");
+        }
 
         string nonce = USR.Split(" ")[5];
         nonce = nonce.Remove(nonce.IndexOf("\r\n"));
@@ -171,7 +178,7 @@ public partial class NotificationServer : Connection
             }
 
             else if (response.Contains("911"))
-                throw new AuthException("Authentication failed");
+                throw new AuthException("Authentication failed. Make sure email and password are correct.");
         }
     }
 
@@ -230,7 +237,7 @@ public partial class NotificationServer : Connection
             }
 
             else if (response.Contains("911"))
-                throw new AuthException("Authentication failed");
+                throw new AuthException("Authentication failed. Make sure email and password are correct.");
         }
     }
 

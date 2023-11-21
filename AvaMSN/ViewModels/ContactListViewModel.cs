@@ -11,6 +11,7 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using System.IO;
 using Avalonia;
+using AvaMSN.MSNP.Exceptions;
 
 namespace AvaMSN.ViewModels;
 
@@ -66,7 +67,6 @@ public class ContactListViewModel : ViewModelBase
 
     public event EventHandler? Disconnected;
     public event EventHandler? OptionsButtonPressed;
-
     public event EventHandler? ChatStarted;
     public event EventHandler<NewMessageEventArgs>? NewMessage;
 
@@ -84,6 +84,9 @@ public class ContactListViewModel : ViewModelBase
         RemoveContactCommand = ReactiveCommand.CreateFromTask(RemoveContact);
         BlockContactCommand = ReactiveCommand.CreateFromTask(BlockContact);
         UnblockContactCommand = ReactiveCommand.CreateFromTask(UnblockContact);
+
+        if (NotificationManager != null)
+            NotificationManager.ReplyTapped += NotificationManager_ReplyTapped;
     }
 
     private async Task ChangePresence(string presence)
@@ -230,7 +233,7 @@ public class ContactListViewModel : ViewModelBase
             Presence = SelectedContact.Presence
         };
 
-        CurrentConversation = new Conversation(SelectedContact, Profile, Database!);
+        CurrentConversation = new Conversation(SelectedContact, Profile, Database);
 
         if (SelectedContact.Presence != PresenceStatus.GetFullName(PresenceStatus.Offline))
         {
@@ -241,8 +244,8 @@ public class ContactListViewModel : ViewModelBase
             else
                 CurrentConversation.Switchboard = switchboard;
 
-            CurrentConversation.SubscribeToSwitchboardsEvents();
             CurrentConversation.NewMessage += Conversation_NewMessage;
+            CurrentConversation.SubscribeToEvents();
             CurrentConversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
         }
 
@@ -262,6 +265,12 @@ public class ContactListViewModel : ViewModelBase
             return;
 
         await NotificationServer.DisconnectAsync();
+    }
+
+    private async void NotificationManager_ReplyTapped(object? sender, EventArgs e)
+    {
+        SelectedContact = NotificationManager?.NotificationPage?.Sender;
+        await Chat();
     }
 
     public void NotificationServer_SwitchboardChanged(object? sender, MSNP.SwitchboardEventArgs e)
@@ -288,9 +297,14 @@ public class ContactListViewModel : ViewModelBase
                 Switchboard = e.Switchboard
             };
 
-            conversation.SubscribeToSwitchboardsEvents();
             conversation.NewMessage += Conversation_NewMessage;
+            conversation.SubscribeToEvents();
         }
+    }
+
+    private void Conversation_NewMessage(object? sender, NewMessageEventArgs e)
+    {
+        NewMessage?.Invoke(sender, e);
     }
 
     public void NotificationServer_Disconnected(object? sender, EventArgs e)
@@ -302,7 +316,6 @@ public class ContactListViewModel : ViewModelBase
             if (NotificationServer != null)
                 NotificationServer.SwitchboardChanged -= CurrentConversation!.NotificationServer_SwitchboardChanged;
 
-            CurrentConversation.NewMessage -= Conversation_NewMessage;
             CurrentConversation.DisplayPictureUpdated -= Conversation_DisplayPictureUpdated;
         }
 
@@ -312,11 +325,7 @@ public class ContactListViewModel : ViewModelBase
         ListData = new();
 
         Disconnected?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void Conversation_NewMessage(object? sender, NewMessageEventArgs e)
-    {
-        NewMessage?.Invoke(this, e);
+        throw new ConnectionException("Lost connection to the server.");
     }
 
     private void Conversation_DisplayPictureUpdated(object? sender, EventArgs e)
