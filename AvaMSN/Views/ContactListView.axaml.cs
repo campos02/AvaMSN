@@ -19,6 +19,6 @@ public partial class ContactListView : UserControl
     {
         TopLevel? topLevel = TopLevel.GetTopLevel(this);
 
-        await (DataContext as ContactListViewModel).ChangeDisplayPicture(topLevel!);
+        await (DataContext as ContactListViewModel)!.ChangeDisplayPicture(topLevel!);
     }
 }

@@ -417,6 +417,12 @@ public partial class NotificationServer : Connection
             {
                 string chgResponse = response[response.IndexOf("CHG")..];
 
+                string[] responses = response.Split("\r\n");
+                string command = response.Replace(responses[0] + "\r\n", "");
+
+                if (command != "")
+                    await HandleIncoming(command);
+
                 if (chgResponse.Split(" ")[1] == TransactionID.ToString())
                     break;
             }
