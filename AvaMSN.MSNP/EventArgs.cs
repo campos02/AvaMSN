@@ -1,5 +1,10 @@
 ﻿namespace AvaMSN.MSNP;
 
+public class DisconnectedEventArgs : EventArgs
+{
+    public bool Requested { get; set; }
+}
+
 public class ContactEventArgs : EventArgs
 {
     public string Email { get; set; } = string.Empty;

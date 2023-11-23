@@ -309,7 +309,7 @@ public class ContactListViewModel : ViewModelBase
         NewMessage?.Invoke(sender, e);
     }
 
-    public void NotificationServer_Disconnected(object? sender, EventArgs e)
+    public void NotificationServer_Disconnected(object? sender, MSNP.DisconnectedEventArgs e)
     {
         if (CurrentConversation != null)
         {
@@ -327,7 +327,9 @@ public class ContactListViewModel : ViewModelBase
         ListData = new();
 
         Disconnected?.Invoke(this, EventArgs.Empty);
-        throw new ConnectionException("Lost connection to the server.");
+        
+        if (!e.Requested)
+            throw new ConnectionException("Lost connection to the server.");
     }
 
     private void Conversation_DisplayPictureUpdated(object? sender, EventArgs e)

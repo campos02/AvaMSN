@@ -12,7 +12,7 @@ public class Connection
     public int TransactionID { get; protected set; }
     public bool Connected { get; private set; }
 
-    public event EventHandler? Disconnected;
+    public event EventHandler<DisconnectedEventArgs>? Disconnected;
 
     public CancellationTokenSource ReceiveSource { get; set; } = new CancellationTokenSource();
 
@@ -125,7 +125,7 @@ public class Connection
     }
 
     /// <summary>
-    /// Send disconnection command
+    /// Send disconnection command and invoke Disconnected event
     /// </summary>
     /// <returns></returns>
     public async Task DisconnectAsync()
@@ -135,6 +135,9 @@ public class Connection
         Client.Dispose();
         Connected = false;
 
-        Disconnected?.Invoke(this, new EventArgs());
+        Disconnected?.Invoke(this, new DisconnectedEventArgs()
+        {
+            Requested = true
+        });
     }
 }
