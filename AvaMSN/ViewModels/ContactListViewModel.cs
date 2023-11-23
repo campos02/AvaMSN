@@ -219,6 +219,8 @@ public class ContactListViewModel : ViewModelBase
         if (SelectedContact == null || NotificationServer == null)
             return;
 
+        SelectedContact.NewMessages = false;
+
         if (SelectedContact == CurrentConversation?.Contact)
         {
             ChatStarted?.Invoke(this, EventArgs.Empty);

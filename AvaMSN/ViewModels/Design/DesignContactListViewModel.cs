@@ -23,7 +23,8 @@ public class DesignContactListViewModel : ContactListViewModel
                     new Contact()
                     {
                         DisplayName = "Available Contact",
-                        Presence = PresenceStatus.GetFullName(PresenceStatus.Available)
+                        Presence = PresenceStatus.GetFullName(PresenceStatus.Available),
+                        NewMessages = true
                     }
                 }),
 

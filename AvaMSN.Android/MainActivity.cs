@@ -8,7 +8,7 @@ using Avalonia.ReactiveUI;
 namespace AvaMSN.Android;
 
 [Activity(
-    Label = "AvaMSN.Android",
+    Label = "AvaMSN",
     Theme = "@style/MyTheme.NoActionBar",
     Icon = "@drawable/icon",
     MainLauncher = true,

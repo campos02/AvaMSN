@@ -43,6 +43,7 @@ public class MainViewModel : ViewModelBase
 
         else if (NotificationManager != null)
         {
+            e!.Contact!.NewMessages = true;
             await NotificationManager.ShowNotification(e?.Contact, e?.Message);
         }
     }
