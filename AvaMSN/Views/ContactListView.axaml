@@ -223,7 +223,7 @@
                       Spacing="3">
             <Grid>
               <PathIcon Data="{StaticResource person_regular}"
-                        Foreground="{Binding Color}"/>
+                        Foreground="{Binding PresenceColor}"/>
               <PathIcon Data="{StaticResource prohibited_regular}"
                         Foreground="Red"
                         IsVisible="{Binding Blocked}"/>

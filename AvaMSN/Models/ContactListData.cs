@@ -1,5 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using AvaMSN.MSNP;
 using AvaMSN.MSNP.PresenceStatus;
 
@@ -77,7 +80,7 @@ public class ContactListData
                     Email = contact.Email,
                     PersonalMessage = contact.PersonalMessage,
                     Presence = PresenceStatus.GetFullName(contact.Presence),
-                    Color = GetStatusColor(contact.Presence)
+                    PresenceColor = GetStatusColor(contact.Presence)
                 });
             }
 
@@ -89,7 +92,7 @@ public class ContactListData
                     Email = contact.Email,
                     PersonalMessage = contact.PersonalMessage,
                     Presence = PresenceStatus.GetFullName(contact.Presence),
-                    Color = GetStatusColor(contact.Presence)
+                    PresenceColor = GetStatusColor(contact.Presence)
                 });
             }
         }
@@ -156,7 +159,10 @@ public class ContactListData
             if (contact != null)
             {
                 contact.Presence = PresenceStatus.GetFullName(e.Presence);
-                contact.Color = GetStatusColor(e.Presence);
+                contact.PresenceColor = GetStatusColor(e.Presence);
+
+                if (!e.HasDisplayPicture)
+                    contact.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
             }
         }
     }

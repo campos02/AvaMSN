@@ -148,6 +148,7 @@ public class ContactListViewModel : ViewModelBase
             using MemoryStream pictureStream = new MemoryStream();
             Profile.DisplayPicture.Save(pictureStream);
 
+            Database?.DeleteUserDisplayPictures(Profile.Email);
             Database?.SaveDisplayPicture(new DisplayPicture()
             {
                 ContactEmail = Profile.Email,
@@ -169,7 +170,8 @@ public class ContactListViewModel : ViewModelBase
         ListData.ContactGroups?[(int)ContactListData.DefaultGroupIndex.Offline].Contacts.Add(new Contact
         {
             Email = NewContactEmail,
-            DisplayName = NewContactDisplayName
+            DisplayName = NewContactDisplayName,
+            Presence = PresenceStatus.GetFullName(PresenceStatus.Offline)
         });
 
         if (NotificationServer == null)
@@ -344,7 +346,7 @@ public class ContactListViewModel : ViewModelBase
             Contact? contact = group.Contacts.FirstOrDefault(contact => contact.Email == conversation?.Contact.Email);
 
             if (contact != null)
-                contact.DisplayPicture = conversation?.Contact.DisplayPicture;
+                contact.DisplayPicture = conversation?.Contact.DisplayPicture!;
         }
     }
 }

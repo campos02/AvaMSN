@@ -49,12 +49,39 @@ public partial class NotificationServer : Connection
         Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[3]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = parameters[2];
         contact.DisplayName = Uri.UnescapeDataString(parameters[5]);
-        contact.DisplayPictureObject = Uri.UnescapeDataString(parameters[7]);
+        
+        try
+        {
+            contact.DisplayPictureObject = Uri.UnescapeDataString(parameters[7]);
+            contact.DisplayPictureObject = contact.DisplayPictureObject.Remove(contact.DisplayPictureObject.LastIndexOf("/>") + "/>".Length);
+        }
+        catch (IndexOutOfRangeException)
+        {
+            contact.DisplayPictureObject = null;
+        }
+
+        bool hasDisplayPicture = false;
+        XmlSerializer serializer = new XmlSerializer(typeof(msnobj));
+
+        if (contact.DisplayPictureObject != null)
+        {
+            using (StringReader reader = new StringReader(contact.DisplayPictureObject))
+            {
+                msnobj? msnobj = (msnobj?)serializer.Deserialize(reader);
+
+                if (msnobj != null)
+                {
+                    if (msnobj.Size > 0)
+                        hasDisplayPicture = true;
+                }
+            }
+        }
 
         PresenceEventArgs eventArgs = new PresenceEventArgs()
         {
             Email = contact.Email,
-            Presence = contact.Presence
+            Presence = contact.Presence,
+            HasDisplayPicture = hasDisplayPicture
         };
 
         PresenceChanged?.Invoke(this, eventArgs);
@@ -73,12 +100,38 @@ public partial class NotificationServer : Connection
         Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[2]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = parameters[1];
         contact.DisplayName = Uri.UnescapeDataString(parameters[4]);
-        contact.DisplayPictureObject = Uri.UnescapeDataString(parameters[6]);
+
+        try
+        {
+            contact.DisplayPictureObject = Uri.UnescapeDataString(parameters[6]);
+        }
+        catch (IndexOutOfRangeException)
+        {
+            contact.DisplayPictureObject = null;
+        }
+
+        bool hasDisplayPicture = false;
+        XmlSerializer serializer = new XmlSerializer(typeof(msnobj));
+
+        if (contact.DisplayPictureObject != null)
+        {
+            using (StringReader reader = new StringReader(contact.DisplayPictureObject))
+            {
+                msnobj? msnobj = (msnobj?)serializer.Deserialize(reader);
+
+                if (msnobj != null)
+                {
+                    if (msnobj.Size > 0)
+                        hasDisplayPicture = true;
+                }
+            }
+        }
 
         PresenceEventArgs eventArgs = new PresenceEventArgs()
         {
             Email = contact.Email,
-            Presence = contact.Presence
+            Presence = contact.Presence,
+            HasDisplayPicture = hasDisplayPicture
         };
 
         PresenceChanged?.Invoke(this, eventArgs);

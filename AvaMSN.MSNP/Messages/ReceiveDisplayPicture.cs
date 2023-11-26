@@ -46,6 +46,7 @@ public class ReceiveDisplayPicture
 
         string bodyText = "EUF-GUID: {A4268EEC-FEC5-49E5-95C3-F126696BDBF6}\r\n" +
                           $"SessionID: {SessionID}\r\n" +
+                          "SChannelState: 0\r\n" +
                           "AppID: 1\r\n" +
                           $"Context: {Convert.ToBase64String(Encoding.UTF8.GetBytes(MSNObject))}\r\n\r\n";
 

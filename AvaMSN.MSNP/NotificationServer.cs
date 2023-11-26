@@ -378,9 +378,10 @@ public partial class NotificationServer : Connection
     public async Task SendPRP()
     {
         TransactionID++;
+        string encodedDisplayName = Uri.EscapeDataString(ContactList.Profile.DisplayName);
 
         // Send PRP
-        string message = $"PRP {TransactionID} MFN {ContactList.Profile.DisplayName}\r\n";
+        string message = $"PRP {TransactionID} MFN {encodedDisplayName}\r\n";
         await SendAsync(message);
 
         while (true)
@@ -390,7 +391,7 @@ public partial class NotificationServer : Connection
 
             if (response.StartsWith("PRP")
                 && response.Split(" ")[1] == TransactionID.ToString()
-                && response.Contains(ContactList.Profile.DisplayName))
+                && response.Contains(encodedDisplayName))
             {
                 break;
             }
@@ -404,7 +405,13 @@ public partial class NotificationServer : Connection
         TransactionID++;
 
         // Send CHG
-        string message = $"CHG {TransactionID} {ContactList.Profile.Presence} {ClientCapabilities} {Uri.EscapeDataString(ContactList.Profile.DisplayPictureObject)}\r\n";
+        string message = $"CHG {TransactionID} {Profile.Presence} {ClientCapabilities}";
+
+        if (Profile.DisplayPictureObject != null)
+            message += $" {Uri.EscapeDataString(Profile.DisplayPictureObject)}\r\n";
+        else
+            message += "\r\n";
+
         await SendAsync(message);
 
         while (true)

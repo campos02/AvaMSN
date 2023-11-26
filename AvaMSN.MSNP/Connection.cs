@@ -108,19 +108,7 @@ public class Connection
             var message = "PNG\r\n";
             await SendAsync(message);
 
-            string response;
-            try
-            {
-                // Receive version
-                response = await ReceiveStringAsync();
-            }
-            catch (OperationCanceledException) { break; }
-
-            if (response.StartsWith("QNG"))
-            {
-                Connected = true;
-                break;
-            }
+            await Task.Delay(30000);
         }
     }
 

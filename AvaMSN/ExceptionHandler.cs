@@ -13,11 +13,19 @@ public class ExceptionHandler : IObserver<Exception>
 
     public void OnError(Exception error)
     {
+#if DEBUG
+        NotificationManager.ShowError(error.ToString());
+#else
         NotificationManager.ShowError(error.Message);
+#endif
     }
 
     public void OnNext(Exception exception)
     {
+#if DEBUG
+        NotificationManager.ShowError(exception.ToString());
+#else
         NotificationManager.ShowError(exception.Message);
+#endif
     }
 }

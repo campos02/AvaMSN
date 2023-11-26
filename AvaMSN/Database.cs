@@ -107,9 +107,19 @@ public class Database
         return connection.Delete(picture);
     }
 
-    public void DeleteDisplayPictures(string contactEmail)
+    public void DeleteContactDisplayPictures(string contactEmail)
     {
-        List<DisplayPicture> pictures = connection.Table<DisplayPicture>().Where(picture => picture.ContactEmail == contactEmail).ToList();
+        List<DisplayPicture> pictures = connection.Table<DisplayPicture>().Where(picture => picture.ContactEmail == contactEmail && !picture.IsUserPicture).ToList();
+
+        foreach (DisplayPicture picture in pictures)
+        {
+            DeleteDisplayPicture(picture);
+        }
+    }
+
+    public void DeleteUserDisplayPictures(string userEmail)
+    {
+        List<DisplayPicture> pictures = connection.Table<DisplayPicture>().Where(picture => picture.ContactEmail == userEmail && picture.IsUserPicture).ToList();
 
         foreach (DisplayPicture picture in pictures)
         {

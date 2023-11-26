@@ -186,6 +186,9 @@ public partial class Switchboard : Connection
 
         displayPictureInviteSent = true;
 
+        if (Contact.DisplayPictureObject == null)
+            return;
+
         ReceiveDisplayPicture displayPicture = new ReceiveDisplayPicture()
         {
             To = Contact.Email,
@@ -193,8 +196,8 @@ public partial class Switchboard : Connection
         };
 
         TransactionID++;
-        byte[] messagePayload = displayPicture.InvitePayload(Contact.DisplayPictureObject);
-        BinaryHeader ackHeader;
+        byte[] messagePayload = displayPicture.InvitePayload(Contact.DisplayPictureObject!);
+        BinaryHeader binaryHeader;
 
         // Send MSG and invitation
         byte[] message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
@@ -206,12 +209,12 @@ public partial class Switchboard : Connection
             byte[] response = await ReceiveAsync();
             string responseString = Encoding.UTF8.GetString(response);
 
+            string[] responses = responseString.Split("\r\n");
+            if (responses[0].Contains("ACK"))
+                responses = responses.Skip(1).ToArray();
+
             if (responseString.Contains("MSG"))
             {
-                string[] responses = responseString.Split("\r\n");
-                if (responses[0].Contains("ACK"))
-                    responses = responses.Skip(1).ToArray();
-
                 string[] parameters = responses[0].Split(" ");
 
                 int length = Convert.ToInt32(parameters[3]);
@@ -229,19 +232,25 @@ public partial class Switchboard : Connection
 
                     if (messageHeaders.Split("\r\n")[2].Contains(Profile.Email) && payloadHeaderParameters[0].Contains("200 OK"))
                     {
-                        byte[] binaryHeader = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).Take(48).ToArray();
-                        ackHeader = new BinaryHeader(binaryHeader);
+                        byte[] header = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).Take(48).ToArray();
+                        binaryHeader = new BinaryHeader(header);
 
                         break;
                     }
                 }
+                else
+                {
+                    await HandleIncoming(response);
+                }
             }
-
-            await HandleIncoming(response);
+            else
+            {
+                await HandleIncoming(response);
+            }
         }
 
         TransactionID++;
-        messagePayload = displayPicture.AcknowledgePayload(ackHeader);
+        messagePayload = displayPicture.AcknowledgePayload(binaryHeader);
 
         // Send MSG and acknowledgement
         message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
@@ -249,16 +258,16 @@ public partial class Switchboard : Connection
 
         while (true)
         {
-            // Receive MSG with acknowledgement
+            // Receive MSG with data preparation
             byte[] response = await ReceiveAsync();
             string responseString = Encoding.UTF8.GetString(response);
 
+            string[] responses = responseString.Split("\r\n");
+            if (responses[0].Contains("ACK"))
+                responses = responses.Skip(1).ToArray();
+
             if (responseString.Contains("MSG"))
             {
-                string[] responses = responseString.Split("\r\n");
-                if (responses[0].Contains("ACK"))
-                    responses = responses.Skip(1).ToArray();
-
                 string[] parameters = responses[0].Split(" ");
 
                 int length = Convert.ToInt32(parameters[3]);
@@ -275,43 +284,68 @@ public partial class Switchboard : Connection
 
                     if (messageHeaders.Split("\r\n")[2].Contains(Profile.Email))
                     {
-                        byte[] binaryHeader = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).Take(48).ToArray();
-                        ackHeader = new BinaryHeader(binaryHeader);
+                        byte[] header = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).Take(48).ToArray();
+                        binaryHeader = new BinaryHeader(header);
 
                         break;
                     }
                 }
+                else
+                {
+                    await HandleIncoming(response);
+                }
             }
-
-            await HandleIncoming(response);
+            else
+            {
+                await HandleIncoming(response);
+            }
         }
 
         TransactionID++;
-        messagePayload = displayPicture.AcknowledgePayload(ackHeader);
+        messagePayload = displayPicture.AcknowledgePayload(binaryHeader);
 
         // Send MSG and acknowledgement
         message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
         await SendAsync(message.Concat(messagePayload).ToArray());
 
+        byte[] dataResponse = Array.Empty<byte>();
         byte[] picture = Array.Empty<byte>();
         while (true)
-        {
-            // Receive MSG with data
-            byte[] response = await ReceiveAsync();
-            string responseString = Encoding.UTF8.GetString(response);
-
-            if (responseString.StartsWith("MSG"))
+        {   
+            if (dataResponse.Length == 0)
             {
+                // Receive MSG with data
+                dataResponse = await ReceiveAsync();
+            }
+
+            string responseString = Encoding.UTF8.GetString(dataResponse);
+
+            if (responseString.Contains("MSG"))
+            {
+                if (!responseString.StartsWith("MSG"))
+                {
+                    int msgIndex = IndexOf(dataResponse, Encoding.UTF8.GetBytes("MSG"));
+                    picture = picture.Concat(dataResponse.Take(msgIndex).ToArray()).ToArray();
+                    dataResponse = dataResponse.Skip(msgIndex).ToArray();
+                    responseString = Encoding.UTF8.GetString(dataResponse);
+                }
+
                 string[] responses = responseString.Split("\r\n");
                 string[] parameters = responses[0].Split(" ");
 
                 int length = Convert.ToInt32(parameters[3]);
 
-                byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                if (length > dataResponse.Length)
+                {
+                    dataResponse = dataResponse.Concat(await ReceiveAsync()).ToArray();
+                }
+
+                byte[] payloadResponse = dataResponse.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
                 byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                 string payloadString = Encoding.UTF8.GetString(payload);
-
                 string[] payloadParameters = payloadString.Split("\r\n");
+
+                dataResponse = payloadResponse.Skip(length).ToArray();
 
                 if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                 {
@@ -320,28 +354,30 @@ public partial class Switchboard : Connection
                     if (messageHeaders.Split("\r\n")[2].Contains(Profile.Email))
                     {
                         byte[] binaryPayload = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).ToArray();
-                        byte[] binaryHeader = binaryPayload.Take(48).ToArray();
+                        byte[] header = binaryPayload.Take(48).ToArray();
                         binaryPayload = binaryPayload.Skip(48).ToArray();
 
-                        ackHeader = new BinaryHeader(binaryHeader);
-
-                        if (picture.Length == 0)
-                        {
-                            picture = new byte[ackHeader.DataSize];
-                        }
-
+                        binaryHeader = new BinaryHeader(header);
                         binaryPayload = binaryPayload[..^4];
-                        Buffer.BlockCopy(binaryPayload, 0, picture, (int)ackHeader.DataOffset, binaryPayload.Length);
+                        picture = picture.Concat(binaryPayload).ToArray();
 
-                        if (ackHeader.DataSize - ackHeader.DataOffset == 0)
+                        if (binaryHeader.DataOffset + binaryHeader.Length == binaryHeader.DataSize)
                         {
                             break;
                         }
                     }
+                    else
+                    {
+                        await HandleIncoming(dataResponse);
+                        dataResponse = Array.Empty<byte>();
+                    }
                 }
             }
-
-            await HandleIncoming(response);
+            else
+            {
+                await HandleIncoming(dataResponse);
+                dataResponse = Array.Empty<byte>();
+            }
         }
 
         Contact.DisplayPicture = picture;
@@ -359,5 +395,19 @@ public partial class Switchboard : Connection
         await SendAsync(message.Concat(messagePayload).ToArray());
 
         _ = ReceiveIncomingAsync();
+    }
+
+    /// <summary>
+    /// Returns the first index of a subarray inside an array
+    /// </summary>
+    private static int IndexOf(byte[] array, byte[] subArray)
+    {
+        for (int i = 0; i < array.Length; i++)
+        {
+            if (array.Skip(i).Take(subArray.Length).SequenceEqual(subArray))
+                return i;
+        }
+
+        return -1;
     }
 }

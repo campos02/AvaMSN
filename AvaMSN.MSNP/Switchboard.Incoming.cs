@@ -85,9 +85,17 @@ public partial class Switchboard : Connection
 
         if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
         {
-            if (payloadParameters[3].Contains("INVITE") || payloadParameters[5].Contains("INVITE"))
+            if (payloadParameters[4].Contains("INVITE"))
             {
                 await HandleP2PInvite(payload);
+            }
+
+            if (payloadParameters.Length > 5)
+            {
+                if (payloadParameters[5].Contains("INVITE"))
+                {
+                    await HandleP2PInvite(payload);
+                }
             }
         }
 
@@ -100,8 +108,8 @@ public partial class Switchboard : Connection
         string payloadString = Encoding.UTF8.GetString(payload);
         string messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
 
-        byte[] binaryHeader = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).Take(48).ToArray();
-        BinaryHeader ackHeader = new BinaryHeader(binaryHeader);
+        byte[] header = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).Take(48).ToArray();
+        BinaryHeader binaryHeader = new BinaryHeader(header);
 
         string[] payloadHeaderParameters = payloadString.Split("\r\n\r\n")[1].Split("\r\n");
         string[] payloadBodyParameters = payloadString.Split("\r\n\r\n")[2].Split("\r\n");
@@ -126,12 +134,12 @@ public partial class Switchboard : Connection
 
         displayPicture.SessionID = Convert.ToUInt32(payloadBodyParameters[1].Split(" ")[1]);
 
-        string base64Object = Convert.ToBase64String(Encoding.UTF8.GetBytes(Profile.DisplayPictureObject + char.MinValue));
-        if (!payloadBodyParameters[4].Contains(base64Object))
+        string msnObject = Encoding.UTF8.GetString(Convert.FromBase64String(payloadBodyParameters[4].Replace("Context: ", "")));
+        if (!msnObject.Contains(Profile.DisplayPictureObject!))
             return;
 
         TransactionID++;
-        byte[] messagePayload = displayPicture.AcknowledgePayload(ackHeader);
+        byte[] messagePayload = displayPicture.AcknowledgePayload(binaryHeader);
 
         // Send MSG and acknowledgement
         byte[] message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
@@ -175,9 +183,15 @@ public partial class Switchboard : Connection
                         break;
                     }
                 }
+                else
+                {
+                    await HandleIncoming(response);
+                }
             }
-
-            await HandleIncoming(response);
+            else
+            {
+                await HandleIncoming(response);
+            }
         }
 
         TransactionID++;
@@ -218,9 +232,15 @@ public partial class Switchboard : Connection
                         break;
                     }
                 }
+                else
+                {
+                    await HandleIncoming(response);
+                }
             }
-
-            await HandleIncoming(response);
+            else
+            {
+                await HandleIncoming(response);
+            }
         }
 
         while (displayPicture.Data!.Length - displayPicture.DataOffset > 0)

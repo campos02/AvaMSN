@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using AvaMSN.MSNP.PresenceStatus;
+using ReactiveUI;
 using System;
 
 namespace AvaMSN.ViewModels;
@@ -38,13 +39,16 @@ public class MainViewModel : ViewModelBase
     {
         if (contactListPage.CurrentConversation?.Contact.Email == e?.Contact?.Email && CurrentPage is ConversationViewModel)
         {
-            NotificationManager?.PlaySound();
+            if (contactListPage.Profile.Presence != PresenceStatus.GetFullName(PresenceStatus.Busy))
+                NotificationManager?.PlaySound();
         }
 
         else if (NotificationManager != null)
         {
             e!.Contact!.NewMessages = true;
-            await NotificationManager.ShowNotification(e?.Contact, e?.Message);
+
+            if (contactListPage.Profile.Presence != PresenceStatus.GetFullName(PresenceStatus.Busy))
+                await NotificationManager.ShowNotification(e?.Contact, e?.Message);
         }
     }
 

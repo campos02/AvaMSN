@@ -14,6 +14,7 @@ public class ContactEventArgs : EventArgs
 public class PresenceEventArgs : ContactEventArgs
 {
     public string Presence { get; set; } = string.Empty;
+    public bool HasDisplayPicture { get; set; }
 }
 
 public class PersonalMessageEventArgs : ContactEventArgs

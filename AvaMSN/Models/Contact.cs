@@ -14,7 +14,7 @@ public class Contact : ReactiveObject
     private string color = string.Empty;
     private bool newMessages;
     private bool blocked;
-    private Bitmap? displayPicture;
+    private Bitmap displayPicture;
 
     public string DisplayName
     {
@@ -34,13 +34,16 @@ public class Contact : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref personalMessage, value);
     }
 
+    /// <summary>
+    /// Stores a full name presence
+    /// </summary>
     public string Presence
     {
         get => presence;
         set => this.RaiseAndSetIfChanged(ref presence, value);
     }
 
-    public string Color
+    public string PresenceColor
     {
         get => color;
         set => this.RaiseAndSetIfChanged(ref color, value);
@@ -58,7 +61,7 @@ public class Contact : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref blocked, value);
     }
 
-    public Bitmap? DisplayPicture
+    public Bitmap DisplayPicture
     {
         get => displayPicture;
         set => this.RaiseAndSetIfChanged(ref displayPicture, value);
@@ -66,6 +69,6 @@ public class Contact : ReactiveObject
 
     public Contact()
     {
-        DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
+        displayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
     }
 }

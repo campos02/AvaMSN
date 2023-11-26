@@ -136,13 +136,20 @@ public class LoginViewModel : ViewModelBase
         Profile.PersonalMessage = user.PersonalMessage;
 
         DisplayPicture? picture = Database?.GetUserDisplayPicture(user.UserEmail);
-        if (picture != null && picture.PictureData.Length > 0)
+        if (picture != null)
         {
-            using MemoryStream pictureStream = new MemoryStream(picture.PictureData);
-            Profile.DisplayPicture = new Bitmap(pictureStream);
-            pictureStream.Position = 0;
+            if (picture.PictureData.Length > 0)
+            {
+                using MemoryStream pictureStream = new MemoryStream(picture.PictureData);
+                Profile.DisplayPicture = new Bitmap(pictureStream);
+                pictureStream.Position = 0;
 
-            Profile.DisplayPictureData = pictureStream.ToArray();
+                Profile.DisplayPictureData = pictureStream.ToArray();
+            }
+        }
+        else
+        {
+            Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
         }
     }
 
@@ -182,7 +189,9 @@ public class LoginViewModel : ViewModelBase
         NotificationServer.GenerateMSNObject();
         await NotificationServer.SendCHG();
 
-        LoggedIn?.Invoke(this, EventArgs.Empty);            
+        _ = NotificationServer.Ping();
+
+        LoggedIn?.Invoke(this, EventArgs.Empty);
 
         if (RememberPassword)
         {
@@ -212,7 +221,6 @@ public class LoginViewModel : ViewModelBase
         Password = string.Empty;
 
         Database?.DeleteUser(user);
-        Database?.DeleteDisplayPictures(user.UserEmail);
         Users?.Remove(user);
         Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
     }

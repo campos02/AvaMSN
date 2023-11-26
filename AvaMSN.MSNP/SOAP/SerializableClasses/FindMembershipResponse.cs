@@ -813,7 +813,7 @@ public partial class FindMembershipResponseFindMembershipResultOwnerNamespaceInf
 
     private byte creatorPuidField;
 
-    private ulong creatorCIDField;
+    private long creatorCIDField;
 
     private string creatorPassportNameField;
 
@@ -848,7 +848,7 @@ public partial class FindMembershipResponseFindMembershipResultOwnerNamespaceInf
     }
 
     /// <remarks/>
-    public ulong CreatorCID
+    public long CreatorCID
     {
         get
         {
