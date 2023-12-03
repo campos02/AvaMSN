@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace AvaMSN;
 
+/// <summary>
+/// Contains functions to show notifications and display errors and their respective pages.
+/// </summary>
 public class NotificationManager : ReactiveObject
 {
     private NotificationViewModel? notificationPage;
@@ -33,19 +36,25 @@ public class NotificationManager : ReactiveObject
     public NotificationManager()
     {
         LibVLC libVLC = new LibVLC();
-
         mediaPlayer = new MediaPlayer(libVLC);
+
+        // Load notification sound
         using Media media = new Media(libVLC, new StreamMediaInput(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/type.wav"))));
         mediaPlayer.Media = media;
     }
 
+    /// <summary>
+    /// Shows a new message notification for five seconds.
+    /// </summary>
+    /// <param name="contact">Message sender.</param>
+    /// <param name="message">The message itself.</param>
+    /// <returns></returns>
     public async Task ShowNotification(Contact? contact, Message? message)
     {
         if (NotificationPage != null)
             return;
 
-        mediaPlayer.Stop();
-        mediaPlayer.Play();
+        PlaySound();
 
         NotificationPage = new NotificationViewModel()
         {
@@ -56,6 +65,7 @@ public class NotificationManager : ReactiveObject
         NotificationPage.ReplyTapped += NotificationPage_ReplyTapped;
         NotificationPage.DismissTapped += NotificationPage_DismissTapped;
 
+        // Stop current delay and create new cancellation source for new delay
         cancellationSource?.Cancel();
         cancellationSource = new CancellationTokenSource();
         try
@@ -67,12 +77,19 @@ public class NotificationManager : ReactiveObject
         CloseNotification();
     }
 
+    /// <summary>
+    /// Plays notification sound.
+    /// </summary>
     public void PlaySound()
     {
         mediaPlayer.Stop();
         mediaPlayer.Play();
     }
 
+    /// <summary>
+    /// Displays error page with provided text.
+    /// </summary>
+    /// <param name="error">Error text to be displayed.</param>
     public void ShowError(string error)
     {
         ErrorPage = new ErrorViewModel()
@@ -83,6 +100,9 @@ public class NotificationManager : ReactiveObject
         ErrorPage.CloseTapped += ErrorPage_CloseTapped;
     }
 
+    /// <summary>
+    /// Removes error from screen.
+    /// </summary>
     private void ErrorPage_CloseTapped(object? sender, EventArgs e)
     {
         ErrorPage = null;
@@ -99,6 +119,9 @@ public class NotificationManager : ReactiveObject
         cancellationSource?.Cancel();
     }
 
+    /// <summary>
+    /// Removes notification from the screen.
+    /// </summary>
     private void CloseNotification()
     {
         if (NotificationPage == null)

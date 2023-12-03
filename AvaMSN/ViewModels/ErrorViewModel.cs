@@ -7,9 +7,7 @@ namespace AvaMSN.ViewModels;
 public class ErrorViewModel : ViewModelBase
 {
     public string Error { get; set; } = string.Empty;
-
     public event EventHandler? CloseTapped;
-
     public ReactiveCommand<Unit, Unit> CloseCommand { get; }
 
     public ErrorViewModel()

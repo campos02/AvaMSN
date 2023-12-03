@@ -8,21 +8,33 @@ using AvaMSN.MSNP.XML.SerializableClasses;
 
 namespace AvaMSN.MSNP;
 
+/// <summary>
+/// Contains contact and profile data and makes requests to the ABCH contact service.
+/// </summary>
 public class ContactList
 {
+    /// <summary>
+    /// Contact API token.
+    /// </summary>
     public string TicketToken { get; set; } = string.Empty;
-    public string SharingService { get; private set; } = string.Empty;
-    public string ABService { get; private set; } = string.Empty;
+
+    public string SharingServiceUrl { get; private set; } = string.Empty;
+    public string ABServiceUrl { get; private set; } = string.Empty;
 
     public List<Contact> Contacts { get; set; } = new List<Contact>();
     public Profile Profile { get; set; } = new Profile();
 
     public ContactList(string host)
     {
-        SharingService = $"https://{host}/abservice/SharingService.asmx";
-        ABService = $"https://{host}/abservice/abservice.asmx";
+        SharingServiceUrl = $"https://{host}/abservice/SharingService.asmx";
+        ABServiceUrl = $"https://{host}/abservice/abservice.asmx";
     }
 
+    /// <summary>
+    /// Gets all contacts in the ABCH membership lists (allow, block, reverse or pending)
+    /// and adds all of them to their respective lists in memory.
+    /// </summary>
+    /// <returns></returns>
     public async Task FindMembership()
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.FindMembership.Envelope));
@@ -34,10 +46,11 @@ public class ContactList
         requestSerializer.Serialize(memory, envelope);
 
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
-        string response = await Requests.SoapRequest(soapXML, SharingService, "http://www.msn.com/webservices/AddressBook/FindMembership");
+        string response = await Requests.MakeRequest(soapXML, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/FindMembership");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.FindMembershipResponse.Envelope));
 
+        // Deserialize response and add contacts
         using (StringReader reader = new StringReader(response))
         {
             var responseEnvelope = (SOAP.SerializableClasses.FindMembershipResponse.Envelope?)responseSerializer.Deserialize(reader);
@@ -49,11 +62,12 @@ public class ContactList
                     if (member.Type != "Passport")
                         continue;
 
+                    // Remove list from ID
                     string contactID = member.MembershipId.Replace($"{membership.MemberRole}/", "");
 
                     Contact contact = Contacts.FirstOrDefault(c => c.ContactID == contactID) ?? new Contact();
 
-                    contact.InLists.SetMembershipLists(membership.MemberRole);
+                    contact.InLists.SetMembershipList(membership.MemberRole);
 
                     contact.Email = member.PassportName;
                     contact.ContactID = contactID;
@@ -67,6 +81,7 @@ public class ContactList
 
                     contact.IsEmailHidden = member.IsPassportNameHidden;
 
+                    // Don't add contacts twice
                     if (!Contacts.Contains(contact))
                         Contacts.Add(contact);
                 }
@@ -74,6 +89,10 @@ public class ContactList
         }
     }
 
+    /// <summary>
+    /// Gets all contacts in the ABCH forward list and adds them all to the respective list in memory.
+    /// </summary>
+    /// <returns></returns>
     public async Task ABFindAll()
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.ABFindAll.Envelope));
@@ -85,10 +104,11 @@ public class ContactList
         requestSerializer.Serialize(memory, envelope);
 
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
-        string response = await Requests.SoapRequest(soapXML, ABService, "http://www.msn.com/webservices/AddressBook/ABFindAll");
+        string response = await Requests.MakeRequest(soapXML, ABServiceUrl, "http://www.msn.com/webservices/AddressBook/ABFindAll");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.ABFindAllResponse.Envelope));
 
+        // Deserialize response and add contacts
         using (StringReader reader = new StringReader(response))
         {
             var responseEnvelope = (SOAP.SerializableClasses.ABFindAllResponse.Envelope?)responseSerializer.Deserialize(reader);
@@ -97,6 +117,7 @@ public class ContactList
             {
                 var contactInfo = addressBookContact.contactInfo;
 
+                // Handle profile info
                 if (contactInfo.contactType == "Me")
                 {
                     UpdateProfile(addressBookContact);
@@ -124,12 +145,18 @@ public class ContactList
                 contact.ABLastChanged = addressBookContact.lastChange;
                 contact.Type = "Passport";
 
+                // Don't add contacts twice
                 if (!Contacts.Contains(contact))
                     Contacts.Add(contact);
             }
         }
     }
 
+    /// <summary>
+    /// Change a user's display name in the ABCH, which must be set in the Profile property before running the command.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="ContactException">Thrown if response can't be deserialized</exception>
     public async Task ChangeDisplayName()
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.ABContactUpdate.Envelope));
@@ -137,6 +164,8 @@ public class ContactList
         var envelope = RequestObjects.AbContactUpdate();
         
         envelope.Header.ABAuthHeader.TicketToken = TicketToken;
+
+        // Update user display name
         envelope.Body.ABContactUpdate.contacts.Contact.contactInfo.contactType = "Me";
         envelope.Body.ABContactUpdate.contacts.Contact.contactInfo.displayName = Profile.DisplayName;
 
@@ -144,17 +173,26 @@ public class ContactList
         requestSerializer.Serialize(memory, envelope);
 
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
-        string response = await Requests.SoapRequest(soapXML, ABService, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
+        string response = await Requests.MakeRequest(soapXML, ABServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.ABContactUpdateResponse.Envelope));
 
         using (StringReader reader = new StringReader(response))
         {
+            // Throw exception if deserialization is not possible
             var responseEnvelope = (SOAP.SerializableClasses.ABContactUpdateResponse.Envelope?)responseSerializer.Deserialize(reader)
                 ?? throw new ContactException("Contact update failure");
         }
     }
 
+    /// <summary>
+    /// Adds a contact to an ABCH membership list (allow, block, reverse or pending).
+    /// </summary>
+    /// <param name="memberRole">List to add to.</param>
+    /// <param name="email">Contact email.</param>
+    /// <param name="scenario">Request scenario.</param>
+    /// <returns></returns>
+    /// <exception cref="ContactException">Thrown if response can't be deserialized.</exception>
     public async Task AddMember(string memberRole, string email, string scenario = "BlockUnblock")
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.AddMember.Envelope));
@@ -171,17 +209,26 @@ public class ContactList
         requestSerializer.Serialize(memory, envelope);
 
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
-        string response = await Requests.SoapRequest(soapXML, SharingService, "http://www.msn.com/webservices/AddressBook/AddMember");
+        string response = await Requests.MakeRequest(soapXML, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/AddMember");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.AddMemberResponse.Envelope));
 
         using (StringReader reader = new StringReader(response))
         {
+            // Throw exception if deserialization is not possible
             var responseEnvelope = (SOAP.SerializableClasses.AddMemberResponse.Envelope?)responseSerializer.Deserialize(reader)
                 ?? throw new ContactException("Member add failure");
         }
     }
 
+    /// <summary>
+    /// Deletes a contact from an ABCH membership list (allow, block, reverse or pending).
+    /// </summary>
+    /// <param name="memberRole">List to delete from.</param>
+    /// <param name="email">Contact email.</param>
+    /// <param name="scenario">Request scenario.</param>
+    /// <returns></returns>
+    /// <exception cref="ContactException">Thrown if response can't be deserialized.</exception>
     public async Task DeleteMember(string memberRole, string email, string scenario = "BlockUnblock")
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.DeleteMember.Envelope));
@@ -198,17 +245,24 @@ public class ContactList
         requestSerializer.Serialize(memory, envelope);
 
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
-        string response = await Requests.SoapRequest(soapXML, SharingService, "http://www.msn.com/webservices/AddressBook/DeleteMember");
+        string response = await Requests.MakeRequest(soapXML, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/DeleteMember");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.DeleteMemberResponse.Envelope));
 
         using (StringReader reader = new StringReader(response))
         {
+            // Throw exception if deserialization is not possible
             var responseEnvelope = (SOAP.SerializableClasses.DeleteMemberResponse.Envelope?)responseSerializer.Deserialize(reader)
                 ?? throw new ContactException("Member delete failure");
         }
     }
 
+    /// <summary>
+    /// Adds a contact to the ABCH forward list.
+    /// </summary>
+    /// <param name="email">Contact email.</param>
+    /// <returns></returns>
+    /// <exception cref="ContactException">Thrown if response can't be deserialized.</exception>
     public async Task ABContactAdd(string email)
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.ABContactAdd.Envelope));
@@ -222,17 +276,24 @@ public class ContactList
         requestSerializer.Serialize(memory, envelope);
 
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
-        string response = await Requests.SoapRequest(soapXML, ABService, "http://www.msn.com/webservices/AddressBook/ABContactAdd");
+        string response = await Requests.MakeRequest(soapXML, ABServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactAdd");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.ABContactAddResponse.Envelope));
 
         using (StringReader reader = new StringReader(response))
         {
+            // Throw exception if deserialization is not possible
             var responseEnvelope = (SOAP.SerializableClasses.ABContactAddResponse.Envelope?)responseSerializer.Deserialize(reader)
                 ?? throw new ContactException("Contact add failure");
         }
     }
 
+    /// <summary>
+    /// Removes a contact from the ABCH forward list.
+    /// </summary>
+    /// <param name="contactID">Contact ID as returned from ABFindAll.</param>
+    /// <returns></returns>
+    /// <exception cref="ContactException">Thrown if response can't be deserialized.</exception>
     public async Task ABContactDelete(string contactID)
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.ABContactDelete.Envelope));
@@ -246,18 +307,23 @@ public class ContactList
         requestSerializer.Serialize(memory, envelope);
 
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
-        string response = await Requests.SoapRequest(soapXML, ABService, "http://www.msn.com/webservices/AddressBook/ABContactDelete");
+        string response = await Requests.MakeRequest(soapXML, ABServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactDelete");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.ABContactDeleteResponse.Envelope));
 
         using (StringReader reader = new StringReader(response))
         {
+            // Throw exception if deserialization is not possible
             var responseEnvelope = (SOAP.SerializableClasses.ABContactDeleteResponse.Envelope?)responseSerializer.Deserialize(reader)
                 ?? throw new ContactException("Contact delete failure");
         }
     }
 
-    public void UpdateProfile(SOAP.SerializableClasses.ABFindAllResponse.ABFindAllResponseABFindAllResultContact profile)
+    /// <summary>
+    /// Sets profile information from ABFindAll response.
+    /// </summary>
+    /// <param name="profile">Profile info object.</param>
+    private void UpdateProfile(SOAP.SerializableClasses.ABFindAllResponse.ABFindAllResponseABFindAllResultContact profile)
     {
         var profileInfo = profile.contactInfo;
 
@@ -282,8 +348,13 @@ public class ContactList
         Profile.ABLastChanged = profile.lastChange;
     }
 
+    /// <summary>
+    /// Returns the payload for the first ADL command ran by the client, which includes all contacts.
+    /// </summary>
+    /// <returns>ADL payload.</returns>
     public string InitialListPayload()
     {
+        // Initialize while setting attribute necessary in the initial payload
         XML.SerializableClasses.InitialListPayload.ml ml = new()
         {
             l = 1
@@ -291,6 +362,7 @@ public class ContactList
 
         List<XML.SerializableClasses.InitialListPayload.mlD> domains = new List<XML.SerializableClasses.InitialListPayload.mlD>();
 
+        // Add contacts with necessary attributes
         foreach (Contact contact in Contacts)
         {
             domains.Add(new XML.SerializableClasses.InitialListPayload.mlD()
@@ -312,6 +384,7 @@ public class ContactList
             OmitXmlDeclaration = true,
         };
 
+        // Remove namespaces
         var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
 
         XmlSerializer mlSerializer = new(typeof(XML.SerializableClasses.InitialListPayload.ml));
@@ -319,15 +392,23 @@ public class ContactList
         using (StringWriter stream = new StringWriter())
         using (XmlWriter writer = XmlWriter.Create(stream, settings))
         {
+            // Serialize with options
             mlSerializer.Serialize(writer, ml, namespaces);
             return stream.ToString();
         }
     }
 
-    public string ListPayload(Contact contact, Lists lists)
+    /// <summary>
+    /// Returns the payload for an ADL (other than the initial one) or RML command.
+    /// </summary>
+    /// <param name="contact">Contact to add or remove.</param>
+    /// <param name="lists">Lists to add or remove the contact from.</param>
+    /// <returns>List command payload.</returns>
+    public static string ListPayload(Contact contact, Lists lists)
     {
         XML.SerializableClasses.ListPayload.ml ml = new();
 
+        // Add contact with necessary attributes
         List<XML.SerializableClasses.ListPayload.mlD> domains = new List<XML.SerializableClasses.ListPayload.mlD>
         {
             new XML.SerializableClasses.ListPayload.mlD()
@@ -344,6 +425,7 @@ public class ContactList
 
         ml.d = domains.ToArray();
 
+        // Remove namespaces
         var settings = new XmlWriterSettings()
         {
             OmitXmlDeclaration = true,
@@ -356,15 +438,22 @@ public class ContactList
         using (StringWriter stream = new StringWriter())
         using (XmlWriter writer = XmlWriter.Create(stream, settings))
         {
+            // Serialize with options
             mlSerializer.Serialize(writer, ml, namespaces);
             return stream.ToString();
         }
     }
 
-    public string ContactPayload(Contact contact)
+    /// <summary>
+    /// Returns the payload for an FQY command.
+    /// </summary>
+    /// <param name="contact"></param>
+    /// <returns></returns>
+    public static string ContactPayload(Contact contact)
     {
         XML.SerializableClasses.ContactPayload.ml ml = new();
 
+        // Add contact with necessary attributes
         List<XML.SerializableClasses.ContactPayload.mlD> domains = new List<XML.SerializableClasses.ContactPayload.mlD>
         {
             new XML.SerializableClasses.ContactPayload.mlD()
@@ -384,6 +473,7 @@ public class ContactList
             OmitXmlDeclaration = true,
         };
 
+        // Remove namespaces
         var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
 
         XmlSerializer mlSerializer = new(typeof(XML.SerializableClasses.ContactPayload.ml));
@@ -391,11 +481,16 @@ public class ContactList
         using (StringWriter stream = new StringWriter())
         using (XmlWriter writer = XmlWriter.Create(stream, settings))
         {
+            // Serialize with options
             mlSerializer.Serialize(writer, ml, namespaces);
             return stream.ToString();
         }
     }
 
+    /// <summary>
+    /// Returns the payload used by the UUX command, which sets a user's personal message.
+    /// </summary>
+    /// <returns>UUX command payload.</returns>
     public string UUXPayload()
     {
         Data data = new()
@@ -408,6 +503,7 @@ public class ContactList
             OmitXmlDeclaration = true
         };
 
+        // Remove namespaces
         var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
 
         XmlSerializer mlSerializer = new(typeof(Data));
@@ -415,6 +511,7 @@ public class ContactList
         using (StringWriter stream = new StringWriter())
         using (XmlWriter writer = XmlWriter.Create(stream, settings))
         {
+            // Serialize with options
             mlSerializer.Serialize(writer, data, namespaces);
             return stream.ToString();
         }

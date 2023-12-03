@@ -3,6 +3,9 @@ using SQLite;
 
 namespace AvaMSN.Models;
 
+/// <summary>
+/// Represents a user account for storage purposes.
+/// </summary>
 public class User : ReactiveObject
 {
     private string email = string.Empty;

@@ -1,5 +1,8 @@
 ﻿namespace AvaMSN.Models;
 
+/// <summary>
+/// Represents a presence status.
+/// </summary>
 public class Presence
 {
     public string Status { get; set; } = string.Empty;

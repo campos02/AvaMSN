@@ -2,6 +2,9 @@
 
 namespace AvaMSN;
 
+/// <summary>
+/// Custom reactive command exception handler.
+/// </summary>
 public class ExceptionHandler : IObserver<Exception>
 {
     public NotificationManager NotificationManager { get; set; } = new NotificationManager();

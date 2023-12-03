@@ -2,6 +2,9 @@
 
 namespace AvaMSN.MSNP.SOAP.RequestObjects;
 
+/// <summary>
+/// Contains functions that return request objects for serialization.
+/// </summary>
 public static partial class RequestObjects
 {
     public static Envelope ABContactAdd()

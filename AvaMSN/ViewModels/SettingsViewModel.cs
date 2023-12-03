@@ -33,30 +33,19 @@ public class SettingsViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Convert input values, assign them and call save to settings file function.
-    /// If successful, display success message for 2 seconds.
+    /// Assigns input values to model and calls save to settings file function.
     /// </summary>
     private async Task Save()
     {
-        try
-        {
-            if (Server != string.Empty)
-                SettingsManager.Settings.Server = Server;
+        if (Server != string.Empty)
+            SettingsManager.Settings.Server = Server;
 
-            SettingsManager.Settings.SaveMessagingHistory = SaveMessages;
-            SettingsManager.SaveToFile();
+        SettingsManager.Settings.SaveMessagingHistory = SaveMessages;
+        SettingsManager.SaveToFile();
 
-            ResultText = "Saved successfully!";
-            await Task.Delay(2000);
-            ResultText = string.Empty;
-        }
-        catch (Exception ex)
-        {
-            ResultText = ex.Message;
-            
-            await Task.Delay(2000);
-            ResultText = string.Empty;
-        }
+        ResultText = "Saved successfully!";
+        await Task.Delay(2000);
+        ResultText = string.Empty;
     }
 
     private void Back()

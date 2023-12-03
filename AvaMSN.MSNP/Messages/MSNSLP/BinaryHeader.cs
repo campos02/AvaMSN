@@ -1,7 +1,16 @@
-﻿namespace AvaMSN.MSNP.Messages;
+﻿namespace AvaMSN.MSNP.Messages.MSNSLP;
 
+/// <summary>
+/// Represents a P2Pv1 binary header.
+/// </summary>
 public class BinaryHeader
 {
+    /// <summary>
+    /// Binary header length.
+    /// </summary>
+    public const int HeaderSize = 48;
+
+    // Header parameters
     public uint SessionID { get; set; }
     public uint Identifier { get; set; }
     public ulong DataOffset { get; set; }
@@ -14,6 +23,10 @@ public class BinaryHeader
 
     public BinaryHeader() { }
 
+    /// <summary>
+    /// Initialize using data from a byte header.
+    /// </summary>
+    /// <param name="binaryHeader">Header in byte array format.</param>
     public BinaryHeader(byte[] binaryHeader)
     {
         using (MemoryStream headerStream = new MemoryStream(binaryHeader))
@@ -34,9 +47,9 @@ public class BinaryHeader
     }
 
     /// <summary>
-    /// Convert all properties into a little endian byte array
+    /// Convert all parameters into a byte array.
     /// </summary>
-    /// <returns>Converted byte array</returns>
+    /// <returns>Converted byte array.</returns>
     public byte[] GetBytes()
     {
         using (MemoryStream headerStream = new MemoryStream())

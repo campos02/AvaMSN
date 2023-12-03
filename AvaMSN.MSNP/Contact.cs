@@ -1,5 +1,8 @@
 ﻿namespace AvaMSN.MSNP;
 
+/// <summary>
+/// Represents a contact.
+/// </summary>
 public class Contact
 {
     // Presence info

@@ -8,6 +8,9 @@ using AvaMSN.MSNP.PresenceStatus;
 
 namespace AvaMSN.Models;
 
+/// <summary>
+/// Contains contact groups, starting code and NS event handlers.
+/// </summary>
 public class ContactListData
 {
     public NotificationServer? NotificationServer { get; set; }
@@ -51,11 +54,15 @@ public class ContactListData
         }
     };
 
-    public void GetProperties()
+    /// <summary>
+    /// Gets contact data from Notification Server and creates contact groups with it.
+    /// </summary>
+    public void GetData()
     {
         if (NotificationServer == null)
             return;
 
+        // Get user profile data
         Profile.DisplayName = NotificationServer.Profile.DisplayName;
         Profile.Email = NotificationServer.Profile.Email;
         Profile.PersonalMessage = NotificationServer.Profile.PersonalMessage;
@@ -69,6 +76,7 @@ public class ContactListData
 
         foreach (MSNP.Contact contact in NotificationServer.ContactList.Contacts)
         {
+            // Only add contacts in forward list
             if (!contact.InLists.Forward)
                 continue;
 
@@ -80,7 +88,8 @@ public class ContactListData
                     Email = contact.Email,
                     PersonalMessage = contact.PersonalMessage,
                     Presence = PresenceStatus.GetFullName(contact.Presence),
-                    PresenceColor = GetStatusColor(contact.Presence)
+                    PresenceColor = GetStatusColor(contact.Presence),
+                    Blocked = contact.InLists.Block
                 });
             }
 
@@ -92,7 +101,8 @@ public class ContactListData
                     Email = contact.Email,
                     PersonalMessage = contact.PersonalMessage,
                     Presence = PresenceStatus.GetFullName(contact.Presence),
-                    PresenceColor = GetStatusColor(contact.Presence)
+                    PresenceColor = GetStatusColor(contact.Presence),
+                    Blocked = contact.InLists.Block
                 });
             }
         }
@@ -101,7 +111,7 @@ public class ContactListData
         NotificationServer.PersonalMessageChanged += NotificationServer_PersonalMessageChanged;
     }
 
-    public string GetStatusColor(string status) => status switch
+    public static string GetStatusColor(string status) => status switch
     {
         PresenceStatus.Available => "LimeGreen",
         PresenceStatus.Busy => "IndianRed",
@@ -113,6 +123,9 @@ public class ContactListData
         _ => "Gray"
     };
 
+    /// <summary>
+    /// Handles presence events, changing groups according to a contact's new status.
+    /// </summary>
     private void NotificationServer_PresenceChanged(object? sender, PresenceEventArgs e)
     {
         if (NotificationServer == null || ContactGroups == null)
@@ -131,6 +144,7 @@ public class ContactListData
                 if (contact == null)
                     return;
 
+                // Remove from offline group and add to available
                 ContactGroups[(int)DefaultGroupIndex.Offline].Contacts.Remove(contact);
                 ContactGroups[(int)DefaultGroupIndex.Available].Contacts.Add(contact);
             }
@@ -147,6 +161,7 @@ public class ContactListData
                 if (contact == null)
                     return;
 
+                // Remove from available group and add to offline
                 ContactGroups[(int)DefaultGroupIndex.Available].Contacts.Remove(contact);
                 ContactGroups[(int)DefaultGroupIndex.Offline].Contacts.Add(contact);
             }
@@ -161,6 +176,7 @@ public class ContactListData
                 contact.Presence = PresenceStatus.GetFullName(e.Presence);
                 contact.PresenceColor = GetStatusColor(e.Presence);
 
+                // Remove display picture if the contact doesn't have it anymore
                 if (!e.HasDisplayPicture)
                     contact.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
             }

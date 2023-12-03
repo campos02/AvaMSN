@@ -11,6 +11,9 @@ using ReactiveUI;
 
 namespace AvaMSN.Models;
 
+/// <summary>
+/// Wrapper for different switchboard sessions and operations with a contact.
+/// </summary>
 public class Conversation : ReactiveObject
 {
     private bool typingUser;
@@ -27,6 +30,9 @@ public class Conversation : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref messageHistory, value);
     }
 
+    /// <summary>
+    /// Controls whether the "is writing..." message is shown.
+    /// </summary>
     public bool TypingUser
     {
         get => typingUser;
@@ -54,9 +60,13 @@ public class Conversation : ReactiveObject
             }
         }
 
+        // Load only first four messages by default
         GetHistory(4);
     }
 
+    /// <summary>
+    /// Sends a text message and saves it to the database.
+    /// </summary>
     public async Task SendTextMessage(string messageText)
     {
         if (Switchboard == null || Profile == null || Contact == null || string.IsNullOrEmpty(messageText))
@@ -93,6 +103,10 @@ public class Conversation : ReactiveObject
         }
     }
 
+    /// <summary>
+    /// Calls switchboard method to send typing notifications.
+    /// </summary>
+    /// <returns></returns>
     public async Task SendTypingUser()
     {
         if (Switchboard == null)
@@ -101,6 +115,10 @@ public class Conversation : ReactiveObject
         await Switchboard.SendTypingUser();
     }
 
+    /// <summary>
+    /// Sends a nudge message and saves it to the database.
+    /// </summary>
+    /// <returns></returns>
     public async Task SendNudge()
     {
         if (Switchboard == null || Profile == null || Contact == null)
@@ -130,6 +148,10 @@ public class Conversation : ReactiveObject
         }
     }
 
+    /// <summary>
+    /// Retrieves a number of messages from the database. If the count parameter is not set or is 0, all messages are returned.
+    /// </summary>
+    /// <param name="count">Amount of messages to retrieve. 0 returns all messages</param>
     public void GetHistory(int count = 0)
     {
         if (Database == null)
@@ -147,12 +169,19 @@ public class Conversation : ReactiveObject
         MessageHistory = new ObservableCollection<Message>(history);
     }
 
+    /// <summary>
+    /// Deletes from the database and cleans all messages between user and contact.
+    /// </summary>
     public void DeleteHistory()
     {
         Database?.DeleteMessages(Profile.Email, Contact.Email);
         MessageHistory = null;
     }
 
+    /// <summary>
+    /// Disconnects from switchboard session.
+    /// </summary>
+    /// <returns></returns>
     public async Task Disconnect()
     {
         if (Switchboard == null)
@@ -161,6 +190,9 @@ public class Conversation : ReactiveObject
         await Switchboard.DisconnectAsync();
     }
 
+    /// <summary>
+    /// Subscribes to switchboard events.
+    /// </summary>
     public void SubscribeToEvents()
     {
         if (Switchboard == null)
@@ -170,14 +202,21 @@ public class Conversation : ReactiveObject
         Switchboard.DisplayPictureUpdated += Switchboard_DisplayPictureUpdated;
     }
 
+    /// <summary>
+    /// Unsubscribes to switchboard events.
+    /// </summary>
     public void UnsubscribeToEvents()
     {
         if (Switchboard == null)
             return;
 
         Switchboard.MessageReceived -= Switchboard_MessageReceived;
+        Switchboard.DisplayPictureUpdated -= Switchboard_DisplayPictureUpdated;
     }
 
+    /// <summary>
+    /// Replaces the switchboard in case a new session with the same contact is now being used.
+    /// </summary>
     public void NotificationServer_SwitchboardChanged(object? sender, SwitchboardEventArgs e)
     {
         if (Contact.Email != e.Switchboard?.Contact.Email)
@@ -187,6 +226,9 @@ public class Conversation : ReactiveObject
         SubscribeToEvents();
     }
 
+    /// <summary>
+    /// If the new message is a typing notification, shows the "is writing..." text for 6 seconds. Otherwise, adds it to message list and database.
+    /// </summary>
     private async void Switchboard_MessageReceived(object? sender, MessageEventArgs e)
     {
         if (e.TypingUser)
@@ -211,6 +253,7 @@ public class Conversation : ReactiveObject
             IsNudge = e.IsNudge
         };
 
+        // Nudges include sender display names in the message itself
         if (!message.IsNudge)
         {
             message.SenderDisplayName = Contact.DisplayName;
@@ -229,6 +272,9 @@ public class Conversation : ReactiveObject
         });
     }
 
+    /// <summary>
+    /// When a display picture is received, sets it in the interface and saves it to the database.
+    /// </summary>
     private void Switchboard_DisplayPictureUpdated(object? sender, DisplayPictureEventArgs e)
     {
         if (e.DisplayPicture == null)

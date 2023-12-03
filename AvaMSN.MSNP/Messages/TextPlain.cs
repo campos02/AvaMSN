@@ -1,5 +1,8 @@
 ﻿namespace AvaMSN.MSNP.Messages;
 
+/// <summary>
+/// Represents a plain text message.
+/// </summary>
 public class TextPlain
 {
     // Headers
@@ -14,8 +17,13 @@ public class TextPlain
     public int CS { get; set; }
     public int FontSize { get; set; } = 22;
 
+    // Contains message text
     public string Content { get ; set; } = string.Empty;
 
+    /// <summary>
+    /// Returns a payload for use in the MSG command.
+    /// </summary>
+    /// <returns>Message payload.</returns>
     public string CreatePayload()
     {
         return $"MIME-Version: {MimeVersion}\r\n" +

@@ -72,11 +72,11 @@ public class ContactListViewModel : ViewModelBase
 
     public ContactListViewModel()
     {
+        // User data commands
         ChangePresenceCommand = ReactiveCommand.CreateFromTask<string>(ChangePresence);
-
-        SignOutCommand = ReactiveCommand.CreateFromTask(SignOut);
-        ChangeNameCommand = ReactiveCommand.CreateFromTask(ChangeName);
+        ChangeNameCommand = ReactiveCommand.CreateFromTask(ChangeDisplayName);
         ChangePersonalMessageCommand = ReactiveCommand.CreateFromTask(ChangePersonalMessage);
+
         ChatCommand = ReactiveCommand.CreateFromTask(Chat);
         OptionsCommand = ReactiveCommand.Create(Options);
 
@@ -84,6 +84,8 @@ public class ContactListViewModel : ViewModelBase
         RemoveContactCommand = ReactiveCommand.CreateFromTask(RemoveContact);
         BlockContactCommand = ReactiveCommand.CreateFromTask(BlockContact);
         UnblockContactCommand = ReactiveCommand.CreateFromTask(UnblockContact);
+
+        SignOutCommand = ReactiveCommand.CreateFromTask(SignOut);
 
         if (NotificationManager != null)
             NotificationManager.ReplyTapped += NotificationManager_ReplyTapped;
@@ -103,7 +105,7 @@ public class ContactListViewModel : ViewModelBase
         SelectedOptionIndex = 0;
     }
 
-    private async Task ChangeName()
+    private async Task ChangeDisplayName()
     {
         if (NotificationServer == null)
             return;
@@ -160,13 +162,21 @@ public class ContactListViewModel : ViewModelBase
                 return;
 
             NotificationServer.Profile.DisplayPicture = pictureStream.ToArray();
-            NotificationServer.GenerateMSNObject();
+            NotificationServer.CreateMSNObject();
             await NotificationServer.SendCHG();
         }
     }
 
     private async Task AddContact()
     {
+        if (NewContactDisplayName == string.Empty)
+            NewContactDisplayName = NewContactEmail;
+
+        if (NotificationServer == null)
+            return;
+
+        await NotificationServer.AddContact(NewContactEmail, NewContactDisplayName);
+
         ListData.ContactGroups?[(int)ContactListData.DefaultGroupIndex.Offline].Contacts.Add(new Contact
         {
             Email = NewContactEmail,
@@ -174,10 +184,8 @@ public class ContactListViewModel : ViewModelBase
             Presence = PresenceStatus.GetFullName(PresenceStatus.Offline)
         });
 
-        if (NotificationServer == null)
-            return;
-
-        await NotificationServer.AddContact(NewContactEmail, NewContactDisplayName);
+        NewContactEmail = string.Empty;
+        NewContactDisplayName = string.Empty;
     }
 
     private async Task RemoveContact()
@@ -187,15 +195,15 @@ public class ContactListViewModel : ViewModelBase
 
         string email = SelectedContact.Email;
 
-        foreach (ContactGroup group in ListData.ContactGroups)
-        {
-            group.Contacts.Remove(SelectedContact);
-        }
-
         if (NotificationServer == null)
             return;
 
         await NotificationServer.RemoveContact(email);
+
+        foreach (ContactGroup group in ListData.ContactGroups)
+        {
+            group.Contacts.Remove(SelectedContact);
+        }
     }
 
     private async Task BlockContact()
@@ -216,13 +224,18 @@ public class ContactListViewModel : ViewModelBase
         SelectedContact.Blocked = false;
     }
 
+    /// <summary>
+    /// Creates a conversation object with the selected contact and navigates to conversation page.
+    /// </summary>
     public async Task Chat()
     {
         if (SelectedContact == null || NotificationServer == null)
             return;
 
+        // Unbold contact name
         SelectedContact.NewMessages = false;
 
+        // Don't go through the process of creating a new instance if a conversation is already taking place 
         if (SelectedContact == CurrentConversation?.Contact)
         {
             ChatStarted?.Invoke(this, EventArgs.Empty);
@@ -241,6 +254,7 @@ public class ContactListViewModel : ViewModelBase
 
         if (SelectedContact.Presence != PresenceStatus.GetFullName(PresenceStatus.Offline))
         {
+            // Check if a switchboard session is already open before requesting a new one
             MSNP.Switchboard? switchboard = NotificationServer.Switchboards.FirstOrDefault(sb => sb.Contact.Email == contact.Email && sb.Connected);
 
             if (switchboard == null)
@@ -268,6 +282,7 @@ public class ContactListViewModel : ViewModelBase
         if (NotificationServer == null)
             return;
 
+        // Will also invoke the disconnection event
         await NotificationServer.DisconnectAsync();
     }
 
@@ -277,6 +292,9 @@ public class ContactListViewModel : ViewModelBase
         await Chat();
     }
 
+    /// <summary>
+    /// If a new switchboard session is taking place and it's not with the current contact, creates a new conversation instance.
+    /// </summary>
     public void NotificationServer_SwitchboardChanged(object? sender, MSNP.SwitchboardEventArgs e)
     {
         if (ContactGroups == null || e.Switchboard == null)
@@ -311,6 +329,10 @@ public class ContactListViewModel : ViewModelBase
         NewMessage?.Invoke(sender, e);
     }
 
+    /// <summary>
+    /// Resets data and returns to login page when disconnected from the server.
+    /// </summary>
+    /// <exception cref="ConnectionException">Thrown if the disconnection wasn't requested.</exception>
     public void NotificationServer_Disconnected(object? sender, MSNP.DisconnectedEventArgs e)
     {
         if (CurrentConversation != null)
@@ -334,6 +356,9 @@ public class ContactListViewModel : ViewModelBase
             throw new ConnectionException("Lost connection to the server.");
     }
 
+    /// <summary>
+    /// Updates picture data in every contact group.
+    /// </summary>
     private void Conversation_DisplayPictureUpdated(object? sender, EventArgs e)
     {
         if (ContactGroups == null)

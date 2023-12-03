@@ -37,6 +37,7 @@ public class MainViewModel : ViewModelBase
 
     private async void ContactListPage_NewMessage(object? sender, Models.NewMessageEventArgs e)
     {
+        // Don't show notification if conversation with sender contact is open, only play sound
         if (contactListPage.CurrentConversation?.Contact.Email == e?.Contact?.Email && CurrentPage is ConversationViewModel)
         {
             if (contactListPage.Profile.Presence != PresenceStatus.GetFullName(PresenceStatus.Busy))
@@ -77,7 +78,7 @@ public class MainViewModel : ViewModelBase
         contactListPage.PersonalMessage = contactListPage.NotificationServer!.Profile.PersonalMessage;
         contactListPage.Profile.DisplayPicture = loginPage.Profile.DisplayPicture;
 
-        contactListPage.ListData.GetProperties();
+        contactListPage.ListData.GetData();
         contactListPage.NotificationServer.Disconnected += contactListPage.NotificationServer_Disconnected;
         contactListPage.NotificationServer.SwitchboardChanged += contactListPage.NotificationServer_SwitchboardChanged;
 
@@ -90,6 +91,9 @@ public class MainViewModel : ViewModelBase
         CurrentPage = loginPage;
     }
 
+    /// <summary>
+    /// Handles options button in every page.
+    /// </summary>
     private void Pages_OptionsButtonPressed(object? sender, EventArgs e)
     {
         previousPage = CurrentPage;

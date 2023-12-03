@@ -5,6 +5,9 @@ using System;
 
 namespace AvaMSN.Models;
 
+/// <summary>
+/// Represents contact data.
+/// </summary>
 public class Contact : ReactiveObject
 {
     private string displayName = string.Empty;

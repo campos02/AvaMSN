@@ -38,7 +38,7 @@ public class ConversationViewModel : ViewModelBase
 
     public ConversationViewModel() 
     {
-        SendCommand = ReactiveCommand.CreateFromTask(Send);
+        SendCommand = ReactiveCommand.CreateFromTask(SendMessage);
         NudgeCommand = ReactiveCommand.CreateFromTask(SendNudge);
         TypingUserCommand = ReactiveCommand.CreateFromTask(SendTypingUser);
         BackCommand = ReactiveCommand.Create(Back);
@@ -47,7 +47,7 @@ public class ConversationViewModel : ViewModelBase
         DeleteHistoryCommand = ReactiveCommand.Create(DeleteHistory);
     }
 
-    private async Task Send()
+    private async Task SendMessage()
     {
         if (Conversation == null)
             return;

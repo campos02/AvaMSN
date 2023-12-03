@@ -5,15 +5,21 @@ using AvaMSN.Models;
 
 namespace AvaMSN;
 
+/// <summary>
+/// Provides access to client settings and functions to save them to the settings file.
+/// </summary>
 public class SettingsManager
 {
     public static string FileName => "settings.json";
     public static string FileDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AvaMSN");
     public static string FilePath => Path.Combine(FileDirectory, FileName);
 
-    // Default settings, static so they change for all objects when modified
+    /// <summary>
+    /// Client settings. When modified, they change across all manager objects.
+    /// </summary>
     public static Settings Settings { get; set; } = new Settings()
     {
+        // Default settings
         Server = "crosstalksrv.hiden.pw",
         SaveMessagingHistory = true
     };
@@ -24,7 +30,7 @@ public class SettingsManager
     }
 
     /// <summary>
-    /// Create file and directory if they don't exist and save serialized settings
+    /// Create file and directory if they don't exist and save serialized settings.
     /// </summary>
     public void SaveToFile()
     {
@@ -36,7 +42,7 @@ public class SettingsManager
     }
 
     /// <summary>
-    /// Read file, if it exists, and assign deserialized settings
+    /// Read file, if it exists, and assign deserialized settings.
     /// </summary>
     public void ReadFile()
     {

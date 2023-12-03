@@ -5,6 +5,9 @@ using System.Globalization;
 
 namespace AvaMSN.Converters;
 
+/// <summary>
+/// Change to past tense if message is pulled from history.
+/// </summary>
 public class UserSaysConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -13,7 +16,6 @@ public class UserSaysConverter : IValueConverter
         {
             if (isHistory)
                 return "said:";
-
             else
                 return "says:";
         }

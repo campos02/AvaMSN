@@ -79,6 +79,9 @@ public class LoginViewModel : ViewModelBase
         GetUsers();
     }
 
+    /// <summary>
+    /// Loads saved user accounts and display options.
+    /// </summary>
     public void GetUsers()
     {
         Users = new ObservableCollection<User>(Database.GetUsers())
@@ -100,6 +103,10 @@ public class LoginViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Displays selected user or runs selected option.
+    /// </summary>
+    /// <param name="option">Account email or option.</param>
     public void ChangeUser(string option)
     {
         switch (option)
@@ -135,6 +142,7 @@ public class LoginViewModel : ViewModelBase
 
         Profile.PersonalMessage = user.PersonalMessage;
 
+        // Load user display picture if it exists
         DisplayPicture? picture = Database?.GetUserDisplayPicture(user.UserEmail);
         if (picture != null)
         {
@@ -153,6 +161,10 @@ public class LoginViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Initiates a new notification server connection, does every login step and saves user if the remember options are enabled.
+    /// </summary>
+    /// <returns></returns>
     public async Task Login()
     {
         NotificationServer = new NotificationServer(SettingsManager.Settings.Server)
@@ -167,14 +179,10 @@ public class LoginViewModel : ViewModelBase
 
         await NotificationServer.SendVersion();
 
+        // Use token and binary secret if available
         User user = Users?.FirstOrDefault(user => user.UserEmail == Email) ?? new User();
 
-        if (user.BinarySecret == "" || user.TicketToken == "" || user.Ticket == "")
-        {
-            await NotificationServer.Authenticate(Password);
-        }
-
-        else
+        if (user.BinarySecret != "" & user.TicketToken != "" & user.Ticket != "")
         {
             NotificationServer.SSO.Ticket = user.Ticket;
             NotificationServer.SSO.BinarySecret = user.BinarySecret;
@@ -183,14 +191,22 @@ public class LoginViewModel : ViewModelBase
             await NotificationServer.AuthenticateWithToken();
         }
 
+        else
+        {
+            await NotificationServer.Authenticate(Password);
+        }
+
         await NotificationServer.GetContactList();
 
+        // Presence and personal message
         await NotificationServer.SendUUX();
-        NotificationServer.GenerateMSNObject();
+        NotificationServer.CreateMSNObject();
         await NotificationServer.SendCHG();
 
+        // Start regularly pinging after presence is set
         _ = NotificationServer.Ping();
 
+        // Navigate to contact list
         LoggedIn?.Invoke(this, EventArgs.Empty);
 
         if (RememberPassword)
@@ -210,6 +226,9 @@ public class LoginViewModel : ViewModelBase
         Password = string.Empty;
     }
 
+    /// <summary>
+    /// Empties fields and removes a user account from user list and database.
+    /// </summary>
     public void ForgetMe()
     {
         User? user = Users?.FirstOrDefault(user => user.UserEmail == Email);
@@ -220,8 +239,8 @@ public class LoginViewModel : ViewModelBase
         Email = string.Empty;
         Password = string.Empty;
 
-        Database?.DeleteUser(user);
         Users?.Remove(user);
+        Database?.DeleteUser(user);
         Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
     }
 }

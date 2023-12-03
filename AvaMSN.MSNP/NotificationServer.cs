@@ -7,19 +7,25 @@ using System.Xml;
 
 namespace AvaMSN.MSNP;
 
+/// <summary>
+/// Represents a connection to the Notification Server (NS).
+/// </summary>
 public partial class NotificationServer : Connection
 {
+    // Protocol version
     public static string Protocol => "MSNP15";
 
-    public ContactList ContactList { get; set; }
+    public ContactList ContactList { get; }
     public Profile Profile
     {
         get => ContactList.Profile;
         set => ContactList.Profile = value;
     }
 
-    public SingleSignOn SSO { get; set; }
+    public SingleSignOn SSO { get; }
     public List<Switchboard> Switchboards { get; set; } = new List<Switchboard>();
+    
+    // Default client capabilities
     public readonly uint ClientCapabilities = 0x80000000;
 
     public NotificationServer(string host)
@@ -37,17 +43,20 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Do all login commands
+    /// Stablishes a connection, does version negotiation and sends client info.
     /// </summary>
     /// <returns></returns>
     public async Task SendVersion()
     {
         await Connect();
-
         await SendVER();
         await SendCVR();
     }
 
+    /// <summary>
+    /// Gets ABCH data and sends it to the server.
+    /// </summary>
+    /// <returns></returns>
     public async Task GetContactList()
     {
         await ContactList.FindMembership();
@@ -59,10 +68,10 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Send version command if it's supported by the server
+    /// Negotiates protocol version with the server.
     /// </summary>
     /// <returns></returns>
-    /// <exception cref="ProtocolException">Throw if server does not support protocol version</exception>
+    /// <exception cref="ProtocolException">Thrown if server does not support protocol version.</exception>
     private async Task SendVER()
     {
         TransactionID++;
@@ -76,6 +85,7 @@ public partial class NotificationServer : Connection
             // Receive version
             string response = await ReceiveStringAsync();
 
+            // Break if response is a command reply
             if (response.StartsWith("VER") && response.Split(" ")[1] == TransactionID.ToString())
             {
                 if (!response.Contains(Protocol))
@@ -87,7 +97,7 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Send CVR command and check for a response
+    /// Sends client info.
     /// </summary>
     /// <returns></returns>
     private async Task SendCVR()
@@ -103,6 +113,7 @@ public partial class NotificationServer : Connection
             // Receive CVR
             string response = await ReceiveStringAsync();
 
+            // Break if response is a command reply
             if (response.StartsWith("CVR") && response.Split(" ")[1] == TransactionID.ToString())
             {
                 break;
@@ -111,9 +122,11 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Do authentication steps
+    /// Does SSO authentication.
     /// </summary>
+    /// <param name="password">User password.</param>
     /// <returns></returns>
+    /// <exception cref="AuthException">Thrown if authentication isn't successful.</exception>
     public async Task Authenticate(string password)
     {
         TransactionID++;
@@ -132,6 +145,7 @@ public partial class NotificationServer : Connection
             string response = await ReceiveStringAsync();
             responses += response;
 
+            // Remove GCF response and break if USR reply is present
             if (responses.Contains("USR") && responses.StartsWith("GCF"))
             {
                 USR = HandleGCF(responses);
@@ -140,6 +154,7 @@ public partial class NotificationServer : Connection
                     break;
             }
 
+            // Break if response is a command reply
             if (response.StartsWith("USR")
                 && response.Split(" ")[1] == TransactionID.ToString())
                 break;
@@ -169,6 +184,7 @@ public partial class NotificationServer : Connection
             // Receive USR S
             string response = await ReceiveStringAsync();
 
+            // Assign ticket and break if response is a command reply and authentication was successful
             if (response.StartsWith("USR")
                 && response.Split(" ")[1] == TransactionID.ToString()
                 && response.Contains("OK"))
@@ -182,6 +198,11 @@ public partial class NotificationServer : Connection
         }
     }
 
+    /// <summary>
+    /// Authenticates using an existing ticket and binary secret.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="AuthException">Thrown if authentication isn't successful.</exception>
     public async Task AuthenticateWithToken()
     {
         TransactionID++;
@@ -200,6 +221,7 @@ public partial class NotificationServer : Connection
             string response = await ReceiveStringAsync();
             responses += response;
 
+            // Remove GCF response and Break if USR reply is present
             if (responses.Contains("USR") && responses.StartsWith("GCF"))
             {
                 USR = HandleGCF(responses);
@@ -208,6 +230,7 @@ public partial class NotificationServer : Connection
                     break;
             }
 
+            // Break if response is a command reply
             if (response.StartsWith("USR")
                 && response.Split(" ")[1] == TransactionID.ToString())
                 break;
@@ -228,6 +251,7 @@ public partial class NotificationServer : Connection
             // Receive USR S
             string response = await ReceiveStringAsync();
 
+            // Break if response is a command reply and authentication was successful
             if (response.StartsWith("USR")
                 && response.Split(" ")[1] == TransactionID.ToString()
                 && response.Contains("OK"))
@@ -242,17 +266,22 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Return USR part after GCF response XML
+    /// Remove GCF command and payload, returning only an USR response.
     /// </summary>
-    /// <param name="response">USR response</param>
-    /// <returns>USR response</returns>
-    private string HandleGCF(string response)
+    /// <param name="response">GCF response.</param>
+    /// <returns>USR response.</returns>
+    private static string HandleGCF(string response)
     {
         return response[response.IndexOf("USR")..];
     }
 
-    public async Task SendBLP()
+    /// <summary>
+    /// Sets user privacy settings in the NS side.
+    /// </summary>
+    /// <returns></returns>
+    private async Task SendBLP()
     {
+        // Value the server reads
         string blp = ContactList.Profile.BLP switch
         {
             2 => "BL",
@@ -270,20 +299,29 @@ public partial class NotificationServer : Connection
             // Receive BLP
             string response = await ReceiveStringAsync();
 
+            // Break if response contains a command reply
             if (response.Contains("BLP")
                 && response.Contains(blp))
             {
+                // Remove other data before reply
                 string blpResponse = response[response.IndexOf("BLP")..];
 
                 if (blpResponse.Split(" ")[1] == TransactionID.ToString())
                     break;
             }
 
+            // Handle normally if response wasn't a reply to this command
             await HandleIncoming(response);
         }
     }
 
-    public async Task SendInitialADL(string payload)
+    /// <summary>
+    /// Adds all contacts retrived from the ABCH in the NS side.
+    /// </summary>
+    /// <param name="payload">Initial ADL payload.</param>
+    /// <returns></returns>
+    /// <exception cref="PayloadException">Thrown if payload exceeds max size.</exception>
+    private async Task SendInitialADL(string payload)
     {
         int length = Encoding.UTF8.GetByteCount(payload);
 
@@ -291,7 +329,6 @@ public partial class NotificationServer : Connection
             throw new PayloadException("Payload too big");
 
         TransactionID++;
-
         string message = $"ADL {TransactionID} {length}\r\n";
 
         // Send ADL and payload
@@ -302,19 +339,28 @@ public partial class NotificationServer : Connection
             // Receive ADL
             string response = await ReceiveStringAsync();
 
+            // Break if response contains a command reply and ADL was successful
             if (response.Contains("ADL")
                 && response.Contains("OK"))
             {
+                // Remove other data before reply
                 string adlResponse = response[response.IndexOf("ADL")..];
 
                 if (adlResponse.Split(" ")[1] == TransactionID.ToString())
                     break;
             }
 
+            // Handle normally if response wasn't a reply to this command
             await HandleIncoming(response);
         }
     }
 
+    /// <summary>
+    /// Adds a contact in the NS side.
+    /// </summary>
+    /// <param name="payload">ADL list payload.</param>
+    /// <returns></returns>
+    /// <exception cref="PayloadException">Thrown if payload exceeds max size.</exception>
     private async Task SendADL(string payload)
     {
         int length = Encoding.UTF8.GetByteCount(payload);
@@ -323,13 +369,18 @@ public partial class NotificationServer : Connection
             throw new PayloadException("Payload too big");
 
         TransactionID++;
-
         string message = $"ADL {TransactionID} {length}\r\n";
 
         // Send ADL and payload
         await SendAsync(message + payload);
     }
 
+    /// <summary>
+    /// Sends an FQY command, used when adding a contact.
+    /// </summary>
+    /// <param name="payload">FQY contact payload.</param>
+    /// <returns></returns>
+    /// <exception cref="PayloadException">Thrown if payload exceeds max size.</exception>
     private async Task SendFQY(string payload)
     {
         int length = Encoding.UTF8.GetByteCount(payload);
@@ -338,13 +389,18 @@ public partial class NotificationServer : Connection
             throw new PayloadException("Payload too big");
 
         TransactionID++;
-
         string message = $"FQY {TransactionID} {length}\r\n";
 
-        // Send ADL and payload
+        // Send FQY and payload
         await SendAsync(message + payload);
     }
 
+    /// <summary>
+    /// Removes a contact in the NS side.
+    /// </summary>
+    /// <param name="payload">RML list payload.</param>
+    /// <returns></returns>
+    /// <exception cref="PayloadException">Thrown if payload exceeds max size.</exception>
     private async Task SendRML(string payload)
     {
         int length = Encoding.UTF8.GetByteCount(payload);
@@ -364,6 +420,7 @@ public partial class NotificationServer : Connection
             // Receive RML
             string response = await ReceiveStringAsync();
 
+            // Break if response is a command reply and RML was successful
             if (response.StartsWith("RML")
                 && response.Split(" ")[1] == TransactionID.ToString()
                 && response.Contains("OK"))
@@ -371,11 +428,16 @@ public partial class NotificationServer : Connection
                 break;
             }
 
+            // Handle normally if response wasn't a reply to this command
             await HandleIncoming(response);
         }
     }
 
-    public async Task SendPRP()
+    /// <summary>
+    /// Sets the user's display name in the NS side.
+    /// </summary>
+    /// <returns></returns>
+    private async Task SendPRP()
     {
         TransactionID++;
         string encodedDisplayName = Uri.EscapeDataString(ContactList.Profile.DisplayName);
@@ -389,6 +451,7 @@ public partial class NotificationServer : Connection
             // Receive PRP
             string response = await ReceiveStringAsync();
 
+            // Break if response is a command reply
             if (response.StartsWith("PRP")
                 && response.Split(" ")[1] == TransactionID.ToString()
                 && response.Contains(encodedDisplayName))
@@ -396,10 +459,15 @@ public partial class NotificationServer : Connection
                 break;
             }
 
+            // Handle normally if response wasn't a reply to this command
             await HandleIncoming(response);
         }
     }
 
+    /// <summary>
+    /// Changes the user's presence status, including the MSN object if present.
+    /// </summary>
+    /// <returns></returns>
     public async Task SendCHG()
     {
         TransactionID++;
@@ -407,6 +475,7 @@ public partial class NotificationServer : Connection
         // Send CHG
         string message = $"CHG {TransactionID} {Profile.Presence} {ClientCapabilities}";
 
+        // Add MSN object if present
         if (Profile.DisplayPictureObject != null)
             message += $" {Uri.EscapeDataString(Profile.DisplayPictureObject)}\r\n";
         else
@@ -419,25 +488,35 @@ public partial class NotificationServer : Connection
             // Receive CHG
             string response = await ReceiveStringAsync();
 
+            // Make sure response contains a command reply
             if (response.Contains("CHG")
                 && response.Contains(ContactList.Profile.Presence))
             {
+                // Remove other data before reply
                 string chgResponse = response[response.IndexOf("CHG")..];
 
+                // Remove and handle other responses if they were also received
                 string[] responses = response.Split("\r\n");
                 string command = response.Replace(responses[0] + "\r\n", "");
 
                 if (command != "")
                     await HandleIncoming(command);
 
+                // Break if response is a command reply
                 if (chgResponse.Split(" ")[1] == TransactionID.ToString())
                     break;
             }
         }
 
+        // Start handling incoming commands
         _ = ReceiveIncomingAsync();
     }
 
+    /// <summary>
+    /// Sends user personal message.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="PayloadException">Thrown if payload exceeds max size.</exception>
     public async Task SendUUX()
     {
         string payload = ContactList.UUXPayload();
@@ -447,7 +526,6 @@ public partial class NotificationServer : Connection
             throw new PayloadException("Payload too big");
 
         TransactionID++;
-
         string message = $"UUX {TransactionID} {length}\r\n";
 
         // Send UUX and payload
@@ -458,6 +536,7 @@ public partial class NotificationServer : Connection
             // Receive UUX
             string response = await ReceiveStringAsync();
 
+            // Break if response is a command reply
             if (response.StartsWith("UUX")
                 && response.Split(" ")[1] == TransactionID.ToString())
             {
@@ -465,9 +544,15 @@ public partial class NotificationServer : Connection
             }
         }
 
+        // Start handling incoming commands again
         _ = ReceiveIncomingAsync();
     }
 
+    /// <summary>
+    /// Requests a new switchboard session, connects to it, then invites a contact.
+    /// </summary>
+    /// <param name="contact">Contact to invite for the session.</param>
+    /// <returns>New switchboard session.</returns>
     public async Task<Switchboard> SendXFR(Contact contact)
     {
         // Send XFR
@@ -481,6 +566,7 @@ public partial class NotificationServer : Connection
             // Receive XFR
             response = await ReceiveStringAsync();
 
+            // Break if response is a command reply
             if (response.StartsWith("XFR")
                 && response.Split(" ")[1] == TransactionID.ToString())
             {
@@ -488,6 +574,7 @@ public partial class NotificationServer : Connection
             }
         }
 
+        // Start handling incoming commands again
         _ = ReceiveIncomingAsync();
 
         string[] parameters = response.Split(" ");
@@ -505,6 +592,7 @@ public partial class NotificationServer : Connection
             Contact = contact
         };
 
+        // Authenticate and invite contact
         await switchboard.SendUSR(authString);
         await switchboard.SendCAL();
 
@@ -519,7 +607,10 @@ public partial class NotificationServer : Connection
         return switchboard;
     }
 
-    public void GenerateMSNObject()
+    /// <summary>
+    /// Creates and assigns an MSN object if any display picture data is present.
+    /// </summary>
+    public void CreateMSNObject()
     {
         if (ContactList.Profile.DisplayPicture == null)
             return;
@@ -539,6 +630,7 @@ public partial class NotificationServer : Connection
             OmitXmlDeclaration = true
         };
 
+        // Remove namespaces
         var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
 
         XmlSerializer msnobjectSerializer = new(typeof(msnobj));
@@ -546,6 +638,7 @@ public partial class NotificationServer : Connection
         using StringWriter stream = new StringWriter();
         using XmlWriter writer = XmlWriter.Create(stream, settings);
 
+        // Serialize with options
         msnobjectSerializer.Serialize(writer, displayPicture, namespaces);
         ContactList.Profile.DisplayPictureObject = stream.ToString();
     }

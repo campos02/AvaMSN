@@ -2,11 +2,21 @@
 
 namespace AvaMSN.MSNP.SOAP;
 
+/// <summary>
+/// Contains the HTTP client and makes SOAP requests.
+/// </summary>
 public static class Requests
 {
-    public static readonly HttpClient HttpClient = new();
+    private static readonly HttpClient HttpClient = new();
 
-    public static async Task<string> SoapRequest(string soapXml, string url, string soapAction)
+    /// <summary>
+    /// Makes a SOAP request.
+    /// </summary>
+    /// <param name="soapXml">XML body content.</param>
+    /// <param name="url">URL to request to.</param>
+    /// <param name="soapAction">SOAP action header content.</param>
+    /// <returns>Response as a string.</returns>
+    public static async Task<string> MakeRequest(string soapXml, string url, string soapAction)
     {
         using (HttpContent content = new StringContent(soapXml, Encoding.UTF8, "text/xml"))
 

@@ -3,6 +3,9 @@ using System;
 
 namespace AvaMSN.Models;
 
+/// <summary>
+/// Represents sent or received messages.
+/// </summary>
 public class Message
 {
     [PrimaryKey, AutoIncrement]

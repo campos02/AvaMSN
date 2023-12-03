@@ -11,6 +11,11 @@ public partial class NotificationServer : Connection
     public event EventHandler<PersonalMessageEventArgs>? PersonalMessageChanged;
     public event EventHandler<SwitchboardEventArgs>? SwitchboardChanged;
 
+    /// <summary>
+    /// Handles responses that aren't the result of a command.
+    /// </summary>
+    /// <param name="responseBytes">Incoming binary response.</param>
+    /// <returns></returns>
     protected override async Task HandleIncoming(byte[] responseBytes)
     {
         string response = Encoding.UTF8.GetString(responseBytes);
@@ -27,6 +32,11 @@ public partial class NotificationServer : Connection
         });
     }
 
+    /// <summary>
+    /// Handles responses that aren't the result of a command.
+    /// </summary>
+    /// <param name="response">Incoming response.</param>
+    /// <returns></returns>
     private async Task HandleIncoming(string response)
     {
         string command = response.Split(" ")[0];
@@ -42,6 +52,12 @@ public partial class NotificationServer : Connection
         });
     }
 
+    /// <summary>
+    /// Handles an initial contact presence response.
+    /// </summary>
+    /// <param name="response"></param>
+    /// <returns></returns>
+    /// <exception cref="ContactException">Thrown if the response is of a non existant contact.</exception>
     private async Task HandleILN(string response)
     {
         string[] parameters = response.Split(" ");
@@ -86,6 +102,7 @@ public partial class NotificationServer : Connection
 
         PresenceChanged?.Invoke(this, eventArgs);
 
+        // Handle other responses if found
         string[] responses = response.Split("\r\n");
         string command = response.Replace(responses[0] + "\r\n", "");
 
@@ -93,6 +110,11 @@ public partial class NotificationServer : Connection
             await HandleIncoming(command);
     }
 
+    /// <summary>
+    /// Handles a contact presence change.
+    /// </summary>
+    /// <param name="response"></param>
+    /// <exception cref="ContactException">Thrown if the response is of a non existant contact.</exception>
     private void HandleNLN(string response)
     {
         string[] parameters = response.Split(" ");
@@ -137,6 +159,11 @@ public partial class NotificationServer : Connection
         PresenceChanged?.Invoke(this, eventArgs);
     }
 
+    /// <summary>
+    /// Handles a contact going offline.
+    /// </summary>
+    /// <param name="response"></param>
+    /// <exception cref="ContactException">Thrown if the response is of a non existant contact.</exception>
     private void HandleFLN(string response)
     {
         string[] parameters = response.Split(" ");
@@ -153,6 +180,12 @@ public partial class NotificationServer : Connection
         PresenceChanged?.Invoke(this, eventArgs);
     }
 
+    /// <summary>
+    /// Handles a contact setting or changing its personal message.
+    /// </summary>
+    /// <param name="response"></param>
+    /// <returns></returns>
+    /// <exception cref="ContactException">Thrown if the response is of a non existant contact.</exception>
     private async Task HandleUBX(string response)
     {
         string[] responses = response.Split("\r\n");
@@ -160,6 +193,7 @@ public partial class NotificationServer : Connection
 
         int length = Convert.ToInt32(parameters[3]);
 
+        // Get payload and deserialize it
         byte[] totalbytes = Encoding.UTF8.GetBytes(responses[1]);
         byte[] payloadBytes = new Span<byte>(totalbytes, 0, length).ToArray();
         string payload = Encoding.UTF8.GetString(payloadBytes);
@@ -184,11 +218,17 @@ public partial class NotificationServer : Connection
             });
         }
 
+        // Handle other responses if found
         string commandAndPayload = response.Replace(responses[0] + "\r\n" + payload, "");
         if (commandAndPayload != "")
             await HandleIncoming(commandAndPayload);
     }
 
+    /// <summary>
+    /// Handles an invitation to a switchboard session by connecting to it.
+    /// </summary>
+    /// <param name="response"></param>
+    /// <returns></returns>
     private async Task HandleRNG(string response)
     {
         string[] parameters = response.Split(" ");
@@ -207,7 +247,7 @@ public partial class NotificationServer : Connection
         };
 
         if (string.IsNullOrEmpty(contact.DisplayName))
-            contact.DisplayName = Uri.UnescapeDataString(displayName);
+            contact.DisplayName = displayName;
 
         Switchboard switchboard = new Switchboard()
         {

@@ -1,5 +1,8 @@
 ﻿namespace AvaMSN.MSNP;
 
+/// <summary>
+/// Represents a user profile, which extends contact data.
+/// </summary>
 public class Profile : Contact
 {
     public int MBEA { get; set; }

@@ -2,6 +2,9 @@
 
 namespace AvaMSN.Models;
 
+/// <summary>
+/// Represents a user's and contact's display picture.
+/// </summary>
 public class DisplayPicture
 {
     [PrimaryKey, AutoIncrement]

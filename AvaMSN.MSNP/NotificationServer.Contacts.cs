@@ -4,14 +4,25 @@ namespace AvaMSN.MSNP;
 
 public partial class NotificationServer : Connection
 {
+    /// <summary>
+    /// Change the user's display name in the ABCH and NS sides.
+    /// </summary>
+    /// <returns></returns>
     public async Task ChangeDisplayName()
     {
         await ContactList.ChangeDisplayName();
         await SendPRP();
 
+        // Start receiving incoming commands again
         _ = ReceiveIncomingAsync();
     }
 
+    /// <summary>
+    /// Adds a new contact to the ABCH and NS.
+    /// </summary>
+    /// <param name="email">Contact email.</param>
+    /// <param name="displayName">Contact display name. Will be the same as the email if not given.</param>
+    /// <returns></returns>
     public async Task AddContact(string email, string displayName = "")
     {
         if (displayName == "")
@@ -24,9 +35,11 @@ public partial class NotificationServer : Connection
             DisplayName = displayName
         };
 
+        // Add to ABCH forward list
         await ContactList.ABContactAdd(contact.Email);
         ContactList.Contacts.Add(contact);
 
+        // Add to allow list
         string payload = ContactList.ListPayload(contact, new Lists
         {
             Allow = true
@@ -34,6 +47,7 @@ public partial class NotificationServer : Connection
 
         await SendADL(payload);
 
+        // Add to forward list and send FQY
         payload = ContactList.ListPayload(contact, new Lists
         {
             Forward = true
@@ -44,9 +58,10 @@ public partial class NotificationServer : Connection
 
         while (true)
         {
-            // Receive First ADL
+            // Receive ADL
             string response = await ReceiveStringAsync();
 
+            // Break if response is a command reply and ADL was successful
             if (response.StartsWith("ADL")
                 && response.Split(" ")[1] == (TransactionID - 2).ToString()
                 && response.Contains("OK"))
@@ -54,17 +69,26 @@ public partial class NotificationServer : Connection
                 break;
             }
 
+            // Handle normally if response wasn't a reply to this command
             else
             {
                 await HandleIncoming(response);
             }
         }
 
+        // Start receiving incoming commands again
         _ = ReceiveIncomingAsync();
     }
 
+    /// <summary>
+    /// Removes a contact from the ABCH and NS forward lists.
+    /// </summary>
+    /// <param name="email">Contact email.</param>
+    /// <returns></returns>
+    /// <exception cref="ContactException">Thrown if the provided email is not of any contact.</exception>
     public async Task RemoveContact(string email)
     {
+        // Remove from forward lists
         Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
         await ContactList.ABContactDelete(contact.Email);
 
@@ -76,13 +100,20 @@ public partial class NotificationServer : Connection
         await SendRML(payload);
         contact.InLists.Forward = false;
 
+        // Start receiving incoming commands again
         _ = ReceiveIncomingAsync();
     }
 
+    /// <summary>
+    /// Blocks a contact in the ABCH and NS sides.
+    /// </summary>
+    /// <param name="email">Contact email.</param>
+    /// <returns></returns>
+    /// <exception cref="ContactException">Thrown if the provided email is not of any contact.</exception>
     public async Task BlockContact(string email)
     {
+        // Add to block lists
         Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
-
         await ContactList.AddMember("Block", contact.Email);
 
         string payload = ContactList.ListPayload(contact, new Lists
@@ -90,8 +121,9 @@ public partial class NotificationServer : Connection
             Block = true
         });
 
-        await SendInitialADL(payload);
+        await SendADL(payload);
 
+        // Remove from allow lists if in them
         if (contact.InLists.Allow)
         {
             await ContactList.DeleteMember("Allow", contact.Email);
@@ -104,13 +136,20 @@ public partial class NotificationServer : Connection
             await SendRML(payload);
         }
 
+        // Start receiving incoming commands again
         _ = ReceiveIncomingAsync();
     }
 
+    /// <summary>
+    /// Unblocks a contact in the ABCH and NS sides.
+    /// </summary>
+    /// <param name="email">Contact email.</param>
+    /// <returns></returns>
+    /// <exception cref="ContactException">Thrown if the provided email is not of any contact.</exception>
     public async Task UnblockContact(string email)
     {
+        // Remove from block lists
         Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
-
         await ContactList.DeleteMember("Block", contact.Email);
 
         string payload = ContactList.ListPayload(contact, new Lists
@@ -120,6 +159,7 @@ public partial class NotificationServer : Connection
 
         await SendRML(payload);
 
+        // Start receiving incoming commands again
         _ = ReceiveIncomingAsync();
     }
 }

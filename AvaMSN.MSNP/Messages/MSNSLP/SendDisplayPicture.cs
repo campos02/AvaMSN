@@ -1,49 +1,23 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace AvaMSN.MSNP.Messages;
+namespace AvaMSN.MSNP.Messages.MSNSLP;
 
-public class SendDisplayPicture
+/// <summary>
+/// Stores session parameters and contains functions that return message payloads for sending a display picture.
+/// </summary>
+public class SendDisplayPicture : DisplayPictureSession
 {
-    public string MimeVersion { get; set; } = "1.0";
-    public string ContentType { get; set; } = "application/x-msnmsgrp2p";
-
-    public string To { get; set; } = string.Empty;
-    public string From { get; set; } = string.Empty;
-    public string Branch { get; set; } = string.Empty;
-    public int CSeq { get; set; }
-    public string CallID { get; set; } = string.Empty;
-
-    public uint Identifier { get; set; }
-    public uint SessionID { get; set; }
-
     public byte[]? Data { get; set; }
     public int DataOffset { get; set; }
 
-    public BinaryHeader? LastHeader { get; set; }
-
-    public byte[] AcknowledgePayload(BinaryHeader binaryHeader)
-    {
-        LastHeader = new BinaryHeader()
-        {
-            Identifier = Identifier,
-            DataSize = binaryHeader.DataSize,
-            Flag = (uint)Flags.Acknowledgement,
-            AckID = binaryHeader.Identifier,
-            AckUniqueID = binaryHeader.AckUniqueID,
-            AckDataSize = binaryHeader.DataSize
-        };
-
-        byte[] footer = { 00, 00, 00, 00 };
-        byte[] content = LastHeader.GetBytes().Concat(footer).ToArray();
-
-        return Encoding.UTF8.GetBytes(PayloadHeaders()).Concat(content).ToArray();
-    }
-
+    /// <summary>
+    /// Returns a 200 OK payload, used to accept a session.
+    /// </summary>
+    /// <returns>Binary payload.</returns>
     public byte[] OkPayload()
     {
         string bodyText = $"SessionID: {SessionID}\r\n\r\n";
-
         byte[] body = Encoding.UTF8.GetBytes(bodyText);
 
         CSeq++;
@@ -58,23 +32,30 @@ public class SendDisplayPicture
                              $"Content-Length: {body.Length + 1}\r\n\r\n";
 
         byte[] headers = Encoding.UTF8.GetBytes(headersText);
-        byte[] inviteMessage = headers.Concat(body).ToArray();
+        byte[] message = headers.Concat(body).ToArray();
 
         Identifier++;
         LastHeader = new BinaryHeader()
         {
             Identifier = Identifier,
-            DataSize = (ulong)inviteMessage.Length + 1,
-            Length = (uint)inviteMessage.Length + 1,
+            DataSize = (ulong)message.Length + 1,
+            Length = (uint)message.Length + 1,
             AckID = BitConverter.ToUInt32(RandomNumberGenerator.GetBytes(sizeof(uint)))
         };
 
         byte[] footer = { 00, 00, 00, 00, 00 };
-        byte[] content = LastHeader.GetBytes().Concat(inviteMessage).Concat(footer).ToArray();
 
+        // Combine to produce full MSNSLP content
+        byte[] content = LastHeader.GetBytes().Concat(message).Concat(footer).ToArray();
+
+        // Combine with headers to get full MSG payload
         return Encoding.UTF8.GetBytes(PayloadHeaders()).Concat(content).ToArray();
     }
 
+    /// <summary>
+    /// Returns a data preparation payload, which tells the receiving client to prepare to receive picture data.
+    /// </summary>
+    /// <returns>Binary payload.</returns>
     public byte[] DataPreparationPayload()
     {
         byte[] message = { 00, 00, 00, 00 };
@@ -90,15 +71,23 @@ public class SendDisplayPicture
         };
 
         byte[] footer = { 00, 00, 00, 01 };
+
+        // Combine to produce full MSNSLP content
         byte[] content = LastHeader.GetBytes().Concat(message).Concat(footer).ToArray();
 
+        // Combine with headers to get full MSG payload
         return Encoding.UTF8.GetBytes(PayloadHeaders()).Concat(content).ToArray();
     }
 
+    /// <summary>
+    /// Returns a data payload, which contains a chunk of picture data.
+    /// </summary>
+    /// <returns>Binary payload.</returns>
     public byte[] DataPayload()
     {
         byte[] message;
 
+        // Set chunk buffer
         if (Data!.Length - DataOffset < 1200)
         {
             message = new byte[Data.Length - DataOffset];
@@ -108,6 +97,7 @@ public class SendDisplayPicture
             message = new byte[1200];
         }
 
+        // Copy chunk to buffer
         Buffer.BlockCopy(Data!, DataOffset, message, 0, message.Length);
 
         LastHeader = new BinaryHeader()
@@ -117,21 +107,17 @@ public class SendDisplayPicture
             DataOffset = (ulong)DataOffset,
             DataSize = (ulong)Data!.Length,
             Length = (uint)message.Length,
-            Flag = (uint)Flags.DisplayPictureData,
+            Flag = (uint)Flags.Data,
             AckID = BitConverter.ToUInt32(RandomNumberGenerator.GetBytes(sizeof(uint)))
         };
 
         byte[] footer = { 00, 00, 00, 01 };
+
+        // Combine to produce full MSNSLP content
         byte[] content = LastHeader.GetBytes().Concat(message).Concat(footer).ToArray();
         DataOffset += message.Length;
 
+        // Combine with headers to get full MSG payload
         return Encoding.UTF8.GetBytes(PayloadHeaders()).Concat(content).ToArray();
-    }
-
-    private string PayloadHeaders()
-    {
-        return $"MIME-Version: {MimeVersion}\r\n" +
-               $"Content-Type: {ContentType}\r\n" +
-               $"P2P-Dest: {To}\r\n\r\n";
     }
 }

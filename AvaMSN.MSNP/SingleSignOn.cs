@@ -6,6 +6,9 @@ using AvaMSN.MSNP.SOAP.RequestObjects;
 
 namespace AvaMSN.MSNP;
 
+/// <summary>
+/// Contains functions used in SSO authentication and stores auth data.
+/// </summary>
 public class SingleSignOn
 {
     public string BinarySecret { get; set; } = string.Empty;
@@ -20,21 +23,10 @@ public class SingleSignOn
     }
 
     /// <summary>
-    /// Concat two byte arrays
+    /// Converts an array of uints into a byte array.
     /// </summary>
-    /// <param name="first">First array</param>
-    /// <param name="second">Second array</param>
-    /// <returns>Concatened array</returns>
-    public static byte[] JoinBytes(byte[] first, byte[] second)
-    {
-        return first.Concat(second).ToArray();
-    }
-
-    /// <summary>
-    /// Convert an array of uints into a byte array
-    /// </summary>
-    /// <param name="uintArray">Array of uints</param>
-    /// <returns>Converted byte array</returns>
+    /// <param name="uintArray">Array of uints.</param>
+    /// <returns>Converted byte array.</returns>
     public static byte[] UIntBytes(uint[] uintArray)
     {
         byte[] bytes = new byte[sizeof(uint) * uintArray.Length];
@@ -51,10 +43,10 @@ public class SingleSignOn
     }
 
     /// <summary>
-    /// Make SOAP request to RST url and get necessary strings from response
+    /// Makes SOAP request to RST url and gets necessary strings from the response.
     /// </summary>
-    /// <param name="username">Username</param>
-    /// <param name="password">User password</param>
+    /// <param name="username">Username.</param>
+    /// <param name="password">User password.</param>
     /// <returns></returns>
     public async Task RstRequest(string username, string password)
     {
@@ -69,7 +61,7 @@ public class SingleSignOn
         requestSerializer.Serialize(memory, envelope);
 
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
-        string response = await Requests.SoapRequest(soapXML, RstAddress, "http://www.msn.com/webservices/storage/w10/");
+        string response = await Requests.MakeRequest(soapXML, RstAddress, "http://www.msn.com/webservices/storage/w10/");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.RstResponse.Envelope));
         
@@ -84,34 +76,34 @@ public class SingleSignOn
     }
 
     /// <summary>
-    /// Hashes key with WS-Secure string, used during return value calculation
+    /// Hashes key with WS-Secure string. Used during return value calculation.
     /// </summary>
-    /// <param name="key">Base64 binary secret</param>
-    /// <param name="wsSecure">WS-Secure string</param>
-    /// <returns>Hashed key bytes</returns>
-    private byte[] WsKey(byte[] key, string wsSecure)
+    /// <param name="key">Base64 binary secret.</param>
+    /// <param name="wsSecure">WS-Secure string.</param>
+    /// <returns>Hashed key bytes.</returns>
+    private static byte[] WsKey(byte[] key, string wsSecure)
     {
         HMACSHA1 hMACSHA1 = new HMACSHA1(key);
         byte[] wsSecureBytes = Encoding.UTF8.GetBytes(wsSecure);
 
         byte[] hash1 = hMACSHA1.ComputeHash(wsSecureBytes);
-        byte[] hash2 = hMACSHA1.ComputeHash(JoinBytes(hash1, wsSecureBytes));
+        byte[] hash2 = hMACSHA1.ComputeHash(hash1.Concat(wsSecureBytes).ToArray());
         byte[] hash3 = hMACSHA1.ComputeHash(hash1);
-        byte[] hash4 = hMACSHA1.ComputeHash(JoinBytes(hash3, wsSecureBytes));
+        byte[] hash4 = hMACSHA1.ComputeHash(hash3.Concat(wsSecureBytes).ToArray());
 
         byte[] hash4Fourbytes = new byte[4];
 
         Buffer.BlockCopy(hash4, 0, hash4Fourbytes, 0, hash4Fourbytes.Length);
 
-        byte[] returnKey = JoinBytes(hash2, hash4Fourbytes);
+        byte[] returnKey = hash2.Concat(hash4Fourbytes).ToArray();
         return returnKey;
     }
 
     /// <summary>
-    /// Calculate SSO return value used in authentication
+    /// Calculates the SSO return value used in authentication.
     /// </summary>
-    /// <param name="nonce">Nonce obtained from server response</param>
-    /// <returns>SSO return value</returns>
+    /// <param name="nonce">Nonce obtained from server response.</param>
+    /// <returns>SSO return value.</returns>
     public string GetReturnValue(string nonce)
     {
         byte[] nonceBytes = Encoding.UTF8.GetBytes(nonce);
@@ -124,7 +116,7 @@ public class SingleSignOn
 
         byte[] key2Hash = hMACSHA1.ComputeHash(nonceBytes);
         byte[] eight8Bytes = { 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08 };
-        byte[] paddedNonce = JoinBytes(nonceBytes, eight8Bytes);
+        byte[] paddedNonce = nonceBytes.Concat(eight8Bytes).ToArray();
 
         byte[] randomBytes = RandomNumberGenerator.GetBytes(8);
 
@@ -147,9 +139,9 @@ public class SingleSignOn
 
         byte[] returnStruct = UIntBytes(headerValues);
 
-        returnStruct = JoinBytes(returnStruct, randomBytes);//aIVBytes
-        returnStruct = JoinBytes(returnStruct, key2Hash);//aHashBytes
-        returnStruct = JoinBytes(returnStruct, encryptedData);//aCipherBytes
+        returnStruct = returnStruct.Concat(randomBytes).ToArray();//aIVBytes
+        returnStruct = returnStruct.Concat(key2Hash).ToArray();//aHashBytes
+        returnStruct = returnStruct.Concat(encryptedData).ToArray();//aCipherBytes
 
         return Convert.ToBase64String(returnStruct);
     }
