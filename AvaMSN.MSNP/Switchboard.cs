@@ -5,6 +5,9 @@ using System.Text;
 
 namespace AvaMSN.MSNP;
 
+/// <summary>
+/// Represents a connection to the Switchboard (SB).
+/// </summary>
 public partial class Switchboard : Connection
 {
     public Profile Profile { get; set; } = new Profile();

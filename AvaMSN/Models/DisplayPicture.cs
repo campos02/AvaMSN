@@ -3,7 +3,7 @@
 namespace AvaMSN.Models;
 
 /// <summary>
-/// Represents a user's and contact's display picture.
+/// Represents user and contact display pictures.
 /// </summary>
 public class DisplayPicture
 {

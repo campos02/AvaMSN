@@ -162,7 +162,7 @@ public class Connection
             }
             catch (ObjectDisposedException)
             {
-                // Stop if socket has already been disposed
+                // Stop if socket has been disposed
                 break;
             }
 

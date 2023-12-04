@@ -3,7 +3,7 @@
 namespace AvaMSN.MSNP.SOAP;
 
 /// <summary>
-/// Contains the HTTP client and makes SOAP requests.
+/// Static class to make SOAP requests.
 /// </summary>
 public static class Requests
 {

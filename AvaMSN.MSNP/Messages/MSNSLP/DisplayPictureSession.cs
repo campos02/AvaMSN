@@ -3,7 +3,7 @@
 namespace AvaMSN.MSNP.Messages.MSNSLP;
 
 /// <summary>
-/// Contains session parameters and other common payload functions for a display picture session.
+/// Base class containing session parameters and other common payload functions for a display picture session.
 /// </summary>
 public class DisplayPictureSession
 {

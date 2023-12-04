@@ -112,29 +112,27 @@ public partial class NotificationServer : Connection
     /// <exception cref="ContactException">Thrown if the provided email is not of any contact.</exception>
     public async Task BlockContact(string email)
     {
-        // Add to block lists
         Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
-        await ContactList.AddMember("Block", contact.Email);
+
+        // Remove from allow lists
+        await ContactList.DeleteMember("Allow", contact.Email);
 
         string payload = ContactList.ListPayload(contact, new Lists
+        {
+            Allow = true
+        });
+
+        await SendRML(payload);
+
+        // Add to block lists
+        await ContactList.AddMember("Block", contact.Email);
+
+        payload = ContactList.ListPayload(contact, new Lists
         {
             Block = true
         });
 
         await SendADL(payload);
-
-        // Remove from allow lists if in them
-        if (contact.InLists.Allow)
-        {
-            await ContactList.DeleteMember("Allow", contact.Email);
-
-            payload = ContactList.ListPayload(contact, new Lists
-            {
-                Allow = true
-            });
-
-            await SendRML(payload);
-        }
 
         // Start receiving incoming commands again
         _ = ReceiveIncomingAsync();
@@ -148,8 +146,9 @@ public partial class NotificationServer : Connection
     /// <exception cref="ContactException">Thrown if the provided email is not of any contact.</exception>
     public async Task UnblockContact(string email)
     {
-        // Remove from block lists
         Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
+
+        // Remove from block lists
         await ContactList.DeleteMember("Block", contact.Email);
 
         string payload = ContactList.ListPayload(contact, new Lists
@@ -158,6 +157,16 @@ public partial class NotificationServer : Connection
         });
 
         await SendRML(payload);
+
+        // Add to allow lists
+        await ContactList.AddMember("Allow", contact.Email);
+
+        payload = ContactList.ListPayload(contact, new Lists
+        {
+            Allow = true
+        });
+
+        await SendADL(payload);
 
         // Start receiving incoming commands again
         _ = ReceiveIncomingAsync();
