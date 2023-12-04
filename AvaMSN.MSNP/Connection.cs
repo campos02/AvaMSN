@@ -46,7 +46,7 @@ public class Connection
     protected void Send(string message)
     {
         var messageBytes = Encoding.UTF8.GetBytes(message);
-        Client!.Send(messageBytes, SocketFlags.None);
+        Client?.Send(messageBytes, SocketFlags.None);
     }
 
     /// <summary>
@@ -150,7 +150,21 @@ public class Connection
         {
             // Send ping
             var message = "PNG\r\n";
-            await SendAsync(message);
+            
+            try
+            {
+                await SendAsync(message);
+            }
+            catch (OperationCanceledException)
+            {
+                // Shutdown socket and invoke event if connection has been lost
+                await DisconnectAsync(requested: false);
+            }
+            catch (ObjectDisposedException)
+            {
+                // Stop if socket has already been disposed
+                break;
+            }
 
             await Task.Delay(30000);
         }
@@ -159,17 +173,20 @@ public class Connection
     /// <summary>
     /// Sends a disconnection command and invokes Disconnected event.
     /// </summary>
+    /// <param name="requested">Whether the disconnection was requested by the user.</param>
     /// <returns></returns>
-    public async Task DisconnectAsync()
+    public async Task DisconnectAsync(bool requested = true)
     {
         await SendAsync("OUT\r\n");
-        Client!.Shutdown(SocketShutdown.Both);
-        Client.Dispose();
+        ReceiveSource.Cancel();
+
+        Client?.Shutdown(SocketShutdown.Both);
+        Client?.Dispose();
         Connected = false;
 
         Disconnected?.Invoke(this, new DisconnectedEventArgs()
         {
-            Requested = true
+            Requested = requested
         });
     }
 }
