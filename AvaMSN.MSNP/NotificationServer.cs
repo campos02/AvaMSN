@@ -34,12 +34,6 @@ public partial class NotificationServer : Connection
 
         SSO = new SingleSignOn(Host);
         ContactList = new ContactList(Host);
-
-        // Add mobile device capability if on a mobile OS
-        if (OperatingSystem.IsIOS() || OperatingSystem.IsAndroid())
-        {
-            ClientCapabilities += 0x01;
-        }
     }
 
     /// <summary>
