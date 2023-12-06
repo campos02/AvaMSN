@@ -38,7 +38,7 @@ public class Contact : ReactiveObject
     }
 
     /// <summary>
-    /// Stores a full name presence
+    /// Stores a full name presence.
     /// </summary>
     public string Presence
     {

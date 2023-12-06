@@ -15,7 +15,7 @@
   <Grid>
     <TransitioningContentControl Content="{Binding CurrentPage}"/>
 
-    <TransitioningContentControl Content="{Binding NotificationManager.NotificationPage}"
+    <TransitioningContentControl Content="{Binding NotificationPage}"
                                  VerticalAlignment="Bottom"
                                  HorizontalAlignment="Right"
                                  MaxWidth="400"

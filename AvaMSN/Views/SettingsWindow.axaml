@@ -1,0 +1,57 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:AvaMSN.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="550"
+        x:Class="AvaMSN.Views.SettingsWindow"
+        Title="Settings"
+        Icon="/Assets/avalonia-logo.ico"
+        MinWidth="300"
+        MinHeight="450"
+        Width="450"
+        WindowStartupLocation="CenterScreen"
+        x:DataType="vm:SettingsWindowViewModel">
+
+  <Grid RowDefinitions="10, Auto, *, 20, Auto"
+        Margin="30">
+
+    <TextBlock Grid.Row="1"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Bottom"
+               FontWeight="ExtraBold"
+               FontSize="20">Settings</TextBlock>
+
+    <Grid Grid.Row="2"
+          RowDefinitions="Auto, 3, Auto, 15, Auto"
+          VerticalAlignment="Center">
+
+      <TextBlock HorizontalAlignment="Center"
+                 FontSize="15">
+        Server:
+      </TextBlock>
+
+      <TextBox Grid.Row="2"
+               Text="{Binding Server}"/>
+
+      <CheckBox Grid.Row="4"
+                HorizontalAlignment="Center"
+                IsChecked="{Binding SaveMessages}">
+        Save messaging history
+      </CheckBox>
+
+    </Grid>
+
+    <StackPanel Grid.Row="4"
+                HorizontalAlignment="Center"
+                Spacing="5">
+
+      <TransitioningContentControl Content="{Binding ResultText}"/>
+
+      <Button Command="{Binding SaveCommand}"
+              HorizontalAlignment="Center">Save</Button>
+
+    </StackPanel>
+
+  </Grid>
+</Window>

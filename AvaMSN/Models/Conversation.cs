@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using AvaMSN.MSNP;
 using AvaMSN.MSNP.Messages;
+using AvaMSN.ViewModels;
+using AvaMSN.Views;
 using ReactiveUI;
 
 namespace AvaMSN.Models;
@@ -40,6 +42,7 @@ public class Conversation : ReactiveObject
     }
 
     public Switchboard? Switchboard { get; set; }
+    private ConversationWindow? ConversationWindow { get; set; }
 
     public event EventHandler? DisplayPictureUpdated;
     public event EventHandler<NewMessageEventArgs>? NewMessage;
@@ -60,8 +63,43 @@ public class Conversation : ReactiveObject
             }
         }
 
-        // Load only first four messages by default
+        // Load only last four messages by default
         GetHistory(4);
+    }
+
+    /// <summary>
+    /// Opens a new conversation window or activates one if it's already open.
+    /// </summary>
+    public void OpenWindow()
+    {
+        if (ConversationWindow != null)
+            ConversationWindow.Activate();
+        else
+        {
+            ConversationWindow = new ConversationWindow()
+            {
+                DataContext = new ConversationWindowViewModel()
+                {
+                    Conversation = this
+                }
+            };
+
+            ConversationWindow.Closed += ConversationWindow_Closed;
+            ConversationWindow.Show();
+        }
+    }
+
+    /// <summary>
+    /// Closes the conversation window.
+    /// </summary>
+    public void CloseWindow()
+    {
+        ConversationWindow?.Close();
+    }
+
+    private void ConversationWindow_Closed(object? sender, EventArgs e)
+    {
+        ConversationWindow = null;
     }
 
     /// <summary>
@@ -170,7 +208,7 @@ public class Conversation : ReactiveObject
     }
 
     /// <summary>
-    /// Deletes from the database and cleans all messages between user and contact.
+    /// Deletes from the database and memory all messages between a user and contact.
     /// </summary>
     public void DeleteHistory()
     {

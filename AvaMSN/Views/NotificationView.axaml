@@ -32,6 +32,7 @@
     <Grid RowDefinitions="Auto, 5, Auto, 10, Auto">
       
       <TextBlock Text="{Binding Message.SenderDisplayName, StringFormat='{}{0} says:'}"
+                 IsVisible="{Binding Message.SenderDisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                  TextWrapping="Wrap"
                  HorizontalAlignment="Center"/>
       

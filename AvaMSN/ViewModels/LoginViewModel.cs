@@ -9,6 +9,7 @@ using System;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using System.IO;
+using AvaMSN.Views;
 
 namespace AvaMSN.ViewModels;
 
@@ -65,7 +66,6 @@ public class LoginViewModel : ViewModelBase
     public ObservableCollection<User>? Users { get; set; }
 
     public event EventHandler? LoggedIn;
-    public event EventHandler? OptionsButtonPressed;
 
     public LoginViewModel()
     {
@@ -122,7 +122,7 @@ public class LoginViewModel : ViewModelBase
                 return;
 
             case "Options":
-                OptionsButtonPressed?.Invoke(this, EventArgs.Empty);
+                OpenOptions();
                 return;
         }
 
@@ -141,9 +141,16 @@ public class LoginViewModel : ViewModelBase
             RememberPassword = true;
 
         Profile.PersonalMessage = user.PersonalMessage;
+        LoadDisplayPicture(user.UserEmail);
+    }
 
-        // Load user display picture if it exists
-        DisplayPicture? picture = Database?.GetUserDisplayPicture(user.UserEmail);
+    /// <summary>
+    /// Retrieves and sets a user display picture from the database. If none are found the default picture is set.
+    /// </summary>
+    /// <param name="email">User email.</param>
+    public void LoadDisplayPicture(string email)
+    {
+        DisplayPicture? picture = Database?.GetUserDisplayPicture(email);
         if (picture != null)
         {
             if (picture.PictureData.Length > 0)
@@ -167,6 +174,8 @@ public class LoginViewModel : ViewModelBase
     /// <returns></returns>
     public async Task Login()
     {
+        LoadDisplayPicture(Email);
+
         NotificationServer = new NotificationServer(SettingsManager.Settings.Server)
         {
             Port = 1863
@@ -242,5 +251,29 @@ public class LoginViewModel : ViewModelBase
         Users?.Remove(user);
         Database?.DeleteUser(user);
         Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
+    }
+
+    /// <summary>
+    /// Opens the settings window or activates it if it's already open.
+    /// </summary>
+    private static void OpenOptions()
+    {
+        if (SettingsWindow != null)
+            SettingsWindow.Activate();
+        else
+        {
+            SettingsWindow = new SettingsWindow()
+            {
+                DataContext = new SettingsWindowViewModel()
+            };
+
+            SettingsWindow.Closed += SettingsWindow_Closed;
+            SettingsWindow.Show();
+        }
+    }
+
+    private static void SettingsWindow_Closed(object? sender, EventArgs e)
+    {
+        SettingsWindow = null;
     }
 }

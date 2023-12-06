@@ -1,14 +1,12 @@
 ﻿using ReactiveUI;
-using System;
 using System.Reactive;
 using System.Threading.Tasks;
 
 namespace AvaMSN.ViewModels;
 
-public class SettingsViewModel : ViewModelBase
+public class SettingsWindowViewModel : ViewModelBase
 {
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
-    public ReactiveCommand<Unit, Unit> BackCommand { get; }
 
     public SettingsManager SettingsManager { get; set; } = new SettingsManager();
     public string Server { get; set; } = string.Empty;
@@ -22,12 +20,9 @@ public class SettingsViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref resultText, value);
     }
 
-    public event EventHandler? BackButtonPressed;
-
-    public SettingsViewModel()
+    public SettingsWindowViewModel()
     {
         SaveCommand = ReactiveCommand.CreateFromTask(Save);
-        BackCommand = ReactiveCommand.Create(Back);
         Server = SettingsManager.Settings.Server;
         SaveMessages = SettingsManager.Settings.SaveMessagingHistory;
     }
@@ -46,10 +41,5 @@ public class SettingsViewModel : ViewModelBase
         ResultText = "Saved successfully!";
         await Task.Delay(2000);
         ResultText = string.Empty;
-    }
-
-    private void Back()
-    {
-        BackButtonPressed?.Invoke(this, EventArgs.Empty);
     }
 }

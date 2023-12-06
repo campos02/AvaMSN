@@ -14,16 +14,8 @@ namespace AvaMSN;
 /// </summary>
 public class NotificationManager : ReactiveObject
 {
-    private NotificationViewModel? notificationPage;
     private ErrorViewModel? errorPage;
     private readonly MediaPlayer mediaPlayer;
-    private CancellationTokenSource? cancellationSource;
-
-    public NotificationViewModel? NotificationPage
-    {
-        get => notificationPage;
-        private set => this.RaiseAndSetIfChanged(ref notificationPage, value);
-    }
 
     public ErrorViewModel? ErrorPage
     {
@@ -31,7 +23,10 @@ public class NotificationManager : ReactiveObject
         private set => this.RaiseAndSetIfChanged(ref errorPage, value);
     }
 
-    public event EventHandler? ReplyTapped;
+    public event EventHandler<ContactEventArgs>? ReplyTapped;
+    public event EventHandler<NotificationEventArgs>? Notification;
+
+    private CancellationTokenSource? delaySource;
 
     public NotificationManager()
     {
@@ -44,37 +39,37 @@ public class NotificationManager : ReactiveObject
     }
 
     /// <summary>
-    /// Shows a new message notification for five seconds.
+    /// Invokes a notification event. A delay task is used as an event argument for syncing (or cancelling) display across all windows.
     /// </summary>
     /// <param name="contact">Message sender.</param>
     /// <param name="message">The message itself.</param>
     /// <returns></returns>
-    public async Task ShowNotification(Contact? contact, Message? message)
+    public void InvokeNotification(Contact? contact, Message? message)
     {
-        if (NotificationPage != null)
-            return;
-
         PlaySound();
 
-        NotificationPage = new NotificationViewModel()
+        delaySource?.Cancel();
+        delaySource = new CancellationTokenSource();
+
+        Notification?.Invoke(this, new NotificationEventArgs
         {
-            Sender = contact,
-            Message = message
-        };
+            Contact = contact,
+            Message = message,
+            DelayTask = Task.Delay(5000, delaySource.Token)
+        });
+    }
 
-        NotificationPage.ReplyTapped += NotificationPage_ReplyTapped;
-        NotificationPage.DismissTapped += NotificationPage_DismissTapped;
-
-        // Stop current delay and create new cancellation source for new delay
-        cancellationSource?.Cancel();
-        cancellationSource = new CancellationTokenSource();
-        try
+    /// <summary>
+    /// Invokes a reply button event.
+    /// </summary>
+    /// <param name="contact">Message sender.</param>
+    /// <returns></returns>
+    public void InvokeReplyTapped(Contact? contact)
+    {
+        ReplyTapped?.Invoke(this, new ContactEventArgs
         {
-            await Task.Delay(5000, cancellationSource.Token);
-        }
-        catch (OperationCanceledException) { }
-
-        CloseNotification();
+            Contact = contact
+        });
     }
 
     /// <summary>
@@ -106,29 +101,5 @@ public class NotificationManager : ReactiveObject
     private void ErrorPage_CloseTapped(object? sender, EventArgs e)
     {
         ErrorPage = null;
-    }
-
-    private void NotificationPage_ReplyTapped(object? sender, EventArgs e)
-    {
-        ReplyTapped?.Invoke(this, new EventArgs());
-        cancellationSource?.Cancel();
-    }
-
-    private void NotificationPage_DismissTapped(object? sender, EventArgs e)
-    {
-        cancellationSource?.Cancel();
-    }
-
-    /// <summary>
-    /// Removes notification from the screen.
-    /// </summary>
-    private void CloseNotification()
-    {
-        if (NotificationPage == null)
-            return;
-
-        NotificationPage!.ReplyTapped -= NotificationPage_ReplyTapped;
-        NotificationPage.DismissTapped -= NotificationPage_DismissTapped;
-        NotificationPage = null;
     }
 }

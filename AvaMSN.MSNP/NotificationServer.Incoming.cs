@@ -69,7 +69,11 @@ public partial class NotificationServer : Connection
         try
         {
             contact.DisplayPictureObject = Uri.UnescapeDataString(parameters[7]);
+            contact.DisplayPictureObject = contact.DisplayPictureObject.Replace("\r\n", "");
             contact.DisplayPictureObject = contact.DisplayPictureObject.Remove(contact.DisplayPictureObject.LastIndexOf("/>") + "/>".Length);
+
+            if (contact.DisplayPictureObject == "0")
+                contact.DisplayPictureObject = null;
         }
         catch (IndexOutOfRangeException)
         {
@@ -126,6 +130,10 @@ public partial class NotificationServer : Connection
         try
         {
             contact.DisplayPictureObject = Uri.UnescapeDataString(parameters[6]);
+            contact.DisplayPictureObject = contact.DisplayPictureObject.Replace("\r\n", "");
+
+            if (contact.DisplayPictureObject == "0")
+                contact.DisplayPictureObject = null;
         }
         catch (IndexOutOfRangeException)
         {

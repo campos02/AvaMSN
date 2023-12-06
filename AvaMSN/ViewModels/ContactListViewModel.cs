@@ -12,6 +12,8 @@ using Avalonia.Platform.Storage;
 using System.IO;
 using Avalonia;
 using AvaMSN.MSNP.Exceptions;
+using AvaMSN.Views;
+using System.Collections.Generic;
 
 namespace AvaMSN.ViewModels;
 
@@ -35,7 +37,7 @@ public class ContactListViewModel : ViewModelBase
     public static Presence[] Statuses => ContactListData.Statuses;
 
     public Contact? SelectedContact { get; set; }
-    public Conversation? CurrentConversation { get; set; }
+    public List<Conversation> Conversations { get; set; } = new List<Conversation>();
 
     public Profile Profile
     {
@@ -66,19 +68,15 @@ public class ContactListViewModel : ViewModelBase
     public Database? Database { get; set; }
 
     public event EventHandler? Disconnected;
-    public event EventHandler? OptionsButtonPressed;
-    public event EventHandler? ChatStarted;
-    public event EventHandler<NewMessageEventArgs>? NewMessage;
 
     public ContactListViewModel()
     {
-        // User data commands
         ChangePresenceCommand = ReactiveCommand.CreateFromTask<string>(ChangePresence);
         ChangeNameCommand = ReactiveCommand.CreateFromTask(ChangeDisplayName);
         ChangePersonalMessageCommand = ReactiveCommand.CreateFromTask(ChangePersonalMessage);
 
         ChatCommand = ReactiveCommand.CreateFromTask(Chat);
-        OptionsCommand = ReactiveCommand.Create(Options);
+        OptionsCommand = ReactiveCommand.Create(OpenOptions);
 
         AddContactCommand = ReactiveCommand.CreateFromTask(AddContact);
         RemoveContactCommand = ReactiveCommand.CreateFromTask(RemoveContact);
@@ -143,7 +141,7 @@ public class ContactListViewModel : ViewModelBase
         {
             await using Stream fileStream = await files[0].OpenReadAsync();
 
-            // Loading then resizing due to a bug in DecodeToWidth
+            // Load then resize due to a bug in DecodeToWidth
             // https://github.com/AvaloniaUI/Avalonia/discussions/13239
             Profile.DisplayPicture = new Bitmap(fileStream).CreateScaledBitmap(new PixelSize(96, 96));
 
@@ -181,7 +179,8 @@ public class ContactListViewModel : ViewModelBase
         {
             Email = NewContactEmail,
             DisplayName = NewContactDisplayName,
-            Presence = PresenceStatus.GetFullName(PresenceStatus.Offline)
+            Presence = PresenceStatus.GetFullName(PresenceStatus.Offline),
+            PresenceColor = ContactListData.GetStatusColor(PresenceStatus.Offline)
         });
 
         NewContactEmail = string.Empty;
@@ -225,7 +224,8 @@ public class ContactListViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Creates a conversation object with the selected contact and navigates to conversation page.
+    /// Creates a new conversation object with the selected contact and opens a new conversation window.
+    /// If a conversation with the selected contact already exists however, simply opens its window.
     /// </summary>
     public async Task Chat()
     {
@@ -234,47 +234,71 @@ public class ContactListViewModel : ViewModelBase
 
         // Unbold contact name
         SelectedContact.NewMessages = false;
+        Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact == SelectedContact);
 
-        // Don't go through the process of creating a new instance if a conversation is already taking place 
-        if (SelectedContact == CurrentConversation?.Contact)
+        if (conversation == null)
         {
-            ChatStarted?.Invoke(this, EventArgs.Empty);
-            return;
+            MSNP.Contact? contact = NotificationServer.ContactList.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ?? new MSNP.Contact()
+            {
+                Email = SelectedContact.Email,
+                DisplayName = SelectedContact.DisplayName,
+                PersonalMessage = SelectedContact.PersonalMessage,
+                Presence = SelectedContact.Presence
+            };
+
+            conversation = new Conversation(SelectedContact, Profile, Database);
+
+            if (SelectedContact.Presence != PresenceStatus.GetFullName(PresenceStatus.Offline))
+            {
+                // Check if a switchboard session is already open before requesting a new one
+                MSNP.Switchboard? switchboard = NotificationServer.Switchboards.FirstOrDefault(sb => sb.Contact.Email == contact.Email && sb.Connected);
+
+                if (switchboard == null)
+                    conversation.Switchboard = await NotificationServer!.SendXFR(contact);
+                else
+                    conversation.Switchboard = switchboard;
+
+                conversation.NewMessage += Conversation_NewMessage;
+                conversation.SubscribeToEvents();
+                conversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
+            }
+
+            NotificationServer.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
+            conversation.OpenWindow();
+            Conversations.Add(conversation);
         }
 
-        MSNP.Contact? contact = NotificationServer.ContactList.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ?? new MSNP.Contact()
-        {
-            Email = SelectedContact.Email,
-            DisplayName = SelectedContact.DisplayName,
-            PersonalMessage = SelectedContact.PersonalMessage,
-            Presence = SelectedContact.Presence
-        };
-
-        CurrentConversation = new Conversation(SelectedContact, Profile, Database);
-
-        if (SelectedContact.Presence != PresenceStatus.GetFullName(PresenceStatus.Offline))
-        {
-            // Check if a switchboard session is already open before requesting a new one
-            MSNP.Switchboard? switchboard = NotificationServer.Switchboards.FirstOrDefault(sb => sb.Contact.Email == contact.Email && sb.Connected);
-
-            if (switchboard == null)
-                CurrentConversation.Switchboard = await NotificationServer!.SendXFR(contact);
-            else
-                CurrentConversation.Switchboard = switchboard;
-
-            CurrentConversation.NewMessage += Conversation_NewMessage;
-            CurrentConversation.SubscribeToEvents();
-            CurrentConversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
-        }
-
-        NotificationServer.SwitchboardChanged += CurrentConversation.NotificationServer_SwitchboardChanged;
-
-        ChatStarted?.Invoke(this, EventArgs.Empty);
+        else
+            conversation.OpenWindow();
     }
 
-    private void Options()
+    private void Conversation_NewMessage(object? sender, NewMessageEventArgs e)
     {
-        OptionsButtonPressed?.Invoke(this, EventArgs.Empty);
+        NotificationManager?.InvokeNotification(e.Contact, e.Message);
+    }
+
+    /// <summary>
+    /// Opens the settings window or activates it if it's already open.
+    /// </summary>
+    private static void OpenOptions()
+    {
+        if (SettingsWindow != null)
+            SettingsWindow.Activate();
+        else
+        {
+            SettingsWindow = new SettingsWindow()
+            {
+                DataContext = new SettingsWindowViewModel()
+            };
+
+            SettingsWindow.Closed += SettingsWindow_Closed;
+            SettingsWindow.Show();
+        }
+    }
+
+    private static void SettingsWindow_Closed(object? sender, EventArgs e)
+    {
+        SettingsWindow = null;
     }
 
     private async Task SignOut()
@@ -286,9 +310,9 @@ public class ContactListViewModel : ViewModelBase
         await NotificationServer.DisconnectAsync();
     }
 
-    private async void NotificationManager_ReplyTapped(object? sender, EventArgs e)
+    private async void NotificationManager_ReplyTapped(object? sender, ContactEventArgs e)
     {
-        SelectedContact = NotificationManager?.NotificationPage?.Sender;
+        SelectedContact = e.Contact;
         await Chat();
     }
 
@@ -312,9 +336,11 @@ public class ContactListViewModel : ViewModelBase
             contact = group.Contacts.FirstOrDefault(contact => contact.Email == e.Switchboard.Contact.Email) ?? contact;
         }
 
-        if (CurrentConversation?.Contact.Email != contact.Email)
+        Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact.Email == contact.Email);
+
+        if (conversation == null)
         {
-            Conversation conversation = new Conversation(contact, Profile, Database!)
+            conversation = new Conversation(contact, Profile, Database!)
             {
                 Switchboard = e.Switchboard
             };
@@ -324,28 +350,25 @@ public class ContactListViewModel : ViewModelBase
         }
     }
 
-    private void Conversation_NewMessage(object? sender, NewMessageEventArgs e)
-    {
-        NewMessage?.Invoke(sender, e);
-    }
-
     /// <summary>
-    /// Resets data and returns to login page when disconnected from the server.
+    /// Resets data, closes chat windows and returns to login page when disconnected from the server.
     /// </summary>
     /// <exception cref="ConnectionException">Thrown if the disconnection wasn't requested.</exception>
     public void NotificationServer_Disconnected(object? sender, MSNP.DisconnectedEventArgs e)
     {
-        if (CurrentConversation != null)
+        // Close every conversation
+        foreach (Conversation conversation in Conversations)
         {
-            CurrentConversation.UnsubscribeToEvents();
-            
-            if (NotificationServer != null)
-                NotificationServer.SwitchboardChanged -= CurrentConversation!.NotificationServer_SwitchboardChanged;
+            conversation.UnsubscribeToEvents();
 
-            CurrentConversation.DisplayPictureUpdated -= Conversation_DisplayPictureUpdated;
+            if (NotificationServer != null)
+                NotificationServer.SwitchboardChanged -= conversation.NotificationServer_SwitchboardChanged;
+
+            conversation.DisplayPictureUpdated -= Conversation_DisplayPictureUpdated;
+            conversation.CloseWindow();
         }
 
-        CurrentConversation = null;
+        Conversations = [];
         NotificationServer = null;
         SelectedContact = null;
         ListData = new();

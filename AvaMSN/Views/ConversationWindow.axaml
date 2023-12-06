@@ -1,34 +1,37 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:AvaMSN.ViewModels"
-             xmlns:dvm="clr-namespace:AvaMSN.ViewModels.Design"
-             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
-             xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
-             xmlns:conv="clr-namespace:AvaMSN.Converters"
-             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="480"
-             x:Class="AvaMSN.Views.ConversationView"
-             x:DataType="vm:ConversationViewModel">
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="550"
+        xmlns:views="clr-namespace:AvaMSN.Views"
+        xmlns:vm="using:AvaMSN.ViewModels"
+        xmlns:dvm="clr-namespace:AvaMSN.ViewModels.Design"
+        xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+        xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+        xmlns:conv="clr-namespace:AvaMSN.Converters"
+        x:Class="AvaMSN.Views.ConversationWindow"
+        Title="Conversation"
+        Icon="/Assets/avalonia-logo.ico"
+        MinWidth="400"
+        MinHeight="450"
+        Width="900"
+        WindowStartupLocation="CenterScreen"
+        x:DataType="vm:ConversationWindowViewModel">
 
   <Design.DataContext>
-    <dvm:DesignConversationViewModel/>
+    <dvm:DesignConversationWindowViewModel/>
   </Design.DataContext>
-  
-  <UserControl.Resources>
+
+  <Window.Resources>
     <conv:UserSaysConverter x:Key="userSaysConverter"/>
     <StreamGeometry x:Key="arrow_previous_regular">M5.75,3 C5.37030423,3 5.05650904,3.28215388 5.00684662,3.64822944 L5,3.75 L5,20.25 C5,20.6642136 5.33578644,21 5.75,21 C6.12969577,21 6.44349096,20.7178461 6.49315338,20.3517706 L6.5,20.25 L6.5,3.75 C6.5,3.33578644 6.16421356,3 5.75,3 Z M18.7803301,3.21966991 C18.5140635,2.95340335 18.0973998,2.9291973 17.8037883,3.14705176 L17.7196699,3.21966991 L9.46966991,11.4696699 C9.20340335,11.7359365 9.1791973,12.1526002 9.39705176,12.4462117 L9.46966991,12.5303301 L17.7196699,20.7803301 C18.0125631,21.0732233 18.4874369,21.0732233 18.7803301,20.7803301 C19.0465966,20.5140635 19.0708027,20.0973998 18.8529482,19.8037883 L18.7803301,19.7196699 L11.0606602,12 L18.7803301,4.28033009 C19.0732233,3.98743687 19.0732233,3.51256313 18.7803301,3.21966991 Z</StreamGeometry>
     <StreamGeometry x:Key="delete_regular">M24,7.25 C27.1017853,7.25 29.629937,9.70601719 29.7458479,12.7794443 L29.75,13 L37,13 C37.6903559,13 38.25,13.5596441 38.25,14.25 C38.25,14.8972087 37.7581253,15.4295339 37.1278052,15.4935464 L37,15.5 L35.909,15.5 L34.2058308,38.0698451 C34.0385226,40.2866784 32.1910211,42 29.9678833,42 L18.0321167,42 C15.8089789,42 13.9614774,40.2866784 13.7941692,38.0698451 L12.09,15.5 L11,15.5 C10.3527913,15.5 9.8204661,15.0081253 9.75645361,14.3778052 L9.75,14.25 C9.75,13.6027913 10.2418747,13.0704661 10.8721948,13.0064536 L11,13 L18.25,13 C18.25,9.82436269 20.8243627,7.25 24,7.25 Z M33.4021054,15.5 L14.5978946,15.5 L16.2870795,37.8817009 C16.3559711,38.7945146 17.116707,39.5 18.0321167,39.5 L29.9678833,39.5 C30.883293,39.5 31.6440289,38.7945146 31.7129205,37.8817009 L33.4021054,15.5 Z M27.25,20.75 C27.8972087,20.75 28.4295339,21.2418747 28.4935464,21.8721948 L28.5,22 L28.5,33 C28.5,33.6903559 27.9403559,34.25 27.25,34.25 C26.6027913,34.25 26.0704661,33.7581253 26.0064536,33.1278052 L26,33 L26,22 C26,21.3096441 26.5596441,20.75 27.25,20.75 Z M20.75,20.75 C21.3972087,20.75 21.9295339,21.2418747 21.9935464,21.8721948 L22,22 L22,33 C22,33.6903559 21.4403559,34.25 20.75,34.25 C20.1027913,34.25 19.5704661,33.7581253 19.5064536,33.1278052 L19.5,33 L19.5,22 C19.5,21.3096441 20.0596441,20.75 20.75,20.75 Z M24,9.75 C22.2669685,9.75 20.8507541,11.1064548 20.7551448,12.8155761 L20.75,13 L27.25,13 C27.25,11.2050746 25.7949254,9.75 24,9.75 Z</StreamGeometry>
     <StreamGeometry x:Key="more_vertical_regular">M24.002 15.75C22.207 15.75 20.752 14.2949 20.752 12.5C20.752 10.7051 22.207 9.25 24.002 9.25C25.7969 9.25 27.252 10.7051 27.252 12.5C27.252 14.2949 25.7969 15.75 24.002 15.75Z M24.002 27.25C22.207 27.25 20.752 25.7949 20.752 24C20.752 22.2051 22.207 20.75 24.002 20.75C25.7969 20.75 27.252 22.2051 27.252 24C27.252 25.7949 25.7969 27.25 24.002 27.25Z M20.752 35.5C20.752 37.2949 22.207 38.75 24.002 38.75C25.7969 38.75 27.252 37.2949 27.252 35.5C27.252 33.7051 25.7969 32.25 24.002 32.25C22.207 32.25 20.752 33.7051 20.752 35.5Z</StreamGeometry>
-  </UserControl.Resources>
-
+  </Window.Resources>
+  
   <Grid Margin="30"
-        RowDefinitions="Auto, 5, Auto, 10, *, 10, 20, 10, Auto"
+        RowDefinitions="Auto, 30, *, 10, 20, 10, Auto"
         ColumnDefinitions="Auto, 15, *">
-
-    <Button Command="{Binding BackCommand}">
-      <PathIcon Data="{StaticResource arrow_previous_regular}"/>
-    </Button>
 
     <Button HorizontalAlignment="Right"
             Grid.ColumnSpan="3">
@@ -46,7 +49,7 @@
     <Border CornerRadius="5"
             ClipToBounds="True"
             VerticalAlignment="Top"
-            Grid.Row="2">
+            Grid.RowSpan="3">
       <Image Source="{Binding Conversation.Contact.DisplayPicture}"
              MaxHeight="100"
              MaxWidth="100"/>
@@ -56,7 +59,7 @@
                 Orientation="Horizontal"
                 Grid.Column="2"
                 Height="25"
-                Grid.Row="2">
+                VerticalAlignment="Bottom">
       <TextBlock Text="{Binding Conversation.Contact.DisplayName}"
                  FontSize="20"
                  FontWeight="ExtraBold"/>
@@ -64,8 +67,8 @@
                  VerticalAlignment="Bottom"/>
     </StackPanel>
 
-    <ScrollViewer Grid.Row="4"
-                  Grid.ColumnSpan="3"
+    <ScrollViewer Grid.Row="2"
+                  Grid.Column="2"
                   Name="scrollViewer">
       <StackPanel>
         <ItemsControl ItemsSource="{Binding Conversation.MessageHistory}"
@@ -128,15 +131,15 @@
       </StackPanel>
     </ScrollViewer>
 
-    <TextBlock Grid.Row="6"
-               Grid.ColumnSpan="3"
+    <TextBlock Grid.Row="4"
+               Grid.Column="2"
                Text="{Binding Conversation.Contact.DisplayName, StringFormat='{}{0} is writing...'}"
                IsVisible="{Binding Conversation.TypingUser}"
                Foreground="Gray"/>
 
     <Border CornerRadius="5"
             ClipToBounds="True"
-            Grid.Row="8"
+            Grid.Row="6"
             VerticalAlignment="Top">
       <Image Source="{Binding Conversation.Profile.DisplayPicture}"
              MaxHeight="100"
@@ -145,7 +148,7 @@
 
     <StackPanel HorizontalAlignment="Stretch"
                 Spacing="10"
-                Grid.Row="8"
+                Grid.Row="6"
                 Grid.Column="2">
       <TextBox Text="{Binding Message}"
                TextWrapping="Wrap"
@@ -168,5 +171,35 @@
       </StackPanel>
     </StackPanel>
 
+    <TransitioningContentControl Content="{Binding NotificationPage}"
+                                 VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Right"
+                                 Grid.ColumnSpan="3"
+                                 Grid.RowSpan="7"
+                                 MaxWidth="400"
+                                 MaxHeight="400"
+                                 ZIndex="1"
+                                 Margin="20">
+
+      <TransitioningContentControl.PageTransition>
+        <CompositePageTransition>
+          <CrossFade Duration="0:0:0.3"/>
+          <PageSlide Orientation="Vertical"
+                     Duration="0:0:0.2"/>
+        </CompositePageTransition>
+      </TransitioningContentControl.PageTransition>
+    </TransitioningContentControl>
+
+    <TransitioningContentControl Content="{Binding NotificationManager.ErrorPage}"
+                                 VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Center"
+                                 Grid.ColumnSpan="3"
+                                 Grid.RowSpan="7"
+                                 MaxWidth="400"
+                                 MaxHeight="400"
+                                 ZIndex="1"
+                                 Margin="20">
+
+    </TransitioningContentControl>
   </Grid>
-</UserControl>
+</Window>

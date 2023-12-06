@@ -4,9 +4,9 @@ using System.Reactive;
 
 namespace AvaMSN.Views;
 
-public partial class ConversationView : UserControl
+public partial class ConversationWindow : Window
 {
-    public ConversationView()
+    public ConversationWindow()
     {
         InitializeComponent();
     }

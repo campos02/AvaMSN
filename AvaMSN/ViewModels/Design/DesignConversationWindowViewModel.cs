@@ -4,9 +4,9 @@ using AvaMSN.Models;
 
 namespace AvaMSN.ViewModels.Design;
 
-public class DesignConversationViewModel : ConversationViewModel
+public class DesignConversationWindowViewModel : ConversationWindowViewModel
 {
-    public DesignConversationViewModel()
+    public DesignConversationWindowViewModel()
     {
         Conversation = new Conversation(new Contact()
         {

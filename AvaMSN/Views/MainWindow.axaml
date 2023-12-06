@@ -11,6 +11,37 @@
         MinWidth="300"
         MinHeight="450"
         Width="500"
-        WindowStartupLocation="CenterScreen">
-        <views:MainView />
+        WindowStartupLocation="CenterScreen"
+        x:DataType="vm:MainWindowViewModel">
+
+  <Grid>
+    <TransitioningContentControl Content="{Binding CurrentPage}"/>
+
+    <TransitioningContentControl Content="{Binding NotificationPage}"
+                                 VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Right"
+                                 MaxWidth="400"
+                                 MaxHeight="400"
+                                 ZIndex="1"
+                                 Margin="20">
+
+      <TransitioningContentControl.PageTransition>
+        <CompositePageTransition>
+          <CrossFade Duration="0:0:0.3"/>
+          <PageSlide Orientation="Vertical"
+                     Duration="0:0:0.2"/>
+        </CompositePageTransition>
+      </TransitioningContentControl.PageTransition>
+    </TransitioningContentControl>
+
+    <TransitioningContentControl Content="{Binding NotificationManager.ErrorPage}"
+                                 VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Center"
+                                 MaxWidth="400"
+                                 MaxHeight="400"
+                                 ZIndex="1"
+                                 Margin="20">
+
+    </TransitioningContentControl>
+  </Grid>
 </Window>
