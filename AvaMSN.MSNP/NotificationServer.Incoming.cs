@@ -80,7 +80,7 @@ public partial class NotificationServer : Connection
             contact.DisplayPictureObject = null;
         }
 
-        bool hasDisplayPicture = false;
+        bool hasDisplayPicture = true;
         XmlSerializer serializer = new XmlSerializer(typeof(msnobj));
 
         if (contact.DisplayPictureObject != null)
@@ -89,10 +89,9 @@ public partial class NotificationServer : Connection
             {
                 msnobj? msnobj = (msnobj?)serializer.Deserialize(reader);
 
-                if (msnobj != null)
+                if (msnobj == null || msnobj.Size <= 0)
                 {
-                    if (msnobj.Size > 0)
-                        hasDisplayPicture = true;
+                    hasDisplayPicture = false;
                 }
             }
         }
@@ -140,7 +139,7 @@ public partial class NotificationServer : Connection
             contact.DisplayPictureObject = null;
         }
 
-        bool hasDisplayPicture = false;
+        bool hasDisplayPicture = true;
         XmlSerializer serializer = new XmlSerializer(typeof(msnobj));
 
         if (contact.DisplayPictureObject != null)
@@ -149,10 +148,9 @@ public partial class NotificationServer : Connection
             {
                 msnobj? msnobj = (msnobj?)serializer.Deserialize(reader);
 
-                if (msnobj != null)
+                if (msnobj == null || msnobj.Size <= 0)
                 {
-                    if (msnobj.Size > 0)
-                        hasDisplayPicture = true;
+                    hasDisplayPicture = false;
                 }
             }
         }
