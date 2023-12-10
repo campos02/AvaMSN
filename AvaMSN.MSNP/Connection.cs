@@ -106,7 +106,7 @@ public class Connection
     }
 
     /// <summary>
-    /// Continously receives and handles incoming messages.
+    /// Continuously receives and handles incoming messages.
     /// </summary>
     /// <returns></returns>
     protected async Task ReceiveIncomingAsync()

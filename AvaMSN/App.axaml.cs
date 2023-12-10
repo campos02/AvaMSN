@@ -9,6 +9,8 @@ namespace AvaMSN;
 
 public partial class App : Application
 {
+    private readonly ExceptionHandler handler = new ExceptionHandler();
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -16,12 +18,12 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        ExceptionHandler handler = new ExceptionHandler();
         RxApp.DefaultExceptionHandler = handler;
         ViewModelBase.NotificationManager = handler.NotificationManager;
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            desktop.Exit += Desktop_Exit;
             desktop.MainWindow = new MainWindow
             {
                 DataContext = new MainWindowViewModel()
@@ -37,5 +39,10 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void Desktop_Exit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    {
+        handler.NotificationManager.FreeStream();
     }
 }

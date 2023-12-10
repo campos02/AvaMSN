@@ -13,7 +13,7 @@
         Title="Conversation"
         Icon="/Assets/avalonia-logo.ico"
         MinWidth="400"
-        MinHeight="450"
+        MinHeight="550"
         Width="900"
         WindowStartupLocation="CenterScreen"
         x:DataType="vm:ConversationWindowViewModel">

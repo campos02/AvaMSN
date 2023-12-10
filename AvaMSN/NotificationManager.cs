@@ -1,9 +1,10 @@
 ﻿using Avalonia.Platform;
 using AvaMSN.Models;
 using AvaMSN.ViewModels;
-using LibVLCSharp.Shared;
+using ManagedBass;
 using ReactiveUI;
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,7 +16,6 @@ namespace AvaMSN;
 public class NotificationManager : ReactiveObject
 {
     private ErrorViewModel? errorPage;
-    private readonly MediaPlayer mediaPlayer;
 
     public ErrorViewModel? ErrorPage
     {
@@ -28,14 +28,18 @@ public class NotificationManager : ReactiveObject
 
     private CancellationTokenSource? delaySource;
 
+    private readonly int AudioStream;
+
     public NotificationManager()
     {
-        LibVLC libVLC = new LibVLC();
-        mediaPlayer = new MediaPlayer(libVLC);
+        if (Bass.Init())
+        {
+            using MemoryStream audioStream = new();
+            AssetLoader.Open(new Uri("avares://AvaMSN/Assets/type.wav")).CopyTo(audioStream);
+            byte[] audio = audioStream.ToArray();
 
-        // Load notification sound
-        using Media media = new Media(libVLC, new StreamMediaInput(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/type.wav"))));
-        mediaPlayer.Media = media;
+            AudioStream = Bass.CreateStream(audio, 0, audio.LongLength, BassFlags.Default);
+        }
     }
 
     /// <summary>
@@ -77,8 +81,19 @@ public class NotificationManager : ReactiveObject
     /// </summary>
     public void PlaySound()
     {
-        mediaPlayer.Stop();
-        mediaPlayer.Play();
+        if (AudioStream == 0)
+            throw new Exception("null audio");
+
+        Bass.ChannelPlay(AudioStream);
+    }
+
+    /// <summary>
+    /// Calls Bass' free stream functions.
+    /// </summary>
+    public void FreeStream()
+    {
+        Bass.StreamFree(AudioStream);
+        Bass.Free();
     }
 
     /// <summary>
