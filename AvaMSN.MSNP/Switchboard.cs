@@ -248,10 +248,12 @@ public partial class Switchboard : Connection
         byte[] message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
         await SendAsync(message.Concat(messagePayload).ToArray());
 
+        byte[] response;
+
         while (true)
         {
             // Receive MSG with acknowledgement
-            byte[] response = await ReceiveAsync();
+            response = await ReceiveAsync();
             string responseString = Encoding.UTF8.GetString(response);
 
             string[] responses = responseString.Split("\r\n");
@@ -264,11 +266,12 @@ public partial class Switchboard : Connection
 
                 int length = Convert.ToInt32(parameters[3]);
 
-                byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
-                byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
+                response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                byte[] payload = new Span<byte>(response, 0, length).ToArray();
                 string payloadString = Encoding.UTF8.GetString(payload);
-
                 string[] payloadParameters = payloadString.Split("\r\n");
+
+                response = response.Skip(length).ToArray();
 
                 if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                 {
@@ -301,96 +304,53 @@ public partial class Switchboard : Connection
         message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
         await SendAsync(message.Concat(messagePayload).ToArray());
 
-        while (true)
-        {
-            // Receive MSG with data preparation
-            byte[] response = await ReceiveAsync();
-            string responseString = Encoding.UTF8.GetString(response);
-
-            string[] responses = responseString.Split("\r\n");
-            if (responses[0].Contains("ACK"))
-                responses = responses.Skip(1).ToArray();
-
-            if (responseString.Contains("MSG"))
-            {
-                string[] parameters = responses[0].Split(" ");
-
-                int length = Convert.ToInt32(parameters[3]);
-
-                byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
-                byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
-                string payloadString = Encoding.UTF8.GetString(payload);
-
-                string[] payloadParameters = payloadString.Split("\r\n");
-
-                if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
-                {
-                    string messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
-
-                    if (messageHeaders.Split("\r\n")[2].Contains(Profile.Email))
-                    {
-                        byte[] header = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).Take(BinaryHeader.HeaderSize).ToArray();
-                        binaryHeader = new BinaryHeader(header);
-
-                        break;
-                    }
-                }
-                else
-                {
-                    await HandleIncoming(response);
-                }
-            }
-            else
-            {
-                await HandleIncoming(response);
-            }
-        }
-
-        TransactionID++;
-        messagePayload = displayPicture.AcknowledgePayload(binaryHeader);
-
-        // Send MSG with acknowledgement
-        message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
-        await SendAsync(message.Concat(messagePayload).ToArray());
-
-        byte[] dataResponse = Array.Empty<byte>();
         byte[] picture = Array.Empty<byte>();
         while (true)
         {
-            if (dataResponse.Length == 0)
+            if (response.Length == 0)
             {
                 // Receive MSG with data
-                dataResponse = await ReceiveAsync();
+                response = await ReceiveAsync();
             }
 
-            string responseString = Encoding.UTF8.GetString(dataResponse);
+            string responseString = Encoding.UTF8.GetString(response);
 
             if (responseString.Contains("MSG"))
             {
                 if (!responseString.StartsWith("MSG"))
                 {
-                    int msgIndex = IndexOf(dataResponse, Encoding.UTF8.GetBytes("MSG"));
-                    picture = picture.Concat(dataResponse.Take(msgIndex).ToArray()).ToArray();
-                    dataResponse = dataResponse.Skip(msgIndex).ToArray();
-                    responseString = Encoding.UTF8.GetString(dataResponse);
+                    int msgIndex = IndexOf(response, Encoding.UTF8.GetBytes("MSG"));
+                    response = response.Skip(msgIndex).ToArray();
+                    continue;
                 }
 
                 string[] responses = responseString.Split("\r\n");
                 string[] parameters = responses[0].Split(" ");
 
-                int length = Convert.ToInt32(parameters[3]);
-
-                if (length > dataResponse.Length)
+                if (parameters.Length < 4)
                 {
-                    dataResponse = dataResponse.Concat(await ReceiveAsync()).ToArray();
+                    response = response.Concat(await ReceiveAsync()).ToArray();
+                    continue;
                 }
 
-                byte[] payloadResponse = dataResponse.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
-                byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
+                int length = Convert.ToInt32(parameters[3]);
+
+                if (length > response.Length - Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length)
+                {
+                    response = response.Concat(await ReceiveAsync()).ToArray();
+                    continue;
+                }
+
+                response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                byte[] payload = new Span<byte>(response, 0, length).ToArray();
                 string payloadString = Encoding.UTF8.GetString(payload);
                 string[] payloadParameters = payloadString.Split("\r\n");
 
-                dataResponse = payloadResponse.Skip(length).ToArray();
+                response = response.Skip(length).ToArray();
+
+                // Ignore invites other than the current one
+                if (payloadString.Contains("INVITE"))
+                    continue;
 
                 if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                 {
@@ -404,6 +364,20 @@ public partial class Switchboard : Connection
 
                         binaryHeader = new BinaryHeader(header);
                         binaryPayload = binaryPayload[..^4];
+                        
+                        // Handle data preparation
+                        if (binaryPayload.Length == 4)
+                        {
+                            TransactionID++;
+                            messagePayload = displayPicture.AcknowledgePayload(binaryHeader);
+
+                            // Send MSG with acknowledgement
+                            message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
+                            await SendAsync(message.Concat(messagePayload).ToArray());
+
+                            continue;
+                        }
+
                         picture = picture.Concat(binaryPayload).ToArray();
 
                         if (binaryHeader.DataOffset + binaryHeader.Length == binaryHeader.DataSize)
@@ -413,17 +387,24 @@ public partial class Switchboard : Connection
                     }
                     else
                     {
-                        await HandleIncoming(dataResponse);
-                        dataResponse = Array.Empty<byte>();
+                        await HandleIncoming(response);
+                        response = Array.Empty<byte>();
                     }
                 }
             }
             else
             {
-                await HandleIncoming(dataResponse);
-                dataResponse = Array.Empty<byte>();
+                await HandleIncoming(response);
+                response = Array.Empty<byte>();
             }
         }
+
+        TransactionID++;
+        messagePayload = displayPicture.ByePayload();
+
+        // Send MSG and BYE
+        message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
+        await SendAsync(message.Concat(messagePayload).ToArray());
 
         // Set display picture and invoke picture event
         Contact.DisplayPicture = picture;
@@ -432,13 +413,6 @@ public partial class Switchboard : Connection
             Email = Contact.Email,
             DisplayPicture = Contact.DisplayPicture
         });
-
-        TransactionID++;
-        messagePayload = displayPicture.ByePayload();
-
-        // Send MSG and BYE
-        message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
-        await SendAsync(message.Concat(messagePayload).ToArray());
 
         // Start receiving incoming commands again
         _ = ReceiveIncomingAsync();
