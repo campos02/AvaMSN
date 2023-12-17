@@ -10,6 +10,7 @@
         MinWidth="300"
         MinHeight="450"
         Width="450"
+        Height="450"
         WindowStartupLocation="CenterScreen"
         x:DataType="vm:SettingsWindowViewModel">
 

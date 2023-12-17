@@ -19,12 +19,6 @@ public class ContactListData
     public ObservableCollection<ContactGroup>? ContactGroups { get; set; }
     public List<Conversation> Conversations { get; set; } = new List<Conversation>();
 
-    public enum DefaultGroupIndex
-    {
-        Online = 0,
-        Offline = 1
-    }
-
     public static Presence[] Statuses { get; } =
     {
         new Presence()
@@ -84,28 +78,40 @@ public class ContactListData
 
             if (contact.Presence != PresenceStatus.Offline)
             {
-                ContactGroups[(int)DefaultGroupIndex.Online].Contacts.Add(new Contact()
+                foreach (ContactGroup group in ContactGroups)
                 {
-                    DisplayName = contact.DisplayName,
-                    Email = contact.Email,
-                    PersonalMessage = contact.PersonalMessage,
-                    Presence = PresenceStatus.GetFullName(contact.Presence),
-                    PresenceColor = GetStatusColor(contact.Presence),
-                    Blocked = contact.InLists.Block
-                });
+                    if (group.Name != "Offline")
+                    {
+                        group.Contacts.Add(new Contact()
+                        {
+                            DisplayName = contact.DisplayName,
+                            Email = contact.Email,
+                            PersonalMessage = contact.PersonalMessage,
+                            Presence = PresenceStatus.GetFullName(contact.Presence),
+                            PresenceColor = GetStatusColor(contact.Presence),
+                            Blocked = contact.InLists.Block
+                        });
+                    }
+                }
             }
 
             else
             {
-                ContactGroups[(int)DefaultGroupIndex.Offline].Contacts.Add(new Contact()
+                foreach (ContactGroup group in ContactGroups)
                 {
-                    DisplayName = contact.DisplayName,
-                    Email = contact.Email,
-                    PersonalMessage = contact.PersonalMessage,
-                    Presence = PresenceStatus.GetFullName(contact.Presence),
-                    PresenceColor = GetStatusColor(contact.Presence),
-                    Blocked = contact.InLists.Block
-                });
+                    if (group.Name != "Online")
+                    {
+                        group.Contacts.Add(new Contact()
+                        {
+                            DisplayName = contact.DisplayName,
+                            Email = contact.Email,
+                            PersonalMessage = contact.PersonalMessage,
+                            Presence = PresenceStatus.GetFullName(contact.Presence),
+                            PresenceColor = GetStatusColor(contact.Presence),
+                            Blocked = contact.InLists.Block
+                        });
+                    }
+                }
             }
         }
 
@@ -133,22 +139,30 @@ public class ContactListData
         if (NotificationServer == null || ContactGroups == null)
             return;
 
-        Contact? contact;
+        Contact? contact = null;
+
+        // Select contact
+        foreach (ContactGroup group in ContactGroups)
+        {
+            contact = group.Contacts.FirstOrDefault(c => c.Email == e.Email);
+
+            if (contact != null)
+                break;
+        }
+
+        if (contact == null)
+            return;
 
         if (e.Presence != PresenceStatus.Offline)
         {
-            contact = ContactGroups[(int)DefaultGroupIndex.Online].Contacts.FirstOrDefault(c => c.Email == e.Email);
-
-            if (contact == null)
+            // Remove from offline group and add to online group
+            foreach (ContactGroup group in ContactGroups)
             {
-                contact = ContactGroups[(int)DefaultGroupIndex.Offline].Contacts.FirstOrDefault(c => c.Email == e.Email);
+                if (group.Name == "Offline")
+                    group.Contacts.Remove(contact);
 
-                if (contact == null)
-                    return;
-
-                // Remove from offline group and add to online
-                ContactGroups[(int)DefaultGroupIndex.Offline].Contacts.Remove(contact);
-                ContactGroups[(int)DefaultGroupIndex.Online].Contacts.Add(contact);
+                else if (group.Name == "Online")
+                    group.Contacts.Add(contact);
             }
 
             // If a conversation is open, request a new switchboard if the contact is now online
@@ -162,18 +176,14 @@ public class ContactListData
 
         else
         {
-            contact = ContactGroups[(int)DefaultGroupIndex.Offline].Contacts.FirstOrDefault(c => c.Email == e.Email);
-
-            if (contact == null)
+            // Remove from online group and add to offline group
+            foreach (ContactGroup group in ContactGroups)
             {
-                contact = ContactGroups[(int)DefaultGroupIndex.Online].Contacts.FirstOrDefault(c => c.Email == e.Email);
+                if (group.Name == "Offline")
+                    group.Contacts.Add(contact);
 
-                if (contact == null)
-                    return;
-
-                // Remove from online group and add to offline
-                ContactGroups[(int)DefaultGroupIndex.Online].Contacts.Remove(contact);
-                ContactGroups[(int)DefaultGroupIndex.Offline].Contacts.Add(contact);
+                else if (group.Name == "Online")
+                    group.Contacts.Remove(contact);
             }
 
             // If a conversation is open, leave switchboard when the contact has gone offline
@@ -185,6 +195,7 @@ public class ContactListData
             }
         }
 
+        // Set new presence
         foreach (ContactGroup group in ContactGroups)
         {
             contact = group.Contacts.FirstOrDefault(c => c.Email == e.Email);

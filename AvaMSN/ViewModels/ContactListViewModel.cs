@@ -183,13 +183,19 @@ public class ContactListViewModel : ViewModelBase
 
         await NotificationServer.AddContact(NewContactEmail, NewContactDisplayName);
 
-        ListData.ContactGroups?[(int)ContactListData.DefaultGroupIndex.Offline].Contacts.Add(new Contact
+        foreach (ContactGroup group in ListData.ContactGroups!)
         {
-            Email = NewContactEmail,
-            DisplayName = NewContactDisplayName,
-            Presence = PresenceStatus.GetFullName(PresenceStatus.Offline),
-            PresenceColor = ContactListData.GetStatusColor(PresenceStatus.Offline)
-        });
+            if (group.Name == "Offline")
+            {
+                group.Contacts.Add(new Contact
+                {
+                    Email = NewContactEmail,
+                    DisplayName = NewContactDisplayName,
+                    Presence = PresenceStatus.GetFullName(PresenceStatus.Offline),
+                    PresenceColor = ContactListData.GetStatusColor(PresenceStatus.Offline)
+                });
+            }
+        }
 
         NewContactEmail = string.Empty;
         NewContactDisplayName = string.Empty;
