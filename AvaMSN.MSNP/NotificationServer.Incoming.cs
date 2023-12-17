@@ -28,6 +28,7 @@ public partial class NotificationServer : Connection
             "FLN" => Task.Run(() => HandleFLN(response)),
             "UBX" => HandleUBX(response),
             "RNG" => HandleRNG(response),
+            "OUT" => DisconnectAsync(requested: false),
             _ => Task.CompletedTask
         });
     }
@@ -48,6 +49,7 @@ public partial class NotificationServer : Connection
             "FLN" => Task.Run(() => HandleFLN(response)),
             "UBX" => HandleUBX(response),
             "RNG" => HandleRNG(response),
+            "OUT" => DisconnectAsync(requested: false),
             _ => Task.CompletedTask
         });
     }

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace AvaMSN;
 
 /// <summary>
-/// Contains functions to show notifications and display errors and their respective pages.
+/// Contains functions to show notifications and display errors.
 /// </summary>
 public class NotificationManager : ReactiveObject
 {
@@ -25,6 +25,7 @@ public class NotificationManager : ReactiveObject
 
     public event EventHandler<ContactEventArgs>? ReplyTapped;
     public event EventHandler<NotificationEventArgs>? Notification;
+    public event EventHandler? ApplicationExit;
 
     private CancellationTokenSource? delaySource;
 
@@ -77,13 +78,18 @@ public class NotificationManager : ReactiveObject
     }
 
     /// <summary>
+    /// Invokes the application exit event.
+    /// </summary>
+    public void InvokeExit()
+    {
+        ApplicationExit?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
     /// Plays notification sound.
     /// </summary>
     public void PlaySound()
     {
-        if (AudioStream == 0)
-            throw new Exception("null audio");
-
         Bass.ChannelPlay(AudioStream);
     }
 

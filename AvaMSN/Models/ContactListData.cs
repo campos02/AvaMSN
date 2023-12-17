@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Media.Imaging;
@@ -16,6 +17,7 @@ public class ContactListData
     public NotificationServer? NotificationServer { get; set; }
     public Profile Profile { get; set; } = new();
     public ObservableCollection<ContactGroup>? ContactGroups { get; set; }
+    public List<Conversation> Conversations { get; set; } = new List<Conversation>();
 
     public enum DefaultGroupIndex
     {
@@ -126,7 +128,7 @@ public class ContactListData
     /// <summary>
     /// Handles presence events, changing groups according to a contact's new status.
     /// </summary>
-    private void NotificationServer_PresenceChanged(object? sender, PresenceEventArgs e)
+    private async void NotificationServer_PresenceChanged(object? sender, PresenceEventArgs e)
     {
         if (NotificationServer == null || ContactGroups == null)
             return;
@@ -148,6 +150,14 @@ public class ContactListData
                 ContactGroups[(int)DefaultGroupIndex.Offline].Contacts.Remove(contact);
                 ContactGroups[(int)DefaultGroupIndex.Available].Contacts.Add(contact);
             }
+
+            // If a conversation is open, request a new switchboard if the contact is now online
+            Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact.Email == e.Email);
+
+            if (conversation != null && contact.Presence == PresenceStatus.GetFullName(PresenceStatus.Offline))
+            {
+                await NotificationServer.SendXFR(e.Email);
+            }
         }
 
         else
@@ -164,6 +174,14 @@ public class ContactListData
                 // Remove from available group and add to offline
                 ContactGroups[(int)DefaultGroupIndex.Available].Contacts.Remove(contact);
                 ContactGroups[(int)DefaultGroupIndex.Offline].Contacts.Add(contact);
+            }
+
+            // If a conversation is open, leave switchboard when the contact has gone offline
+            Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact.Email == e.Email);
+
+            if (conversation != null && conversation.Switchboard != null)
+            {
+                await conversation.Switchboard.DisconnectAsync();
             }
         }
 

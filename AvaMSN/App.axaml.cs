@@ -44,5 +44,6 @@ public partial class App : Application
     private void Desktop_Exit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
         handler.NotificationManager.FreeStream();
+        handler.NotificationManager.InvokeExit();
     }
 }

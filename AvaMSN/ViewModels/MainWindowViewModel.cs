@@ -97,8 +97,7 @@ public class MainWindowViewModel : ViewModelBase
         contactListPage.Profile.DisplayPicture = loginPage.Profile.DisplayPicture;
 
         contactListPage.ListData.GetData();
-        contactListPage.NotificationServer.Disconnected += contactListPage.NotificationServer_Disconnected;
-        contactListPage.NotificationServer.SwitchboardChanged += contactListPage.NotificationServer_SwitchboardChanged;
+        contactListPage.SubscribeToEvents();
 
         CurrentPage = contactListPage;
     }

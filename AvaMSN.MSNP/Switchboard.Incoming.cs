@@ -284,7 +284,7 @@ public partial class Switchboard : Connection
     }
 
     /// <summary>
-    /// Disconnects when the contact leaves the session.
+    /// Disconnects when the contact leaves or the session is closed.
     /// </summary>
     /// <returns></returns>
     private async Task HandleBYE()

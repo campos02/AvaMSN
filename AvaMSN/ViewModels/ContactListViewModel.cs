@@ -37,7 +37,11 @@ public class ContactListViewModel : ViewModelBase
     public static Presence[] Statuses => ContactListData.Statuses;
 
     public Contact? SelectedContact { get; set; }
-    public List<Conversation> Conversations { get; set; } = new List<Conversation>();
+    public List<Conversation> Conversations
+    {
+        get => ListData.Conversations;
+        set => ListData.Conversations = value;
+    }
 
     public Profile Profile
     {
@@ -86,7 +90,11 @@ public class ContactListViewModel : ViewModelBase
         SignOutCommand = ReactiveCommand.CreateFromTask(SignOut);
 
         if (NotificationManager != null)
+        {
             NotificationManager.ReplyTapped += NotificationManager_ReplyTapped;
+            NotificationManager.ApplicationExit += NotificationManager_ApplicationExit;
+        }
+            
     }
 
     private async Task ChangePresence(string presence)
@@ -236,7 +244,7 @@ public class ContactListViewModel : ViewModelBase
         SelectedContact.NewMessages = false;
         Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact == SelectedContact);
 
-        if (conversation == null)
+        if (conversation == null || conversation.Switchboard == null)
         {
             MSNP.Contact? contact = NotificationServer.ContactList.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ?? new MSNP.Contact()
             {
@@ -310,6 +318,29 @@ public class ContactListViewModel : ViewModelBase
         await NotificationServer.DisconnectAsync();
     }
 
+    /// <summary>
+    /// Subscribes to notification server events.
+    /// </summary>
+    public void SubscribeToEvents()
+    {
+        NotificationServer!.Disconnected += NotificationServer_Disconnected;
+        NotificationServer.SwitchboardChanged += NotificationServer_SwitchboardChanged;
+    }
+
+    /// <summary>
+    /// Unsubscribes to notification server events.
+    /// </summary>
+    public void UnsubscribeToEvents()
+    {
+        NotificationServer!.Disconnected -= NotificationServer_Disconnected;
+        NotificationServer.SwitchboardChanged -= NotificationServer_SwitchboardChanged;
+    }
+
+    private async void NotificationManager_ApplicationExit(object? sender, EventArgs e)
+    {
+        await SignOut();
+    }
+
     private async void NotificationManager_ReplyTapped(object? sender, ContactEventArgs e)
     {
         SelectedContact = e.Contact;
@@ -346,6 +377,7 @@ public class ContactListViewModel : ViewModelBase
             };
 
             conversation.NewMessage += Conversation_NewMessage;
+            NotificationServer!.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
             conversation.SubscribeToEvents();
         }
     }
@@ -360,11 +392,10 @@ public class ContactListViewModel : ViewModelBase
         foreach (Conversation conversation in Conversations)
         {
             conversation.UnsubscribeToEvents();
-
-            if (NotificationServer != null)
-                NotificationServer.SwitchboardChanged -= conversation.NotificationServer_SwitchboardChanged;
-
+            NotificationServer!.SwitchboardChanged -= conversation.NotificationServer_SwitchboardChanged;
             conversation.DisplayPictureUpdated -= Conversation_DisplayPictureUpdated;
+            conversation.NewMessage -= Conversation_NewMessage;
+
             conversation.CloseWindow();
         }
 
@@ -376,7 +407,7 @@ public class ContactListViewModel : ViewModelBase
         Disconnected?.Invoke(this, EventArgs.Empty);
         
         if (!e.Requested)
-            throw new ConnectionException("Lost connection to the server.");
+            throw new ConnectionException("Lost connection to the server");
     }
 
     /// <summary>

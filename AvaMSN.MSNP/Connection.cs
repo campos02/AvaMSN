@@ -141,7 +141,7 @@ public class Connection
     };
 
     /// <summary>
-    /// Pings the server every 30 seconds so connection isn't lost.
+    /// Pings the server every 30 seconds so connection isn't automatically closed.
     /// </summary>
     /// <returns></returns>
     public async Task Ping()
@@ -155,11 +155,23 @@ public class Connection
             {
                 await SendAsync(message);
             }
+            
             catch (OperationCanceledException)
             {
                 // Shutdown socket and invoke event if connection has been lost
-                await DisconnectAsync(requested: false);
+                DisconnectSocket(requested: false);
+                
+                break;
             }
+
+            catch (SocketException)
+            {
+                // Shutdown socket and invoke event if connection has been lost
+                DisconnectSocket(requested: false);
+
+                break;
+            }
+            
             catch (ObjectDisposedException)
             {
                 // Stop if socket has been disposed
@@ -171,13 +183,22 @@ public class Connection
     }
 
     /// <summary>
-    /// Sends a disconnection command and invokes Disconnected event.
+    /// Sends a disconnection command and disconnects the socket.
     /// </summary>
     /// <param name="requested">Whether the disconnection was requested by the user.</param>
     /// <returns></returns>
-    public async Task DisconnectAsync(bool requested = true)
+    public virtual async Task DisconnectAsync(bool requested = true)
     {
         await SendAsync("OUT\r\n");
+        DisconnectSocket(requested);
+    }
+
+    /// <summary>
+    /// Disconnects the socket and invokes the Disconnected event.
+    /// </summary>
+    /// <param name="requested">Whether the disconnection was requested by the user.</param>
+    protected void DisconnectSocket(bool requested = true)
+    {
         ReceiveSource.Cancel();
 
         Client?.Shutdown(SocketShutdown.Both);

@@ -602,6 +602,21 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
+    /// Searches for a contact using its email then calls contact parameter overload.
+    /// </summary>
+    /// <param name="contactEmail">Contact email.</param>
+    /// <returns>New switchboard session.</returns>
+    public async Task<Switchboard> SendXFR(string contactEmail)
+    {
+        Contact? contact = ContactList.Contacts.FirstOrDefault(ct => ct.Email == contactEmail);
+
+        if (contact != null)
+            return await SendXFR(contact);
+        else
+            throw new ContactException("Contact does not exist");
+    }
+
+    /// <summary>
     /// Creates and assigns an MSN object if any display picture data is present.
     /// </summary>
     public void CreateMSNObject()
@@ -635,5 +650,21 @@ public partial class NotificationServer : Connection
         // Serialize with options
         msnobjectSerializer.Serialize(writer, displayPicture, namespaces);
         ContactList.Profile.DisplayPictureObject = stream.ToString();
+    }
+
+    /// <summary>
+    /// Sends a disconnection command and invokes the Disconnected event for the NS and every connected SB.
+    /// </summary>
+    /// <param name="requested">Whether the disconnection was requested by the user.</param>
+    /// <returns></returns>
+    public override async Task DisconnectAsync(bool requested = true)
+    {
+        await base.DisconnectAsync(requested);
+        
+        foreach (Switchboard switchboard in Switchboards)
+        {
+            if (switchboard.Connected)
+                await switchboard.DisconnectAsync();
+        }
     }
 }
