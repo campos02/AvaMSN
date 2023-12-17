@@ -327,9 +327,9 @@ public class ContactList
     {
         var profileInfo = profile.contactInfo;
 
-        Profile.MBEA = profileInfo.annotations[0].Value;
-        Profile.GTC = profileInfo.annotations[1].Value;
-        Profile.BLP = profileInfo.annotations[2].Value;
+        Profile.MBEA = Convert.ToInt32(profileInfo.annotations[0].Value);
+        Profile.GTC = Convert.ToInt32(profileInfo.annotations[1].Value);
+        Profile.BLP = Convert.ToInt32(profileInfo.annotations[2].Value);
 
         Profile.DisplayName = profileInfo.displayName;
         Profile.Email = profileInfo.passportName;

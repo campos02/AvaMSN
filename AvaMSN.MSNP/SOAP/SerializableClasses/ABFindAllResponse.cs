@@ -486,7 +486,7 @@ public partial class ABFindAllResponseABFindAllResultGroupsGroupGroupInfoAnnotat
 
     private string nameField;
 
-    private byte valueField;
+    private string valueField;
 
     /// <remarks/>
     public string Name
@@ -502,7 +502,7 @@ public partial class ABFindAllResponseABFindAllResultGroupsGroupGroupInfoAnnotat
     }
 
     /// <remarks/>
-    public byte Value
+    public string Value
     {
         get
         {
@@ -946,7 +946,7 @@ public partial class ABFindAllResponseABFindAllResultContactContactInfoAnnotatio
 
     private string nameField;
 
-    private byte valueField;
+    private string valueField;
 
     /// <remarks/>
     public string Name
@@ -962,7 +962,7 @@ public partial class ABFindAllResponseABFindAllResultContactContactInfoAnnotatio
     }
 
     /// <remarks/>
-    public byte Value
+    public string Value
     {
         get
         {
