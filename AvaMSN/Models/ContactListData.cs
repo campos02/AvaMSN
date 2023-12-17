@@ -21,7 +21,7 @@ public class ContactListData
 
     public enum DefaultGroupIndex
     {
-        Available = 0,
+        Online = 0,
         Offline = 1
     }
 
@@ -29,9 +29,9 @@ public class ContactListData
     {
         new Presence()
         {
-            Status = PresenceStatus.GetFullName(PresenceStatus.Available),
+            Status = PresenceStatus.GetFullName(PresenceStatus.Online),
             Color = "LimeGreen",
-            ShortName = PresenceStatus.Available
+            ShortName = PresenceStatus.Online
         },
 
         new Presence()
@@ -72,7 +72,7 @@ public class ContactListData
 
         ContactGroups =
         [
-            new ContactGroup("Available", []),
+            new ContactGroup("Online", []),
             new ContactGroup("Offline", [])
         ];
 
@@ -84,7 +84,7 @@ public class ContactListData
 
             if (contact.Presence != PresenceStatus.Offline)
             {
-                ContactGroups[(int)DefaultGroupIndex.Available].Contacts.Add(new Contact()
+                ContactGroups[(int)DefaultGroupIndex.Online].Contacts.Add(new Contact()
                 {
                     DisplayName = contact.DisplayName,
                     Email = contact.Email,
@@ -115,7 +115,7 @@ public class ContactListData
 
     public static string GetStatusColor(string status) => status switch
     {
-        PresenceStatus.Available => "LimeGreen",
+        PresenceStatus.Online => "LimeGreen",
         PresenceStatus.Busy => "IndianRed",
         PresenceStatus.Away => "DarkOrange",
         PresenceStatus.Idle => "DarkOrange",
@@ -137,7 +137,7 @@ public class ContactListData
 
         if (e.Presence != PresenceStatus.Offline)
         {
-            contact = ContactGroups[(int)DefaultGroupIndex.Available].Contacts.FirstOrDefault(c => c.Email == e.Email);
+            contact = ContactGroups[(int)DefaultGroupIndex.Online].Contacts.FirstOrDefault(c => c.Email == e.Email);
 
             if (contact == null)
             {
@@ -146,9 +146,9 @@ public class ContactListData
                 if (contact == null)
                     return;
 
-                // Remove from offline group and add to available
+                // Remove from offline group and add to online
                 ContactGroups[(int)DefaultGroupIndex.Offline].Contacts.Remove(contact);
-                ContactGroups[(int)DefaultGroupIndex.Available].Contacts.Add(contact);
+                ContactGroups[(int)DefaultGroupIndex.Online].Contacts.Add(contact);
             }
 
             // If a conversation is open, request a new switchboard if the contact is now online
@@ -166,13 +166,13 @@ public class ContactListData
 
             if (contact == null)
             {
-                contact = ContactGroups[(int)DefaultGroupIndex.Available].Contacts.FirstOrDefault(c => c.Email == e.Email);
+                contact = ContactGroups[(int)DefaultGroupIndex.Online].Contacts.FirstOrDefault(c => c.Email == e.Email);
 
                 if (contact == null)
                     return;
 
-                // Remove from available group and add to offline
-                ContactGroups[(int)DefaultGroupIndex.Available].Contacts.Remove(contact);
+                // Remove from online group and add to offline
+                ContactGroups[(int)DefaultGroupIndex.Online].Contacts.Remove(contact);
                 ContactGroups[(int)DefaultGroupIndex.Offline].Contacts.Add(contact);
             }
 

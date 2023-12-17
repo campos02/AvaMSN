@@ -13,17 +13,17 @@ public class DesignContactListViewModel : ContactListViewModel
             Profile = new Profile()
             {
                 DisplayName = "Testing",
-                Presence = PresenceStatus.GetFullName(PresenceStatus.Available)
+                Presence = PresenceStatus.GetFullName(PresenceStatus.Online)
             },
 
             ContactGroups = new ObservableCollection<ContactGroup>()
             {
-                new ContactGroup("Available", new ObservableCollection<Contact>()
+                new ContactGroup("Online", new ObservableCollection<Contact>()
                 {
                     new Contact()
                     {
-                        DisplayName = "Available Contact",
-                        Presence = PresenceStatus.GetFullName(PresenceStatus.Available),
+                        DisplayName = "Online Contact",
+                        Presence = PresenceStatus.GetFullName(PresenceStatus.Online),
                         NewMessages = true
                     }
                 }),

@@ -11,7 +11,7 @@ public class DesignConversationWindowViewModel : ConversationWindowViewModel
         Conversation = new Conversation(new Contact()
         {
             DisplayName = "test",
-            Presence = "Available"
+            Presence = "Online"
         },
 
         new Profile()

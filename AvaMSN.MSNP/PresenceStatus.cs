@@ -5,7 +5,7 @@
 /// </summary>
 public struct PresenceStatus
 {
-    public const string Available = "NLN";
+    public const string Online = "NLN";
     public const string Busy = "BSY";
     public const string Idle = "IDL";
     public const string BeRightBack = "BRB";
@@ -17,7 +17,7 @@ public struct PresenceStatus
 
     public static string GetFullName(string status) => status switch
     {
-        Available => "Available",
+        Online => "Online",
         Busy => "Busy",
         Idle => "Idle",
         BeRightBack => "Be right back",
@@ -30,7 +30,7 @@ public struct PresenceStatus
 
     public static string GetShortName(string status) => status switch
     {
-        "Available" => Available,
+        "Online" => Online,
         "Busy" => Busy,
         "Idle" => Idle,
         "Be right back" => BeRightBack,
