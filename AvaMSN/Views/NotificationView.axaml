@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:models="clr-namespace:AvaMSN.Models;assembly=AvaMSN"
              xmlns:vm="clr-namespace:AvaMSN.ViewModels"
+             xmlns:conv="clr-namespace:AvaMSN.Converters"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
              x:Class="AvaMSN.Views.NotificationView"
              x:DataType="vm:NotificationViewModel">
@@ -21,6 +22,10 @@
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>
+    <conv:UserSaysConverter x:Key="userSaysConverter"/>
+    <conv:BoldConverter x:Key="boldConverter"/>
+    <conv:ItalicConverter x:Key="italicConverter"/>
+    <conv:DecorationsConverter x:Key="decorationsConverter"/>
   </UserControl.Resources>
   
   <Border BorderThickness="2"
@@ -39,14 +44,19 @@
       <TextBlock Text="{Binding Message.Text}"
                  TextWrapping="Wrap"
                  HorizontalAlignment="Center"
-                 Grid.Row="2"/>
+                 Grid.Row="2"
+                 FontWeight="{Binding Message.Bold, Converter={StaticResource boldConverter}}"
+                 FontStyle="{Binding Message.Italic, Converter={StaticResource italicConverter}}"
+                 TextDecorations="{Binding Message.Decorations, Converter={StaticResource decorationsConverter}}"/>
       
       <StackPanel Orientation="Horizontal"
                   Spacing="5"
                   HorizontalAlignment="Center"
                   Grid.Row="4">
-        <Button Command="{Binding ReplyCommand}">Reply</Button>
-        <Button Command="{Binding DismissCommand}">Dismiss</Button>
+        <Button Command="{Binding ReplyCommand}"
+                ToolTip.Tip="Open a new conversation window">Reply</Button>
+        <Button Command="{Binding DismissCommand}"
+                ToolTip.Tip="Close notification">Dismiss</Button>
       </StackPanel>
     </Grid>
   </Border>

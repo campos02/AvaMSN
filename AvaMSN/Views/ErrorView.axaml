@@ -39,7 +39,8 @@
 
       <Button Command="{Binding CloseCommand}"
               HorizontalAlignment="Center"
-              Grid.Row="2">
+              Grid.Row="2"
+              ToolTip.Tip="Close error">
         Close
       </Button>
       

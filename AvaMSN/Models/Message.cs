@@ -16,6 +16,10 @@ public class Message
 
     public string SenderDisplayName { get; set; } = string.Empty;
     public string RecipientDisplayName { get; set; } = string.Empty;
+
+    public bool Bold { get; set; }
+    public bool Italic { get; set; }
+    public string Decorations { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
 
     public DateTime DateTime { get; set; }

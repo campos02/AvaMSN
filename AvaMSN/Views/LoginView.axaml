@@ -43,16 +43,18 @@
           RowDefinitions="Auto, 3, Auto, 30, Auto, 3, Auto, 15, Auto, 5, Auto, 15, Auto"
           VerticalAlignment="Center">
 
-      <TextBlock HorizontalAlignment="Center">Email:</TextBlock>
+      <TextBlock HorizontalAlignment="Center">E-mail:</TextBlock>
 
       <Grid Grid.Row="2"
             ColumnDefinitions="*, Auto">
-        <TextBox Watermark="Enter your email"
-                 Text="{Binding Email}"/>
+        <TextBox Watermark="Enter your e-mail"
+                 Text="{Binding Email}"
+                 ToolTip.Tip="Enter your e-mail address"/>
 
         <ComboBox ItemsSource="{Binding Users}"
                   Grid.Column="1"
-                  Name="userBox">
+                  Name="userBox"
+                  ToolTip.Tip="Change users or open options window">
           <ComboBox.DataTemplates>
             <DataTemplate DataType="models:User">
               <Button Command="{Binding $parent[ComboBox].((vm:LoginViewModel)DataContext).ChangeUserCommand}"
@@ -78,7 +80,8 @@
       <TextBox Text="{Binding Password}"
                PasswordChar="•"
                Watermark="Enter your password"
-               Grid.Row="6"/>
+               Grid.Row="6"
+               ToolTip.Tip="Enter your account password"/>
 
       <TextBlock Grid.Row="8"
                  HorizontalAlignment="Center">Sign in as:</TextBlock>
@@ -86,7 +89,8 @@
       <ComboBox Grid.Row="10"
                 HorizontalAlignment="Center"
                 ItemsSource="{Binding Statuses}"
-                SelectedItem="{Binding SelectedStatus}">
+                SelectedItem="{Binding SelectedStatus}"
+                ToolTip.Tip="Select the status that your contacts will see after you sign in">
         <ComboBox.DataTemplates>
           <DataTemplate DataType="models:Presence">
             <StackPanel Spacing="3"
@@ -104,13 +108,18 @@
                   HorizontalAlignment="Center">
         <StackPanel Orientation="Horizontal"
                     Spacing="5">
-          <CheckBox IsChecked="{Binding RememberMe}">Remember me</CheckBox>
+          <CheckBox IsChecked="{Binding RememberMe}"
+                    ToolTip.Tip="Save your e-mail address on this computer">
+            Remember me
+          </CheckBox>
           <Button Background="Transparent"
                   VerticalAlignment="Bottom"
-                  Command="{Binding ForgetMeCommand}">(Forget me)</Button>
+                  Command="{Binding ForgetMeCommand}"
+                  ToolTip.Tip="Remove my sign-in information from this computer">(Forget me)</Button>
         </StackPanel>
-        <CheckBox IsChecked="{Binding RememberPassword}"
-                  >Remember my password</CheckBox>
+        <CheckBox IsChecked="{Binding RememberPassword}">
+          Remember my password
+        </CheckBox>
       </StackPanel>
 
     </Grid>
@@ -118,7 +127,8 @@
     <Button Grid.Row="6"
             Grid.ColumnSpan="3"
             HorizontalAlignment="Center"
-            Command="{Binding LoginCommand}">Sign in</Button>
+            Command="{Binding LoginCommand}"
+            ToolTip.Tip="Sign in to Messenger">Sign in</Button>
 
   </Grid>
 </UserControl>

@@ -42,6 +42,9 @@ public class DesignConversationWindowViewModel : ConversationWindowViewModel
                     SenderDisplayName= "test",
                     DateTime = DateTime.Now,
                     Text = "test message",
+                    Bold = true,
+                    Italic = true,
+                    Decorations = "Strikethrough Underline"
                 }
             },
 

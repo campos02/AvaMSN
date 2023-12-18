@@ -1,4 +1,5 @@
 ﻿using AvaMSN.Models;
+using AvaMSN.MSNP.Messages;
 using ReactiveUI;
 using System;
 using System.Reactive;
@@ -30,6 +31,28 @@ public class ConversationWindowViewModel : ViewModelBase
     {
         get => notificationPage;
         private set => this.RaiseAndSetIfChanged(ref notificationPage, value);
+    }
+
+    private bool bold;
+    private bool strikethrough;
+    private bool underline;
+
+    public bool Bold
+    {
+        get => bold;
+        set => this.RaiseAndSetIfChanged(ref bold, value);
+    }
+
+    public bool Strikethrough
+    {
+        get => strikethrough;
+        set => this.RaiseAndSetIfChanged(ref strikethrough, value);
+    }
+
+    public bool Underline
+    {
+        get => underline;
+        set => this.RaiseAndSetIfChanged(ref underline, value);
     }
 
     public ReactiveCommand<Unit, Unit> SendCommand { get; }
@@ -117,7 +140,15 @@ public class ConversationWindowViewModel : ViewModelBase
         if (Conversation == null)
             return;
 
-        await Conversation.SendTextMessage(Message);
+        TextPlain message = new TextPlain()
+        {
+            Bold = Bold,
+            Strikethrough = Strikethrough,
+            Underline = Underline,
+            Content = Message
+        };
+
+        await Conversation.SendTextMessage(message);
         Message = string.Empty;
     }
 

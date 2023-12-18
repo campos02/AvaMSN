@@ -9,16 +9,16 @@ namespace AvaMSN.Converters;
 /// <summary>
 /// Use bold font when value is true.
 /// </summary>
-public class BoldConverter : IValueConverter
+public class ItalicConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is bool bold)
+        if (value is bool italic)
         {
-            if (bold)
-                return FontWeight.ExtraBold;
+            if (italic)
+                return FontStyle.Italic;
             else
-                return FontWeight.Regular;
+                return FontStyle.Normal;
         }
 
         return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);

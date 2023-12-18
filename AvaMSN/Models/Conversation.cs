@@ -105,18 +105,14 @@ public class Conversation : ReactiveObject
     /// <summary>
     /// Sends a text message and saves it to the database.
     /// </summary>
-    public async Task SendTextMessage(string messageText)
+    public async Task SendTextMessage(TextPlain textMessage)
     {
-        if (Switchboard == null || !Switchboard.Connected || Profile == null || Contact == null || string.IsNullOrEmpty(messageText))
+        if (Switchboard == null || !Switchboard.Connected || Profile == null || Contact == null || string.IsNullOrEmpty(textMessage.Content))
             return;
 
         try
         {
-            await Switchboard.SendTextMessage(new TextPlain()
-            {
-                FontName = "Segoe UI",
-                Content = messageText
-            });
+            await Switchboard.SendTextMessage(textMessage);
 
             TypingUser = false;
 
@@ -126,9 +122,19 @@ public class Conversation : ReactiveObject
                 SenderDisplayName = Profile.DisplayName,
                 Recipient = Contact.Email,
                 RecipientDisplayName = Contact.DisplayName,
-                Text = messageText,
+
+                Bold = textMessage.Bold,
+                Italic = textMessage.Italic,
+
+                Text = textMessage.Content,
                 DateTime = DateTime.Now
             };
+
+            if (textMessage.Strikethrough)
+                message.Decorations = "Strikethrough";
+
+            if (textMessage.Underline)
+                message.Decorations += " Underline";
 
             Messages.Add(message);
             
@@ -277,7 +283,7 @@ public class Conversation : ReactiveObject
             TypingUser = false;
         }
 
-        if (e.Message == string.Empty)
+        if (string.IsNullOrEmpty(e.Message?.Content))
             return;
 
         TypingUser = false;
@@ -286,10 +292,20 @@ public class Conversation : ReactiveObject
         {
             Sender = Contact.Email,
             Recipient = Profile.Email,
-            Text = e.Message,
+
+            Bold = e.Message.Bold,
+            Italic = e.Message.Italic,
+
+            Text = e.Message?.Content!,
             DateTime = DateTime.Now,
             IsNudge = e.IsNudge
         };
+
+        if (e.Message!.Strikethrough)
+            message.Decorations = "Strikethrough";
+
+        if (e.Message.Underline)
+            message.Decorations += " Underline";
 
         // Nudges include sender display names in the message itself
         if (!message.IsNudge)

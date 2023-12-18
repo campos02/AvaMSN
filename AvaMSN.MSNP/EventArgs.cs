@@ -1,4 +1,6 @@
-﻿namespace AvaMSN.MSNP;
+﻿using AvaMSN.MSNP.Messages;
+
+namespace AvaMSN.MSNP;
 
 public class DisconnectedEventArgs : EventArgs
 {
@@ -27,7 +29,7 @@ public class MessageEventArgs : ContactEventArgs
     public bool InContactList { get; set; }
     public bool TypingUser { get; set; }
     public bool IsNudge { get; set; }
-    public string Message { get; set; } = string.Empty;
+    public TextPlain? Message { get; set; }
 }
 
 public class SwitchboardEventArgs : ContactEventArgs

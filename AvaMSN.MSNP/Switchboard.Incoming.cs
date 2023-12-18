@@ -1,4 +1,5 @@
-﻿using AvaMSN.MSNP.Messages.MSNSLP;
+﻿using AvaMSN.MSNP.Messages;
+using AvaMSN.MSNP.Messages.MSNSLP;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -84,7 +85,12 @@ public partial class Switchboard : Connection
                     MessageReceived?.Invoke(this, new MessageEventArgs()
                     {
                         Email = parameters[1],
-                        Message = $"{Uri.UnescapeDataString(parameters[2])} just sent you a nudge!",
+
+                        Message = new Messages.TextPlain()
+                        {
+                            Content = $"{Uri.UnescapeDataString(parameters[2])} just sent you a nudge!"
+                        },
+
                         IsNudge = true
                     });
                 }
@@ -94,10 +100,17 @@ public partial class Switchboard : Connection
         // Handle plain text
         if (payloadParameters[1].Contains("Content-Type: text/plain"))
         {
+            TextPlain message = new TextPlain()
+            {
+                Content = payloadParameters[4]
+            };
+
+            message.SetFormatting(payloadParameters[2]);
+
             MessageReceived?.Invoke(this, new MessageEventArgs()
             {
                 Email = parameters[1],
-                Message = payloadParameters[4]
+                Message = message
             });
         }
 

@@ -51,7 +51,8 @@
         <ComboBox BorderThickness="0"
                   SelectedIndex="{Binding SelectedOptionIndex}"
                   Name="presenceBox"
-                  Background="Transparent">
+                  Background="Transparent"
+                  ToolTip.Tip="Change status or enter options">
 
           <ComboBoxItem Padding="3"
                         Height="0">
@@ -125,13 +126,15 @@
 
           <ComboBoxItem>
             <Button Classes="presence-button"
-                    Tapped="Display_Picture_Tapped">
+                    Tapped="Display_Picture_Tapped"
+                    ToolTip.Tip="Change your display picture">
               Change Display Picture
             </Button>
           </ComboBoxItem>
 
           <ComboBoxItem>
-            <Button Classes="presence-button">
+            <Button Classes="presence-button"
+                    ToolTip.Tip="Change your display name">
               <TextBlock>Change Display Name</TextBlock>
               <Button.Flyout>
                 <Flyout Placement="BottomEdgeAlignedLeft">
@@ -148,7 +151,8 @@
           <ComboBoxItem>
             <Button Classes="presence-button"
                     Tapped="Button_Tapped"
-                    Command="{Binding OptionsCommand}">
+                    Command="{Binding OptionsCommand}"
+                    ToolTip.Tip="Open options window">
               <TextBlock>Options</TextBlock>
             </Button>
           </ComboBoxItem>
@@ -158,7 +162,8 @@
           <ComboBoxItem>
             <Button Classes="presence-button"
                     Tapped="Button_Tapped"
-                    Command="{Binding SignOutCommand}">
+                    Command="{Binding SignOutCommand}"
+                    ToolTip.Tip="Sign out and return to login screen">
               <TextBlock>Sign Out</TextBlock>
             </Button>
           </ComboBoxItem>
@@ -177,7 +182,8 @@
                  BorderThickness="0"
                  Background="Transparent"
                  Watermark="Share a quick message"
-                 Text="{Binding PersonalMessage}">
+                 Text="{Binding PersonalMessage}"
+                 ToolTip.Tip="Enter a personal message">
           <i:Interaction.Behaviors>
             <ia:EventTriggerBehavior EventName="LostFocus">
               <InvokeCommandAction Command="{Binding ChangePersonalMessageCommand}"/>
@@ -220,7 +226,8 @@
 
         <DataTemplate DataType="models:Contact">
           <StackPanel Orientation="Horizontal"
-                      Spacing="3">
+                      Spacing="3"
+                      ToolTip.Tip="Send a message to this contact">
             <Grid>
               <PathIcon Data="{StaticResource person_regular}"
                         Foreground="{Binding PresenceColor}"/>

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using AvaMSN.ViewModels;
 using System.Reactive;
 
 namespace AvaMSN.Views;
@@ -13,10 +14,10 @@ public partial class ConversationWindow : Window
 
     private void TextBox_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (sendButton.Command == null || e.Key != Key.Enter)
+        if (e.Key != Key.Enter)
             return;
 
-        sendButton.Command.Execute(new Unit { });
+        (DataContext as ConversationWindowViewModel)?.SendCommand.Execute(new Unit { });
     }
 
     private void ItemsControl_PropertyChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)

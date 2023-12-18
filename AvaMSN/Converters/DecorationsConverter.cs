@@ -7,18 +7,15 @@ using System.Globalization;
 namespace AvaMSN.Converters;
 
 /// <summary>
-/// Use bold font when value is true.
+/// Set text decorations.
 /// </summary>
-public class BoldConverter : IValueConverter
+public class DecorationsConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is bool bold)
+        if (value is string decorations)
         {
-            if (bold)
-                return FontWeight.ExtraBold;
-            else
-                return FontWeight.Regular;
+            return TextDecorationCollection.Parse(decorations);
         }
 
         return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
