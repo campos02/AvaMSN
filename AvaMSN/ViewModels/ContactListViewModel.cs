@@ -250,7 +250,7 @@ public class ContactListViewModel : ViewModelBase
         SelectedContact.NewMessages = false;
         Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact == SelectedContact);
 
-        if (conversation == null || conversation.Switchboard == null)
+        if (conversation == null || conversation.Switchboard == null || !conversation.Switchboard.Connected)
         {
             MSNP.Contact? contact = NotificationServer.ContactList.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ?? new MSNP.Contact()
             {

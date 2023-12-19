@@ -107,7 +107,7 @@ public class Conversation : ReactiveObject
     /// </summary>
     public async Task SendTextMessage(TextPlain textMessage)
     {
-        if (Switchboard == null || !Switchboard.Connected || Profile == null || Contact == null || string.IsNullOrEmpty(textMessage.Content))
+        if (Switchboard == null || !Switchboard.Connected || string.IsNullOrEmpty(textMessage.Content))
             return;
 
         try
@@ -165,7 +165,7 @@ public class Conversation : ReactiveObject
     /// <returns></returns>
     public async Task SendNudge()
     {
-        if (Switchboard == null || Profile == null || Contact == null || !Switchboard.Connected)
+        if (Switchboard == null || !Switchboard.Connected)
             return;
 
         try

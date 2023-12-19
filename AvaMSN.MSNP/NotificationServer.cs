@@ -502,6 +502,15 @@ public partial class NotificationServer : Connection
             }
         }
 
+        // Disconnect from switchboards when going invisible
+        if (Profile.Presence == PresenceStatus.PresenceStatus.Invisible)
+        {
+            foreach (Switchboard switchboard in Switchboards)
+            {
+                await switchboard.DisconnectAsync();
+            }
+        }
+
         // Start handling incoming commands
         _ = ReceiveIncomingAsync();
     }
