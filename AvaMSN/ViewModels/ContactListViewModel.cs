@@ -70,7 +70,6 @@ public class ContactListViewModel : ViewModelBase
     public string NewContactDisplayName { get; set; } = string.Empty;
 
     public Database? Database { get; set; }
-
     public event EventHandler? Disconnected;
 
     public ContactListViewModel()
@@ -94,7 +93,6 @@ public class ContactListViewModel : ViewModelBase
             NotificationManager.ReplyTapped += NotificationManager_ReplyTapped;
             NotificationManager.ApplicationExit += NotificationManager_ApplicationExit;
         }
-            
     }
 
     private async Task ChangePresence(string presence)
@@ -248,38 +246,35 @@ public class ContactListViewModel : ViewModelBase
 
         // Unbold contact name
         SelectedContact.NewMessages = false;
-        Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact == SelectedContact);
 
-        if (conversation == null || conversation.Switchboard == null || !conversation.Switchboard.Connected)
+        Conversation? conversation = Conversations.LastOrDefault(conv => conv.Contact == SelectedContact);
+        if (conversation == null)
         {
-            MSNP.Contact? contact = NotificationServer.ContactList.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ?? new MSNP.Contact()
-            {
-                Email = SelectedContact.Email,
-                DisplayName = SelectedContact.DisplayName,
-                PersonalMessage = SelectedContact.PersonalMessage,
-                Presence = SelectedContact.Presence
-            };
-
             conversation = new Conversation(SelectedContact, Profile, Database);
-            Conversations.Add(conversation);
 
+            conversation.NewMessage += Conversation_NewMessage;
+            conversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
+            NotificationServer.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
+
+            Conversations.Add(conversation);
+        }
+
+        if (conversation.Switchboard == null || !conversation.Switchboard.Connected)
+        {
             if (SelectedContact.Presence != PresenceStatus.GetFullName(PresenceStatus.Offline))
             {
-                // Check if a switchboard session is already open before requesting a new one
-                MSNP.Switchboard? switchboard = NotificationServer.Switchboards.FirstOrDefault(sb => sb.Contact.Email == contact.Email && sb.Connected);
+                MSNP.Contact? contact = NotificationServer.ContactList.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ?? new MSNP.Contact()
+                {
+                    Email = SelectedContact.Email,
+                    DisplayName = SelectedContact.DisplayName,
+                    PersonalMessage = SelectedContact.PersonalMessage,
+                    Presence = SelectedContact.Presence
+                };
 
-                if (switchboard == null)
-                    conversation.Switchboard = await NotificationServer!.SendXFR(contact);
-                else
-                    conversation.Switchboard = switchboard;
-
-                conversation.NewMessage += Conversation_NewMessage;
-                conversation.SubscribeToEvents();
-                conversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
+                await NotificationServer!.SendXFR(contact);
+                conversation.OpenWindow();
+                await conversation.Switchboard!.ReceiveDisplayPicture();
             }
-
-            NotificationServer.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
-            conversation.OpenWindow();
         }
 
         else
@@ -334,9 +329,9 @@ public class ContactListViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Unsubscribes to notification server events.
+    /// Unsubscribes from notification server events.
     /// </summary>
-    public void UnsubscribeToEvents()
+    public void UnsubscribeFromEvents()
     {
         NotificationServer!.Disconnected -= NotificationServer_Disconnected;
         NotificationServer.SwitchboardChanged -= NotificationServer_SwitchboardChanged;
@@ -361,7 +356,7 @@ public class ContactListViewModel : ViewModelBase
         if (ContactGroups == null || e.Switchboard == null)
             return;
 
-        Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact.Email == e.Switchboard.Contact.Email);
+        Conversation? conversation = Conversations.LastOrDefault(conv => conv.Contact.Email == e.Switchboard.Contact.Email);
 
         if (conversation == null)
         {
@@ -383,8 +378,8 @@ public class ContactListViewModel : ViewModelBase
             };
 
             conversation.NewMessage += Conversation_NewMessage;
-            NotificationServer!.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
             conversation.SubscribeToEvents();
+            NotificationServer!.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
         }
     }
 
@@ -392,12 +387,12 @@ public class ContactListViewModel : ViewModelBase
     /// Resets data, closes chat windows and returns to login page when disconnected from the server.
     /// </summary>
     /// <exception cref="ConnectionException">Thrown if the disconnection wasn't requested.</exception>
-    public void NotificationServer_Disconnected(object? sender, MSNP.DisconnectedEventArgs e)
+    public async void NotificationServer_Disconnected(object? sender, MSNP.DisconnectedEventArgs e)
     {
         // Close every conversation
         foreach (Conversation conversation in Conversations)
         {
-            conversation.UnsubscribeToEvents();
+            await conversation.Disconnect();
             NotificationServer!.SwitchboardChanged -= conversation.NotificationServer_SwitchboardChanged;
             conversation.DisplayPictureUpdated -= Conversation_DisplayPictureUpdated;
             conversation.NewMessage -= Conversation_NewMessage;

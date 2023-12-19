@@ -115,11 +115,14 @@ public class Conversation : ReactiveObject
     /// </summary>
     public async Task SendTextMessage(TextPlain textMessage)
     {
-        if (Switchboard == null || !Switchboard.Connected || string.IsNullOrEmpty(textMessage.Content))
+        if (string.IsNullOrEmpty(textMessage.Content))
             return;
 
         try
         {
+            if (Switchboard == null || !Switchboard.Connected)
+                throw new MSNP.Exceptions.ContactException("Contact is offline");
+
             await Switchboard.SendTextMessage(textMessage);
 
             TypingUser = false;
@@ -149,9 +152,14 @@ public class Conversation : ReactiveObject
             if (SettingsManager.Settings.SaveMessagingHistory)
                 Database?.SaveMessage(message);
         }
+
         catch (Exception)
         {
-            Messages.Add(new Message { Text = "Failed to send one or more messages" });
+            Messages.Add(new Message
+            {
+                Text = "One or more messages could not be delivered",
+                DateTime = DateTime.Now
+            });
         }
     }
 
@@ -173,11 +181,11 @@ public class Conversation : ReactiveObject
     /// <returns></returns>
     public async Task SendNudge()
     {
-        if (Switchboard == null || !Switchboard.Connected)
-            return;
-
         try
         {
+            if (Switchboard == null || !Switchboard.Connected)
+                throw new MSNP.Exceptions.ContactException("Contact is offline");
+
             await Switchboard.SendNudge();
             TypingUser = false;
 
@@ -194,9 +202,14 @@ public class Conversation : ReactiveObject
             if (SettingsManager.Settings.SaveMessagingHistory)
                 Database?.SaveMessage(message);
         }
+
         catch (Exception)
         {
-            Messages.Add(new Message { Text = "Failed to send one or more messages" });
+            Messages.Add(new Message
+            {
+                Text = "One or more messages could not be delivered",
+                DateTime = DateTime.Now
+            });
         }
     }
 
@@ -231,7 +244,7 @@ public class Conversation : ReactiveObject
     }
 
     /// <summary>
-    /// Disconnects from switchboard session.
+    /// Disconnects from the switchboard.
     /// </summary>
     /// <returns></returns>
     public async Task Disconnect()
@@ -239,7 +252,10 @@ public class Conversation : ReactiveObject
         if (Switchboard == null)
             return;
 
-        await Switchboard.DisconnectAsync();
+        if (Switchboard.Connected)
+            await Switchboard.DisconnectAsync();
+
+        UnsubscribeFromEvents();
     }
 
     /// <summary>
@@ -255,9 +271,9 @@ public class Conversation : ReactiveObject
     }
 
     /// <summary>
-    /// Unsubscribes to switchboard events.
+    /// Unsubscribes from switchboard events.
     /// </summary>
-    public void UnsubscribeToEvents()
+    public void UnsubscribeFromEvents()
     {
         if (Switchboard == null)
             return;
@@ -269,11 +285,12 @@ public class Conversation : ReactiveObject
     /// <summary>
     /// Replaces the switchboard in case a new session with the same contact is now being used.
     /// </summary>
-    public void NotificationServer_SwitchboardChanged(object? sender, SwitchboardEventArgs e)
+    public async void NotificationServer_SwitchboardChanged(object? sender, SwitchboardEventArgs e)
     {
         if (Contact.Email != e.Switchboard?.Contact.Email)
             return;
 
+        await Disconnect();
         Switchboard = e.Switchboard;
         SubscribeToEvents();
     }
@@ -289,6 +306,7 @@ public class Conversation : ReactiveObject
 
             await Task.Delay(6000);
             TypingUser = false;
+            return;
         }
 
         if (string.IsNullOrEmpty(e.Message?.Content))

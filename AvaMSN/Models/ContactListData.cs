@@ -155,22 +155,26 @@ public class ContactListData
 
         if (e.Presence != PresenceStatus.Offline)
         {
-            // Remove from offline group and add to online group
-            foreach (ContactGroup group in ContactGroups)
+            // If the previous status was offline...
+            if (contact.Presence == PresenceStatus.GetFullName(PresenceStatus.Offline))
             {
-                if (group.Name == "Offline")
-                    group.Contacts.Remove(contact);
+                // Remove from the offline group and add to the online group
+                foreach (ContactGroup group in ContactGroups)
+                {
+                    if (group.Name == "Offline")
+                        group.Contacts.Remove(contact);
 
-                else if (group.Name == "Online")
-                    group.Contacts.Add(contact);
-            }
+                    else if (group.Name == "Online")
+                        group.Contacts.Add(contact);
+                }
 
-            // If a conversation is open, request a new switchboard if the contact is now online
-            Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact.Email == e.Email);
+                // If a conversation is open, request a new switchboard
+                Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact.Email == e.Email);
 
-            if (conversation != null && contact.Presence == PresenceStatus.GetFullName(PresenceStatus.Offline))
-            {
-                await NotificationServer.SendXFR(e.Email);
+                if (conversation != null && contact.Presence == PresenceStatus.GetFullName(PresenceStatus.Offline))
+                {
+                    await NotificationServer.SendXFR(e.Email);
+                }
             }
         }
 
@@ -186,7 +190,7 @@ public class ContactListData
                     group.Contacts.Remove(contact);
             }
 
-            // If a conversation is open, leave switchboard when the contact has gone offline
+            // If a conversation is open, leave switchboard
             Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact.Email == e.Email);
 
             if (conversation != null && conversation.Switchboard != null)
