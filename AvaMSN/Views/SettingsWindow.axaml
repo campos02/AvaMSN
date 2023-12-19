@@ -35,12 +35,14 @@
       <TextBox Grid.Row="2"
                Text="{Binding Server}"
                Watermark="Messenger server address"
-               ToolTip.Tip="Enter the messenger server address"/>
+               ToolTip.Tip="Enter the Messenger server address"
+               ToolTip.ShowDelay="1000"/>
 
       <CheckBox Grid.Row="4"
                 HorizontalAlignment="Center"
                 IsChecked="{Binding SaveMessages}"
-                ToolTip.Tip="Choose whether or not to save your message on this computer">
+                ToolTip.Tip="Choose whether or not to save your message on this computer"
+                ToolTip.ShowDelay="1000">
         Save messaging history
       </CheckBox>
 
@@ -54,7 +56,8 @@
 
       <Button Command="{Binding SaveCommand}"
               HorizontalAlignment="Center"
-              ToolTip.Tip="Save settings">Save</Button>
+              ToolTip.Tip="Save settings"
+              ToolTip.ShowDelay="1000">Save</Button>
 
     </StackPanel>
 

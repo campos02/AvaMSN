@@ -52,7 +52,8 @@
                   SelectedIndex="{Binding SelectedOptionIndex}"
                   Name="presenceBox"
                   Background="Transparent"
-                  ToolTip.Tip="Change status or enter options">
+                  ToolTip.Tip="Change your status or enter options"
+                  ToolTip.ShowDelay="1000">
 
           <ComboBoxItem Padding="3"
                         Height="0">
@@ -127,14 +128,16 @@
           <ComboBoxItem>
             <Button Classes="presence-button"
                     Tapped="Display_Picture_Tapped"
-                    ToolTip.Tip="Change your display picture">
+                    ToolTip.Tip="Change your display picture"
+                    ToolTip.ShowDelay="1000">
               Change Display Picture
             </Button>
           </ComboBoxItem>
 
           <ComboBoxItem>
             <Button Classes="presence-button"
-                    ToolTip.Tip="Change your display name">
+                    ToolTip.Tip="Change your display name"
+                    ToolTip.ShowDelay="1000">
               <TextBlock>Change Display Name</TextBlock>
               <Button.Flyout>
                 <Flyout Placement="BottomEdgeAlignedLeft">
@@ -152,7 +155,8 @@
             <Button Classes="presence-button"
                     Tapped="Button_Tapped"
                     Command="{Binding OptionsCommand}"
-                    ToolTip.Tip="Open options window">
+                    ToolTip.Tip="Open options window"
+                    ToolTip.ShowDelay="1000">
               <TextBlock>Options</TextBlock>
             </Button>
           </ComboBoxItem>
@@ -163,7 +167,8 @@
             <Button Classes="presence-button"
                     Tapped="Button_Tapped"
                     Command="{Binding SignOutCommand}"
-                    ToolTip.Tip="Sign out and return to login screen">
+                    ToolTip.Tip="Sign out and return to login screen"
+                    ToolTip.ShowDelay="1000">
               <TextBlock>Sign Out</TextBlock>
             </Button>
           </ComboBoxItem>
@@ -183,7 +188,8 @@
                  Background="Transparent"
                  Watermark="Share a quick message"
                  Text="{Binding PersonalMessage}"
-                 ToolTip.Tip="Enter a personal message">
+                 ToolTip.Tip="Enter a personal message"
+                 ToolTip.ShowDelay="1000">
           <i:Interaction.Behaviors>
             <ia:EventTriggerBehavior EventName="LostFocus">
               <InvokeCommandAction Command="{Binding ChangePersonalMessageCommand}"/>
@@ -196,7 +202,8 @@
     
     <Button HorizontalAlignment="Right"
             Background="Transparent"
-            ToolTip.Tip="Add a contact">
+            ToolTip.Tip="Add a contact"
+            ToolTip.ShowDelay="1000">
       <PathIcon Data="{StaticResource person_add_regular}"/>
       <Button.Flyout>
         <Flyout>
@@ -227,7 +234,8 @@
         <DataTemplate DataType="models:Contact">
           <StackPanel Orientation="Horizontal"
                       Spacing="3"
-                      ToolTip.Tip="Send a message to this contact">
+                      ToolTip.Tip="Send a message to this contact"
+                      ToolTip.ShowDelay="1000">
             <Grid>
               <PathIcon Data="{StaticResource person_regular}"
                         Foreground="{Binding PresenceColor}"/>

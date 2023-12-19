@@ -41,7 +41,8 @@
 
     <Button HorizontalAlignment="Right"
             Grid.ColumnSpan="3"
-            ToolTip.Tip="More options">
+            ToolTip.Tip="More options"
+            ToolTip.ShowDelay="1000">
       <PathIcon Data="{StaticResource more_vertical_regular}"/>
       <Button.Flyout>
         <MenuFlyout>
@@ -169,7 +170,8 @@
                KeyDown="TextBox_KeyDown"
                FontWeight="{Binding Bold, Converter={StaticResource boldConverter}}"
                Watermark="Write your message"
-               ToolTip.Tip="Enter your message here">
+               ToolTip.Tip="Enter your message here"
+               ToolTip.ShowDelay="1000">
         <i:Interaction.Behaviors>
           <ia:EventTriggerBehavior EventName="TextChanged">
             <InvokeCommandAction Command="{Binding TypingUserCommand}"/>
@@ -182,20 +184,24 @@
                   HorizontalAlignment="Stretch">
         <Button Command="{Binding NudgeCommand}"
                 Padding="7"
-                ToolTip.Tip="Send a nudge">Send a Nudge</Button>
+                ToolTip.Tip="Send a nudge"
+                ToolTip.ShowDelay="1000">Send a Nudge</Button>
         
         <ToggleButton IsChecked="{Binding Bold}"
-                      ToolTip.Tip="Toggle bold">
+                      ToolTip.Tip="Toggle bold"
+                      ToolTip.ShowDelay="1000">
           <PathIcon Data="{StaticResource text_bold_regular}"/>
         </ToggleButton>
         
         <ToggleButton IsChecked="{Binding Strikethrough}"
-                      ToolTip.Tip="Toggle strikethrough">
+                      ToolTip.Tip="Toggle strikethrough"
+                      ToolTip.ShowDelay="1000">
           <PathIcon Data="{StaticResource text_strikethrough_regular}"/>
         </ToggleButton>
         
         <ToggleButton IsChecked="{Binding Underline}"
-                      ToolTip.Tip="Toggle underline">
+                      ToolTip.Tip="Toggle underline"
+                      ToolTip.ShowDelay="1000">
           <PathIcon Data="{StaticResource text_underline_regular}"/>
         </ToggleButton>
       </StackPanel>

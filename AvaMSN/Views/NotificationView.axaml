@@ -54,9 +54,11 @@
                   HorizontalAlignment="Center"
                   Grid.Row="4">
         <Button Command="{Binding ReplyCommand}"
-                ToolTip.Tip="Open a new conversation window">Reply</Button>
+                ToolTip.Tip="Open a new conversation window"
+                ToolTip.ShowDelay="1000">Reply</Button>
         <Button Command="{Binding DismissCommand}"
-                ToolTip.Tip="Close notification">Dismiss</Button>
+                ToolTip.Tip="Close notification"
+                ToolTip.ShowDelay="1000">Dismiss</Button>
       </StackPanel>
     </Grid>
   </Border>

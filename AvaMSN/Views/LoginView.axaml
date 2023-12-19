@@ -49,12 +49,14 @@
             ColumnDefinitions="*, Auto">
         <TextBox Watermark="Enter your e-mail"
                  Text="{Binding Email}"
-                 ToolTip.Tip="Enter your e-mail address"/>
+                 ToolTip.Tip="Enter your e-mail address"
+                 ToolTip.ShowDelay="1000"/>
 
         <ComboBox ItemsSource="{Binding Users}"
                   Grid.Column="1"
                   Name="userBox"
-                  ToolTip.Tip="Change users or open options window">
+                  ToolTip.Tip="Change users or open options window"
+                  ToolTip.ShowDelay="1000">
           <ComboBox.DataTemplates>
             <DataTemplate DataType="models:User">
               <Button Command="{Binding $parent[ComboBox].((vm:LoginViewModel)DataContext).ChangeUserCommand}"
@@ -81,7 +83,8 @@
                PasswordChar="•"
                Watermark="Enter your password"
                Grid.Row="6"
-               ToolTip.Tip="Enter your account password"/>
+               ToolTip.Tip="Enter your account password"
+               ToolTip.ShowDelay="1000"/>
 
       <TextBlock Grid.Row="8"
                  HorizontalAlignment="Center">Sign in as:</TextBlock>
@@ -90,7 +93,8 @@
                 HorizontalAlignment="Center"
                 ItemsSource="{Binding Statuses}"
                 SelectedItem="{Binding SelectedStatus}"
-                ToolTip.Tip="Select the status that your contacts will see after you sign in">
+                ToolTip.Tip="Select the status that your contacts will see after you sign in"
+                ToolTip.ShowDelay="1000">
         <ComboBox.DataTemplates>
           <DataTemplate DataType="models:Presence">
             <StackPanel Spacing="3"
@@ -109,13 +113,15 @@
         <StackPanel Orientation="Horizontal"
                     Spacing="5">
           <CheckBox IsChecked="{Binding RememberMe}"
-                    ToolTip.Tip="Save your e-mail address on this computer">
+                    ToolTip.Tip="Save your e-mail address on this computer"
+                    ToolTip.ShowDelay="1000">
             Remember me
           </CheckBox>
           <Button Background="Transparent"
                   VerticalAlignment="Bottom"
                   Command="{Binding ForgetMeCommand}"
-                  ToolTip.Tip="Remove my sign-in information from this computer">(Forget me)</Button>
+                  ToolTip.Tip="Remove my sign-in information from this computer"
+                  ToolTip.ShowDelay="1000">(Forget me)</Button>
         </StackPanel>
         <CheckBox IsChecked="{Binding RememberPassword}">
           Remember my password
@@ -128,7 +134,8 @@
             Grid.ColumnSpan="3"
             HorizontalAlignment="Center"
             Command="{Binding LoginCommand}"
-            ToolTip.Tip="Sign in to Messenger">Sign in</Button>
+            ToolTip.Tip="Sign in to Messenger"
+            ToolTip.ShowDelay="1000">Sign in</Button>
 
   </Grid>
 </UserControl>

@@ -40,7 +40,8 @@
       <Button Command="{Binding CloseCommand}"
               HorizontalAlignment="Center"
               Grid.Row="2"
-              ToolTip.Tip="Close error">
+              ToolTip.Tip="Close error"
+              ToolTip.ShowDelay="1000">
         Close
       </Button>
       
