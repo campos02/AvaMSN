@@ -82,6 +82,7 @@ public class NotificationManager : ReactiveObject
     /// </summary>
     public void InvokeExit()
     {
+        delaySource?.Dispose();
         ApplicationExit?.Invoke(this, EventArgs.Empty);
     }
 

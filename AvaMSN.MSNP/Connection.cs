@@ -16,8 +16,7 @@ public class Connection
     public bool Connected { get; private set; }
 
     public event EventHandler<DisconnectedEventArgs>? Disconnected;
-
-    public CancellationTokenSource ReceiveSource { get; set; } = new CancellationTokenSource();
+    private CancellationTokenSource receiveSource = new CancellationTokenSource();
 
     /// <summary>
     /// Resolves host address and stablishes a connection to it.
@@ -76,12 +75,12 @@ public class Connection
     /// <returns>Message received in string format.</returns>
     protected async Task<string> ReceiveStringAsync()
     {
-        ReceiveSource.Cancel();
-        ReceiveSource = new CancellationTokenSource();
-        ReceiveSource.CancelAfter(30000);
+        receiveSource.Cancel();
+        receiveSource = new CancellationTokenSource();
+        receiveSource.CancelAfter(30000);
 
         var buffer = new byte[1664];
-        var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, ReceiveSource.Token);
+        var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
 
         return Encoding.UTF8.GetString(buffer, 0, received);
     }
@@ -92,12 +91,12 @@ public class Connection
     /// <returns>Message received.</returns>
     protected async Task<byte[]> ReceiveAsync()
     {
-        ReceiveSource.Cancel();
-        ReceiveSource = new CancellationTokenSource();
-        ReceiveSource.CancelAfter(30000);
+        receiveSource.Cancel();
+        receiveSource = new CancellationTokenSource();
+        receiveSource.CancelAfter(30000);
 
         var buffer = new byte[1664];
-        var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, ReceiveSource.Token);
+        var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
 
         byte[] response = new byte[received];
         Buffer.BlockCopy(buffer, 0, response, 0, received);
@@ -111,15 +110,15 @@ public class Connection
     /// <returns></returns>
     protected async Task ReceiveIncomingAsync()
     {
-        ReceiveSource.Cancel();
-        ReceiveSource = new CancellationTokenSource();
+        receiveSource.Cancel();
+        receiveSource = new CancellationTokenSource();
 
         try
         {
             while (true)
             {
                 var buffer = new byte[1664];
-                var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, ReceiveSource.Token);
+                var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
 
                 byte[] response = new byte[received];
                 Buffer.BlockCopy(buffer, 0, response, 0, received);
@@ -199,7 +198,8 @@ public class Connection
     /// <param name="requested">Whether the disconnection was requested by the user.</param>
     protected void DisconnectSocket(bool requested = true)
     {
-        ReceiveSource.Cancel();
+        receiveSource.Cancel();
+        receiveSource.Dispose();
 
         Client?.Shutdown(SocketShutdown.Both);
         Client?.Dispose();

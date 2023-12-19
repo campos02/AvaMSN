@@ -261,6 +261,7 @@ public class ContactListViewModel : ViewModelBase
             };
 
             conversation = new Conversation(SelectedContact, Profile, Database);
+            Conversations.Add(conversation);
 
             if (SelectedContact.Presence != PresenceStatus.GetFullName(PresenceStatus.Offline))
             {
@@ -279,7 +280,6 @@ public class ContactListViewModel : ViewModelBase
 
             NotificationServer.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
             conversation.OpenWindow();
-            Conversations.Add(conversation);
         }
 
         else
@@ -361,22 +361,22 @@ public class ContactListViewModel : ViewModelBase
         if (ContactGroups == null || e.Switchboard == null)
             return;
 
-        Contact? contact = new Contact()
-        {
-            Email = e.Switchboard.Contact.Email,
-            DisplayName = e.Switchboard.Contact.DisplayName,
-            Presence = PresenceStatus.GetFullName(e.Switchboard.Contact.Presence)
-        };
-
-        foreach (ContactGroup group in ContactGroups)
-        {
-            contact = group.Contacts.FirstOrDefault(contact => contact.Email == e.Switchboard.Contact.Email) ?? contact;
-        }
-
-        Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact.Email == contact.Email);
+        Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact.Email == e.Switchboard.Contact.Email);
 
         if (conversation == null)
         {
+            Contact? contact = new Contact()
+            {
+                Email = e.Switchboard.Contact.Email,
+                DisplayName = e.Switchboard.Contact.DisplayName,
+                Presence = PresenceStatus.GetFullName(e.Switchboard.Contact.Presence)
+            };
+
+            foreach (ContactGroup group in ContactGroups)
+            {
+                contact = group.Contacts.FirstOrDefault(contact => contact.Email == e.Switchboard.Contact.Email) ?? contact;
+            }
+
             conversation = new Conversation(contact, Profile, Database!)
             {
                 Switchboard = e.Switchboard

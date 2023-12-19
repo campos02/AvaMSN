@@ -85,6 +85,7 @@ public class Conversation : ReactiveObject
             };
 
             ConversationWindow.Closed += ConversationWindow_Closed;
+            ConversationWindow.Activated += ConversationWindow_Activated;
             ConversationWindow.Show();
         }
     }
@@ -97,8 +98,15 @@ public class Conversation : ReactiveObject
         ConversationWindow?.Close();
     }
 
+    private void ConversationWindow_Activated(object? sender, EventArgs e)
+    {
+        Contact.NewMessages = false;
+    }
+
     private void ConversationWindow_Closed(object? sender, EventArgs e)
     {
+        ConversationWindow!.Closed -= ConversationWindow_Closed;
+        ConversationWindow.Activated -= ConversationWindow_Activated;
         ConversationWindow = null;
     }
 
@@ -318,6 +326,11 @@ public class Conversation : ReactiveObject
 
         if (SettingsManager.Settings.SaveMessagingHistory)
             Database?.SaveMessage(message);
+
+        if (ConversationWindow == null)
+            Contact.NewMessages = true;
+        else if (!ConversationWindow.IsActive)
+            Contact.NewMessages = true;
 
         NewMessage?.Invoke(this, new NewMessageEventArgs()
         {

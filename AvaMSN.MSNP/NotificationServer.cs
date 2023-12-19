@@ -459,7 +459,7 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Changes the user's presence status, including the MSN object if present.
+    /// Changes the user's presence status and includes the MSN object if present.
     /// </summary>
     /// <returns></returns>
     public async Task SendCHG()
