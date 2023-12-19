@@ -38,14 +38,21 @@
                ToolTip.Tip="Enter the Messenger server address"
                ToolTip.ShowDelay="1000"/>
 
-      <CheckBox Grid.Row="4"
-                HorizontalAlignment="Center"
-                IsChecked="{Binding SaveMessages}"
-                ToolTip.Tip="Choose whether or not to save your message on this computer"
-                ToolTip.ShowDelay="1000">
-        Save messaging history
-      </CheckBox>
+      <StackPanel Grid.Row="4"
+                  HorizontalAlignment="Center">
+        <CheckBox IsChecked="{Binding SaveMessages}"
+          ToolTip.Tip="Choose whether or not to save your message on this computer"
+          ToolTip.ShowDelay="1000">
+          Save messaging history
+        </CheckBox>
 
+        <CheckBox IsChecked="{Binding MinimizeToTray}"
+          ToolTip.Tip="Choose whether to close or minimize to tray when the close button is pressed"
+          ToolTip.ShowDelay="1000">
+          Minimize to tray
+        </CheckBox>
+      </StackPanel>
+      
     </Grid>
 
     <StackPanel Grid.Row="4"

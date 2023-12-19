@@ -2,7 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="AvaMSN.App"
              xmlns:local="using:AvaMSN"
-             RequestedThemeVariant="Default">
+             xmlns:vm="using:AvaMSN.ViewModels"
+             RequestedThemeVariant="Default"
+             x:DataType="vm:ApplicationViewModel">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.Styles>
@@ -17,4 +19,24 @@
     <Application.DataTemplates>
       <local:ViewLocator/>
     </Application.DataTemplates>
+
+    <TrayIcon.Icons>
+      <TrayIcons>
+        <TrayIcon Icon="/Assets/avalonia-logo.ico"
+                  ToolTipText="AvaMSN"
+                  Command="{Binding OpenCommand}">
+          <TrayIcon.Menu>
+            <NativeMenu>
+              <NativeMenuItem Header="Open AvaMSN"
+                              Command="{Binding OpenCommand}"/>
+              <NativeMenuItem Header="Minimize to tray"
+                              Command="{Binding MinimizeCommand}"/>
+              <NativeMenuItemSeparator/>
+              <NativeMenuItem Header="Exit"
+                              Command="{Binding ExitCommand}"/>
+            </NativeMenu>
+          </TrayIcon.Menu>
+        </TrayIcon>
+      </TrayIcons>
+    </TrayIcon.Icons>
 </Application>

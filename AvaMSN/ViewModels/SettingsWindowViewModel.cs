@@ -8,9 +8,9 @@ public class SettingsWindowViewModel : ViewModelBase
 {
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
 
-    public SettingsManager SettingsManager { get; set; } = new SettingsManager();
     public string Server { get; set; } = string.Empty;
     public bool SaveMessages { get; set; }
+    public bool MinimizeToTray { get; set; }
 
     private string resultText = string.Empty;
 
@@ -25,6 +25,7 @@ public class SettingsWindowViewModel : ViewModelBase
         SaveCommand = ReactiveCommand.CreateFromTask(Save);
         Server = SettingsManager.Settings.Server;
         SaveMessages = SettingsManager.Settings.SaveMessagingHistory;
+        MinimizeToTray = SettingsManager.Settings.MinimizeToTray;
     }
 
     /// <summary>
@@ -36,6 +37,7 @@ public class SettingsWindowViewModel : ViewModelBase
             SettingsManager.Settings.Server = Server;
 
         SettingsManager.Settings.SaveMessagingHistory = SaveMessages;
+        SettingsManager.Settings.MinimizeToTray = MinimizeToTray;
         SettingsManager.SaveToFile();
 
         ResultText = "Saved successfully!";
