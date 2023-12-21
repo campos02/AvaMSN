@@ -134,7 +134,7 @@ public class ContactListData
     /// <summary>
     /// Handles presence events, changing groups according to a contact's new status.
     /// </summary>
-    private async void NotificationServer_PresenceChanged(object? sender, PresenceEventArgs e)
+    private void NotificationServer_PresenceChanged(object? sender, PresenceEventArgs e)
     {
         if (NotificationServer == null || ContactGroups == null)
             return;
@@ -167,14 +167,6 @@ public class ContactListData
                     else if (group.Name == "Online")
                         group.Contacts.Add(contact);
                 }
-
-                // If a conversation is open, request a new switchboard
-                Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact.Email == e.Email);
-
-                if (conversation != null && contact.Presence == PresenceStatus.GetFullName(PresenceStatus.Offline))
-                {
-                    await NotificationServer.SendXFR(e.Email);
-                }
             }
         }
 
@@ -188,14 +180,6 @@ public class ContactListData
 
                 else if (group.Name == "Online")
                     group.Contacts.Remove(contact);
-            }
-
-            // If a conversation is open, leave switchboard
-            Conversation? conversation = Conversations.FirstOrDefault(conv => conv.Contact.Email == e.Email);
-
-            if (conversation != null && conversation.Switchboard != null)
-            {
-                await conversation.Switchboard.DisconnectAsync();
             }
         }
 

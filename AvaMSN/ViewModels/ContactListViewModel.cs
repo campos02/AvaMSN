@@ -250,7 +250,10 @@ public class ContactListViewModel : ViewModelBase
         Conversation? conversation = Conversations.LastOrDefault(conv => conv.Contact == SelectedContact);
         if (conversation == null)
         {
-            conversation = new Conversation(SelectedContact, Profile, Database);
+            conversation = new Conversation(SelectedContact, Profile, Database)
+            {
+                NotificationServer = NotificationServer
+            };
 
             conversation.NewMessage += Conversation_NewMessage;
             conversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
@@ -263,18 +266,15 @@ public class ContactListViewModel : ViewModelBase
         {
             if (SelectedContact.Presence != PresenceStatus.GetFullName(PresenceStatus.Offline))
             {
-                MSNP.Contact? contact = NotificationServer.ContactList.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ?? new MSNP.Contact()
-                {
-                    Email = SelectedContact.Email,
-                    DisplayName = SelectedContact.DisplayName,
-                    PersonalMessage = SelectedContact.PersonalMessage,
-                    Presence = SelectedContact.Presence
-                };
+                conversation.Switchboard = await NotificationServer.SendXFR(SelectedContact.Email);
+                conversation.SubscribeToEvents();
 
-                await NotificationServer!.SendXFR(contact);
                 conversation.OpenWindow();
-                await conversation.Switchboard!.ReceiveDisplayPicture();
+                await conversation.Switchboard.ReceiveDisplayPicture();
             }
+
+            else
+                conversation.OpenWindow();
         }
 
         else

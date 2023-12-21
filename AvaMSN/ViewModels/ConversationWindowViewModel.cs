@@ -148,8 +148,8 @@ public class ConversationWindowViewModel : ViewModelBase
             Content = Message
         };
 
-        await Conversation.SendTextMessage(message);
         Message = string.Empty;
+        await Conversation.SendTextMessage(message);
     }
 
     private async Task SendTypingUser()

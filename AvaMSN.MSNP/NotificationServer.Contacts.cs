@@ -5,7 +5,7 @@ namespace AvaMSN.MSNP;
 public partial class NotificationServer : Connection
 {
     /// <summary>
-    /// Change the user's display name in the ABCH and NS sides.
+    /// Change the user's display name on the ABCH and NS sides.
     /// </summary>
     /// <returns></returns>
     public async Task ChangeDisplayName()
@@ -40,7 +40,7 @@ public partial class NotificationServer : Connection
         ContactList.Contacts.Add(contact);
 
         // Add to allow list
-        string payload = ContactList.ListPayload(contact, new Lists
+        string payload = ContactService.ListPayload(contact, new Lists
         {
             Allow = true
         });
@@ -48,13 +48,13 @@ public partial class NotificationServer : Connection
         await SendADL(payload);
 
         // Add to forward list and send FQY
-        payload = ContactList.ListPayload(contact, new Lists
+        payload = ContactService.ListPayload(contact, new Lists
         {
             Forward = true
         });
 
         await SendADL(payload);
-        await SendFQY(ContactList.ContactPayload(contact));
+        await SendFQY(ContactService.ContactPayload(contact));
 
         while (true)
         {
@@ -92,7 +92,7 @@ public partial class NotificationServer : Connection
         Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
         await ContactList.ABContactDelete(contact.Email);
 
-        string payload = ContactList.ListPayload(contact, new Lists
+        string payload = ContactService.ListPayload(contact, new Lists
         {
             Forward = true
         });
@@ -105,7 +105,7 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Blocks a contact in the ABCH and NS sides.
+    /// Blocks a contact on the ABCH and NS sides.
     /// </summary>
     /// <param name="email">Contact email.</param>
     /// <returns></returns>
@@ -117,7 +117,7 @@ public partial class NotificationServer : Connection
         // Remove from allow lists
         await ContactList.DeleteMember("Allow", contact.Email);
 
-        string payload = ContactList.ListPayload(contact, new Lists
+        string payload = ContactService.ListPayload(contact, new Lists
         {
             Allow = true
         });
@@ -127,7 +127,7 @@ public partial class NotificationServer : Connection
         // Add to block lists
         await ContactList.AddMember("Block", contact.Email);
 
-        payload = ContactList.ListPayload(contact, new Lists
+        payload = ContactService.ListPayload(contact, new Lists
         {
             Block = true
         });
@@ -139,7 +139,7 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Unblocks a contact in the ABCH and NS sides.
+    /// Unblocks a contact on the ABCH and NS sides.
     /// </summary>
     /// <param name="email">Contact email.</param>
     /// <returns></returns>
@@ -151,7 +151,7 @@ public partial class NotificationServer : Connection
         // Remove from block lists
         await ContactList.DeleteMember("Block", contact.Email);
 
-        string payload = ContactList.ListPayload(contact, new Lists
+        string payload = ContactService.ListPayload(contact, new Lists
         {
             Block = true
         });
@@ -161,7 +161,7 @@ public partial class NotificationServer : Connection
         // Add to allow lists
         await ContactList.AddMember("Allow", contact.Email);
 
-        payload = ContactList.ListPayload(contact, new Lists
+        payload = ContactService.ListPayload(contact, new Lists
         {
             Allow = true
         });

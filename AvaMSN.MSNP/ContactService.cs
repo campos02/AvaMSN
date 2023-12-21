@@ -11,7 +11,7 @@ namespace AvaMSN.MSNP;
 /// <summary>
 /// Contains contact and profile data and makes requests to the ABCH contact service.
 /// </summary>
-public class ContactList
+public class ContactService
 {
     /// <summary>
     /// Contact API token.
@@ -24,7 +24,7 @@ public class ContactList
     public List<Contact> Contacts { get; set; } = new List<Contact>();
     public Profile Profile { get; set; } = new Profile();
 
-    public ContactList(string host)
+    public ContactService(string host)
     {
         SharingServiceUrl = $"https://{host}/abservice/SharingService.asmx";
         ABServiceUrl = $"https://{host}/abservice/abservice.asmx";
@@ -354,7 +354,7 @@ public class ContactList
     /// <returns>ADL payload.</returns>
     public string InitialListPayload()
     {
-        // Initialize while setting attribute necessary in the initial payload
+        // Initialize while setting the necessary attribute
         XML.SerializableClasses.InitialListPayload.ml ml = new()
         {
             l = 1
@@ -362,7 +362,7 @@ public class ContactList
 
         List<XML.SerializableClasses.InitialListPayload.mlD> domains = new List<XML.SerializableClasses.InitialListPayload.mlD>();
 
-        // Add contacts with necessary attributes
+        // Add contacts with the necessary attributes
         foreach (Contact contact in Contacts)
         {
             domains.Add(new XML.SerializableClasses.InitialListPayload.mlD()
@@ -385,7 +385,7 @@ public class ContactList
         };
 
         // Remove namespaces
-        var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+        var namespaces = new XmlSerializerNamespaces([XmlQualifiedName.Empty]);
 
         XmlSerializer mlSerializer = new(typeof(XML.SerializableClasses.InitialListPayload.ml));
 
@@ -408,7 +408,7 @@ public class ContactList
     {
         XML.SerializableClasses.ListPayload.ml ml = new();
 
-        // Add contact with necessary attributes
+        // Add contact with the necessary attributes
         List<XML.SerializableClasses.ListPayload.mlD> domains = new List<XML.SerializableClasses.ListPayload.mlD>
         {
             new XML.SerializableClasses.ListPayload.mlD()
@@ -431,7 +431,7 @@ public class ContactList
             OmitXmlDeclaration = true,
         };
 
-        var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+        var namespaces = new XmlSerializerNamespaces([XmlQualifiedName.Empty]);
 
         XmlSerializer mlSerializer = new(typeof(XML.SerializableClasses.ListPayload.ml));
 
@@ -453,7 +453,7 @@ public class ContactList
     {
         XML.SerializableClasses.ContactPayload.ml ml = new();
 
-        // Add contact with necessary attributes
+        // Add contact with the necessary attributes
         List<XML.SerializableClasses.ContactPayload.mlD> domains = new List<XML.SerializableClasses.ContactPayload.mlD>
         {
             new XML.SerializableClasses.ContactPayload.mlD()
@@ -474,7 +474,7 @@ public class ContactList
         };
 
         // Remove namespaces
-        var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+        var namespaces = new XmlSerializerNamespaces([XmlQualifiedName.Empty]);
 
         XmlSerializer mlSerializer = new(typeof(XML.SerializableClasses.ContactPayload.ml));
 
@@ -504,7 +504,7 @@ public class ContactList
         };
 
         // Remove namespaces
-        var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+        var namespaces = new XmlSerializerNamespaces([XmlQualifiedName.Empty]);
 
         XmlSerializer mlSerializer = new(typeof(Data));
 

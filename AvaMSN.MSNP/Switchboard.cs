@@ -1,6 +1,7 @@
 ﻿using AvaMSN.MSNP.Exceptions;
 using AvaMSN.MSNP.Messages;
 using System.Text;
+using System.Timers;
 
 namespace AvaMSN.MSNP;
 
@@ -11,6 +12,24 @@ public partial class Switchboard : Connection
 {
     public Profile Profile { get; set; } = new Profile();
     public Contact Contact { get; set; } = new Contact();
+    private readonly System.Timers.Timer timeout;
+
+    public Switchboard()
+    {
+        // Set 10 minute timeout
+        timeout = new System.Timers.Timer(600000)
+        {
+            AutoReset = false
+        };
+
+        timeout.Elapsed += Timer_Elapsed;
+    }
+
+    protected override async Task Connect()
+    {
+        await base.Connect();
+        ResetTimeout();
+    }
 
     /// <summary>
     /// Authenticates in a requested switchboard session.
@@ -21,7 +40,6 @@ public partial class Switchboard : Connection
     public async Task SendUSR(string authString)
     {
         await Connect();
-
         TransactionID++;
 
         // Send USR
@@ -59,7 +77,6 @@ public partial class Switchboard : Connection
     public async Task SendANS(string sessionID, string authString)
     {
         await Connect();
-
         TransactionID++;
 
         // Send ANS
@@ -140,6 +157,7 @@ public partial class Switchboard : Connection
         if (string.IsNullOrEmpty(textMessage.Content))
             return;
 
+        ResetTimeout();
         TransactionID++;
 
         string payload = textMessage.CreatePayload();
@@ -195,6 +213,7 @@ public partial class Switchboard : Connection
     /// <exception cref="CommandException">Thrown if the message couldn't be sent.</exception>
     public async Task SendNudge()
     {
+        ResetTimeout();
         TransactionID++;
 
         string payload = "MIME-Version: 1.0\r\n" +
@@ -227,5 +246,25 @@ public partial class Switchboard : Connection
 
         // Start receiving incoming commands again
         _ = ReceiveIncomingAsync();
+    }
+
+    /// <summary>
+    /// Starts or restarts the timeout timer.
+    /// </summary>
+    public void ResetTimeout()
+    {
+        timeout.Stop();
+        timeout.Start();
+    }
+
+    public override async Task DisconnectAsync(bool requested = true)
+    {
+        await base.DisconnectAsync(requested);
+        timeout.Stop();
+    }
+
+    private async void Timer_Elapsed(object? sender, ElapsedEventArgs e)
+    {
+        await DisconnectAsync();
     }
 }

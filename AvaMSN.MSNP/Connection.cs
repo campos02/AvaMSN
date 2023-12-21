@@ -22,7 +22,7 @@ public class Connection
     /// Resolves host address and stablishes a connection to it.
     /// </summary>
     /// <returns></returns>
-    protected async Task Connect()
+    protected virtual async Task Connect()
     {
         IPHostEntry ipHostInfo = await Dns.GetHostEntryAsync(Host);
         IPAddress ipAddress = ipHostInfo.AddressList[0];
@@ -188,8 +188,11 @@ public class Connection
     /// <returns></returns>
     public virtual async Task DisconnectAsync(bool requested = true)
     {
-        await SendAsync("OUT\r\n");
-        DisconnectSocket(requested);
+        if (Connected)
+        {
+            await SendAsync("OUT\r\n");
+            DisconnectSocket(requested);
+        }
     }
 
     /// <summary>

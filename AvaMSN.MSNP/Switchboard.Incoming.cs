@@ -35,6 +35,7 @@ public partial class Switchboard : Connection
     /// <returns></returns>
     private async Task HandleMSG(byte[] response)
     {
+        ResetTimeout();
         string responseString = Encoding.UTF8.GetString(response);
 
         string[] responses = responseString.Split("\r\n");

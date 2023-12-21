@@ -32,7 +32,7 @@ public class MessageEventArgs : ContactEventArgs
     public TextPlain? Message { get; set; }
 }
 
-public class SwitchboardEventArgs : ContactEventArgs
+public class SwitchboardEventArgs
 {
     public Switchboard? Switchboard { get; set; }
 }

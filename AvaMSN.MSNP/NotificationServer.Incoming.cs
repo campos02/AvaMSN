@@ -98,14 +98,12 @@ public partial class NotificationServer : Connection
             }
         }
 
-        PresenceEventArgs eventArgs = new PresenceEventArgs()
+        PresenceChanged?.Invoke(this, new PresenceEventArgs()
         {
             Email = contact.Email,
             Presence = contact.Presence,
             HasDisplayPicture = hasDisplayPicture
-        };
-
-        PresenceChanged?.Invoke(this, eventArgs);
+        });
 
         // Handle other responses if found
         string[] responses = response.Split("\r\n");
@@ -157,14 +155,12 @@ public partial class NotificationServer : Connection
             }
         }
 
-        PresenceEventArgs eventArgs = new PresenceEventArgs()
+        PresenceChanged?.Invoke(this, new PresenceEventArgs()
         {
             Email = contact.Email,
             Presence = contact.Presence,
             HasDisplayPicture = hasDisplayPicture
-        };
-
-        PresenceChanged?.Invoke(this, eventArgs);
+        });
     }
 
     /// <summary>
@@ -172,20 +168,24 @@ public partial class NotificationServer : Connection
     /// </summary>
     /// <param name="response"></param>
     /// <exception cref="ContactException">Thrown if the response is of a non existant contact.</exception>
-    private void HandleFLN(string response)
+    private async void HandleFLN(string response)
     {
         string[] parameters = response.Split(" ");
 
         Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[1]) ?? throw new ContactException("Contact does not exist");
-        contact.Presence = string.Empty;
+        contact.Presence = PresenceStatus.PresenceStatus.Offline;
 
-        PresenceEventArgs eventArgs = new PresenceEventArgs()
+        List<Switchboard> switchboards = Switchboards.Where(sb => sb.Contact.Email == contact.Email && sb.Connected).ToList();
+        foreach (Switchboard switchboard in switchboards)
+        {
+            await switchboard.DisconnectAsync();
+        }
+
+        PresenceChanged?.Invoke(this, new PresenceEventArgs()
         {
             Email = contact.Email,
             Presence = contact.Presence
-        };
-
-        PresenceChanged?.Invoke(this, eventArgs);
+        });
     }
 
     /// <summary>

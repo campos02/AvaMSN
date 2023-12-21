@@ -15,7 +15,7 @@ public partial class NotificationServer : Connection
     // Protocol version
     public static string Protocol => "MSNP15";
 
-    public ContactList ContactList { get; }
+    public ContactService ContactList { get; }
     public Profile Profile
     {
         get => ContactList.Profile;
@@ -33,7 +33,7 @@ public partial class NotificationServer : Connection
         Host = host;
 
         SSO = new SingleSignOn(Host);
-        ContactList = new ContactList(Host);
+        ContactList = new ContactService(Host);
     }
 
     /// <summary>
@@ -101,7 +101,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Send CVR
-            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.8 msmsgs\r\n";
+            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.8.1 msmsgs\r\n";
             await SendAsync(message);
 
             // Receive CVR
@@ -270,7 +270,7 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Sets user privacy settings in the NS side.
+    /// Sets user privacy settings on the NS side.
     /// </summary>
     /// <returns></returns>
     private async Task SendBLP()
@@ -310,7 +310,7 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Adds all contacts retrived from the ABCH in the NS side.
+    /// Adds all contacts retrived from the ABCH on the NS side.
     /// </summary>
     /// <param name="payload">Initial ADL payload.</param>
     /// <returns></returns>
@@ -350,7 +350,7 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Adds a contact in the NS side.
+    /// Adds a contact on the NS side.
     /// </summary>
     /// <param name="payload">ADL list payload.</param>
     /// <returns></returns>
@@ -390,7 +390,7 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Removes a contact in the NS side.
+    /// Removes a contact on the NS side.
     /// </summary>
     /// <param name="payload">RML list payload.</param>
     /// <returns></returns>
@@ -428,7 +428,7 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Sets the user's display name in the NS side.
+    /// Sets the user's display name on the NS side.
     /// </summary>
     /// <returns></returns>
     private async Task SendPRP()
@@ -516,7 +516,7 @@ public partial class NotificationServer : Connection
     }
 
     /// <summary>
-    /// Sends user personal message.
+    /// Sends a user personal message.
     /// </summary>
     /// <returns></returns>
     /// <exception cref="PayloadException">Thrown if payload exceeds max size.</exception>
@@ -599,25 +599,18 @@ public partial class NotificationServer : Connection
         await switchboard.SendUSR(authString);
         await switchboard.SendCAL();
 
-        SwitchboardChanged?.Invoke(this, new SwitchboardEventArgs
-        {
-            Email = contact.Email,
-            Switchboard = switchboard
-        });
-
         Switchboards.Add(switchboard);
-
         return switchboard;
     }
 
     /// <summary>
-    /// Searches for a contact using its email then calls contact parameter overload.
+    /// Searches for a contact using its email then calls the contact parameter overload.
     /// </summary>
     /// <param name="contactEmail">Contact email.</param>
     /// <returns>New switchboard session.</returns>
     public async Task<Switchboard> SendXFR(string contactEmail)
     {
-        Contact? contact = ContactList.Contacts.FirstOrDefault(ct => ct.Email == contactEmail);
+        Contact? contact = ContactList.Contacts.LastOrDefault(ct => ct.Email == contactEmail);
 
         if (contact != null)
             return await SendXFR(contact);
@@ -672,8 +665,7 @@ public partial class NotificationServer : Connection
         
         foreach (Switchboard switchboard in Switchboards)
         {
-            if (switchboard.Connected)
-                await switchboard.DisconnectAsync();
+            await switchboard.DisconnectAsync();
         }
     }
 }

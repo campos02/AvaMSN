@@ -52,7 +52,7 @@ public class DisplayPictureSession
     }
 
     /// <summary>
-    /// Returns MSG payload headers used in the session.
+    /// Returns payload headers used in the MSG command.
     /// </summary>
     /// <returns>Message payload headers.</returns>
     protected string PayloadHeaders()
