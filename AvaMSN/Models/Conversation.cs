@@ -132,7 +132,7 @@ public class Conversation : ReactiveObject
                 SubscribeToEvents();
             }
 
-            await Switchboard!.SendTextMessage(textMessage);
+            await Switchboard.SendTextMessage(textMessage);
 
             TypingUser = false;
 
@@ -201,7 +201,7 @@ public class Conversation : ReactiveObject
                 SubscribeToEvents();
             }
 
-            await Switchboard!.SendNudge();
+            await Switchboard.SendNudge();
             TypingUser = false;
 
             Message message = new Message
@@ -267,8 +267,7 @@ public class Conversation : ReactiveObject
         if (Switchboard == null)
             return;
 
-        if (Switchboard.Connected)
-            await Switchboard.DisconnectAsync();
+        await Switchboard.DisconnectAsync();
     }
 
     /// <summary>

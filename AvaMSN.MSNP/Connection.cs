@@ -113,20 +113,22 @@ public class Connection
         receiveSource.Cancel();
         receiveSource = new CancellationTokenSource();
 
-        try
+        while (true)
         {
-            while (true)
+            var buffer = new byte[1664];
+            int received;
+
+            try
             {
-                var buffer = new byte[1664];
-                var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
-
-                byte[] response = new byte[received];
-                Buffer.BlockCopy(buffer, 0, response, 0, received);
-
-                HandleIncoming(response);
+                received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
             }
+            catch (OperationCanceledException) { return; }
+
+            byte[] response = new byte[received];
+            Buffer.BlockCopy(buffer, 0, response, 0, received);
+
+            HandleIncoming(response);
         }
-        catch (OperationCanceledException) { return; }
     }
 
     /// <summary>

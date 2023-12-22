@@ -278,7 +278,10 @@ public class ContactListViewModel : ViewModelBase
         }
 
         else
+        {
             conversation.OpenWindow();
+            await conversation.Switchboard.ReceiveDisplayPicture();
+        }
     }
 
     private void Conversation_NewMessage(object? sender, NewMessageEventArgs e)
@@ -380,6 +383,8 @@ public class ContactListViewModel : ViewModelBase
             conversation.NewMessage += Conversation_NewMessage;
             conversation.SubscribeToEvents();
             NotificationServer!.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
+
+            Conversations.Add(conversation);
         }
     }
 
