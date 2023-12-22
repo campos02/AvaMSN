@@ -6,6 +6,7 @@ An Avalonia MSNP15 client. It's compatible with Linux, Windows and MacOS.
 The default server is [CrossTalk](https://crosstalk.hiden.pw), which is currently in private alpha. That can be changed in the options window, however, to any server supporting version 15 of the protocol.
 
 ## To do
+- [ ] Come up with a better way to do the "remember your password" feature
 - [ ] Complete message formatting options
 - [ ] Offline messages
 - [x] Tray icon
