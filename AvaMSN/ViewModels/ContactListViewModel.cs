@@ -270,7 +270,11 @@ public class ContactListViewModel : ViewModelBase
                 conversation.SubscribeToEvents();
 
                 conversation.OpenWindow();
-                await conversation.Switchboard.ReceiveDisplayPicture();
+                try
+                {
+                    await conversation.Switchboard.ReceiveDisplayPicture();
+                }
+                catch (OperationCanceledException) { return; }
             }
 
             else
@@ -280,7 +284,11 @@ public class ContactListViewModel : ViewModelBase
         else
         {
             conversation.OpenWindow();
-            await conversation.Switchboard.ReceiveDisplayPicture();
+            try
+            {
+                await conversation.Switchboard.ReceiveDisplayPicture();
+            }
+            catch (OperationCanceledException) { return; }
         }
     }
 
