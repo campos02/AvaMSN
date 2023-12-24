@@ -144,7 +144,8 @@
                   <StackPanel Spacing="5">
                     <TextBox Text="{Binding DisplayName}"
                              Watermark="New display name"/>
-                    <Button Command="{Binding ChangeNameCommand}">Change</Button>
+                    <Button Command="{Binding ChangeNameCommand}"
+                            Tapped="Button_Tapped">Change</Button>
                   </StackPanel>
                 </Flyout>
               </Button.Flyout>

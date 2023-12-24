@@ -101,7 +101,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Send CVR
-            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.9.1 msmsgs\r\n";
+            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.9.2 msmsgs\r\n";
             await SendAsync(message);
 
             // Receive CVR
@@ -434,10 +434,9 @@ public partial class NotificationServer : Connection
     private async Task SendPRP()
     {
         TransactionID++;
-        string encodedDisplayName = Uri.EscapeDataString(ContactList.Profile.DisplayName);
 
         // Send PRP
-        string message = $"PRP {TransactionID} MFN {encodedDisplayName}\r\n";
+        string message = $"PRP {TransactionID} MFN {Uri.EscapeDataString(ContactList.Profile.DisplayName)}\r\n";
         await SendAsync(message);
 
         while (true)
@@ -447,8 +446,7 @@ public partial class NotificationServer : Connection
 
             // Break if response is a command reply
             if (response.StartsWith("PRP")
-                && response.Split(" ")[1] == TransactionID.ToString()
-                && response.Contains(encodedDisplayName))
+                && response.Split(" ")[1] == TransactionID.ToString())
             {
                 break;
             }
