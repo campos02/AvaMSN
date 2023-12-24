@@ -70,6 +70,8 @@ public class Contact : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref displayPicture, value);
     }
 
+    public string? DisplayPictureHash { get; set; }
+
     public Contact()
     {
         displayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));

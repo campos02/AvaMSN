@@ -156,14 +156,6 @@ public class Connection
             {
                 await SendAsync(message);
             }
-            
-            catch (OperationCanceledException)
-            {
-                // Shutdown socket and invoke event if connection has been lost
-                DisconnectSocket(requested: false);
-                
-                break;
-            }
 
             catch (SocketException)
             {

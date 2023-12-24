@@ -35,7 +35,6 @@ public class SingleSignOn
         for (int i = 0; i < uintArray.Length; i++)
         {
             indexBytes = BitConverter.GetBytes(uintArray[i]);
-
             Buffer.BlockCopy(indexBytes, 0, bytes, i * sizeof(uint), sizeof(uint));
         }
 

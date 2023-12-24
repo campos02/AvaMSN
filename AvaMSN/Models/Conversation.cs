@@ -63,6 +63,7 @@ public class Conversation : ReactiveObject
             {
                 using MemoryStream pictureStream = new MemoryStream(displayPicture.PictureData);
                 Contact.DisplayPicture = new Bitmap(pictureStream);
+                Contact.DisplayPictureHash = displayPicture.PictureHash;
             }
         }
 
@@ -387,11 +388,13 @@ public class Conversation : ReactiveObject
 
         using MemoryStream pictureStream = new MemoryStream(e.DisplayPicture);
         Contact.DisplayPicture = new Bitmap(pictureStream);
+        Contact.DisplayPictureHash = e.DisplayPictureHash;
 
         Database?.SaveDisplayPicture(new DisplayPicture()
         {
             ContactEmail = Contact.Email,
-            PictureData = pictureStream.ToArray()
+            PictureData = pictureStream.ToArray(),
+            PictureHash = e.DisplayPictureHash!
         });
 
         DisplayPictureUpdated?.Invoke(this, EventArgs.Empty);

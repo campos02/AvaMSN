@@ -12,5 +12,6 @@ public class DisplayPicture
 
     public string ContactEmail { get; set; } = string.Empty;
     public byte[] PictureData { get; set; } = [];
+    public string PictureHash { get; set; } = string.Empty;
     public bool IsUserPicture { get; set; }
 }

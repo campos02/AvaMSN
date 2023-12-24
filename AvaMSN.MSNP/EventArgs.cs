@@ -40,4 +40,5 @@ public class SwitchboardEventArgs
 public class DisplayPictureEventArgs : ContactEventArgs
 {
     public byte[]? DisplayPicture { get; set; }
+    public string? DisplayPictureHash { get; set; }
 }

@@ -248,6 +248,9 @@ public class ContactListViewModel : ViewModelBase
         SelectedContact.NewMessages = false;
 
         Conversation? conversation = Conversations.LastOrDefault(conv => conv.Contact == SelectedContact);
+        MSNP.Contact? contact = NotificationServer.ContactList.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ??
+                                throw new ContactException("Could not find the selected contact");
+
         if (conversation == null)
         {
             conversation = new Conversation(SelectedContact, Profile, Database)
@@ -266,30 +269,24 @@ public class ContactListViewModel : ViewModelBase
         {
             if (SelectedContact.Presence != PresenceStatus.GetFullName(PresenceStatus.Offline))
             {
-                conversation.Switchboard = await NotificationServer.SendXFR(SelectedContact.Email);
+                conversation.Switchboard = await NotificationServer.SendXFR(contact);
                 conversation.SubscribeToEvents();
-
-                conversation.OpenWindow();
-                try
-                {
-                    await conversation.Switchboard.ReceiveDisplayPicture();
-                }
-                catch (OperationCanceledException) { return; }
             }
 
             else
+            {
                 conversation.OpenWindow();
+                return;
+            }
         }
 
-        else
+        conversation.OpenWindow();
+        try
         {
-            conversation.OpenWindow();
-            try
-            {
-                await conversation.Switchboard.ReceiveDisplayPicture();
-            }
-            catch (OperationCanceledException) { return; }
+            if (contact.DisplayPictureHash != SelectedContact.DisplayPictureHash)
+                await conversation.Switchboard.GetDisplayPicture();
         }
+        catch (OperationCanceledException) { return; }
     }
 
     private void Conversation_NewMessage(object? sender, NewMessageEventArgs e)

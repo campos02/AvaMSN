@@ -90,6 +90,7 @@ public partial class NotificationServer : Connection
             using (StringReader reader = new StringReader(contact.DisplayPictureObject))
             {
                 msnobj? msnobj = (msnobj?)serializer.Deserialize(reader);
+                contact.DisplayPictureHash = msnobj?.SHA1D;
 
                 if (msnobj == null || msnobj.Size <= 0)
                 {
@@ -147,6 +148,7 @@ public partial class NotificationServer : Connection
             using (StringReader reader = new StringReader(contact.DisplayPictureObject))
             {
                 msnobj? msnobj = (msnobj?)serializer.Deserialize(reader);
+                contact.DisplayPictureHash = msnobj?.SHA1D;
 
                 if (msnobj == null || msnobj.Size <= 0)
                 {
@@ -249,13 +251,20 @@ public partial class NotificationServer : Connection
         string email = parameters[5];
         string displayName = Uri.UnescapeDataString(parameters[6]);
 
-        Contact contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email) ?? new Contact()
-        {
-            Email = email
-        };
+        Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email);
 
-        if (string.IsNullOrEmpty(contact.DisplayName))
-            contact.DisplayName = displayName;
+        if (contact == null)
+        {
+            contact = new Contact()
+            {
+                Email = email
+            };
+
+            if (string.IsNullOrEmpty(contact.DisplayName))
+                contact.DisplayName = displayName;
+
+            ContactList.Contacts.Add(contact);
+        }
 
         Switchboard switchboard = new Switchboard()
         {
