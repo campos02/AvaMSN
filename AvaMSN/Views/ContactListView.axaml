@@ -130,7 +130,7 @@
                     Tapped="Display_Picture_Tapped"
                     ToolTip.Tip="Change your display picture"
                     ToolTip.ShowDelay="1000">
-              Change Display Picture
+              Change display picture
             </Button>
           </ComboBoxItem>
 
@@ -138,7 +138,7 @@
             <Button Classes="presence-button"
                     ToolTip.Tip="Change your display name"
                     ToolTip.ShowDelay="1000">
-              <TextBlock>Change Display Name</TextBlock>
+              <TextBlock>Change display name</TextBlock>
               <Button.Flyout>
                 <Flyout Placement="BottomEdgeAlignedLeft">
                   <StackPanel Spacing="5">
@@ -169,7 +169,7 @@
                     Command="{Binding SignOutCommand}"
                     ToolTip.Tip="Sign out and return to login screen"
                     ToolTip.ShowDelay="1000">
-              <TextBlock>Sign Out</TextBlock>
+              <TextBlock>Sign out</TextBlock>
             </Button>
           </ComboBoxItem>
 

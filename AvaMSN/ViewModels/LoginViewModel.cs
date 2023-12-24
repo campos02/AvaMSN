@@ -88,7 +88,7 @@ public class LoginViewModel : ViewModelBase
         {
             new User
             {
-                UserEmail = "New User"
+                UserEmail = "New user"
             },
             new User
             {
