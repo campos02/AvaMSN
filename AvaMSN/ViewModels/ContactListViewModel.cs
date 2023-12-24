@@ -36,7 +36,14 @@ public class ContactListViewModel : ViewModelBase
     public ObservableCollection<ContactGroup>? ContactGroups => ListData.ContactGroups;
     public static Presence[] Statuses => ContactListData.Statuses;
 
-    public Contact? SelectedContact { get; set; }
+    private Contact? selectedContact;
+
+    public Contact? SelectedContact
+    {
+        get => selectedContact;
+        set => this.RaiseAndSetIfChanged(ref selectedContact, value);
+    }
+
     public List<Conversation> Conversations
     {
         get => ListData.Conversations;

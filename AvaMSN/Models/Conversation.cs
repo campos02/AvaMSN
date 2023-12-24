@@ -232,7 +232,7 @@ public class Conversation : ReactiveObject
     /// <summary>
     /// Retrieves a number of messages from the database. If the count parameter is not set or is 0, all messages are returned.
     /// </summary>
-    /// <param name="count">Amount of messages to retrieve. 0 returns all messages</param>
+    /// <param name="count">Amount of messages to retrieve. 0 returns all messages.</param>
     public void GetHistory(int count = 0)
     {
         if (Database == null)
@@ -366,9 +366,7 @@ public class Conversation : ReactiveObject
         if (SettingsManager.Settings.SaveMessagingHistory)
             Database?.SaveMessage(message);
 
-        if (conversationWindow == null)
-            Contact.NewMessages = true;
-        else if (!conversationWindow.IsActive)
+        if (conversationWindow == null || !conversationWindow.IsActive)
             Contact.NewMessages = true;
 
         NewMessage?.Invoke(this, new NewMessageEventArgs()

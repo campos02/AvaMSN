@@ -19,18 +19,7 @@ public partial class NotificationServer : Connection
     protected override async Task HandleIncoming(byte[] responseBytes)
     {
         string response = Encoding.UTF8.GetString(responseBytes);
-        string command = response.Split(" ")[0];
-
-        await (command switch
-        {
-            "ILN" => HandleILN(response),
-            "NLN" => Task.Run(() => HandleNLN(response)),
-            "FLN" => Task.Run(() => HandleFLN(response)),
-            "UBX" => HandleUBX(response),
-            "RNG" => HandleRNG(response),
-            "OUT" => DisconnectAsync(requested: false),
-            _ => Task.CompletedTask
-        });
+        await HandleIncoming(response);
     }
 
     /// <summary>
