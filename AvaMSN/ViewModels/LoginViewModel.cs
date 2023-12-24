@@ -111,7 +111,7 @@ public class LoginViewModel : ViewModelBase
     {
         switch (option)
         {
-            case "New User":
+            case "New user":
                 Email = string.Empty;
                 Password = string.Empty;
 
