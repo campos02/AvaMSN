@@ -423,9 +423,9 @@ public class ContactListViewModel : ViewModelBase
         ListData = new();
 
         Disconnected?.Invoke(this, EventArgs.Empty);
-        
+
         if (!e.Requested)
-            throw new ConnectionException("Lost connection to the server");
+            NotificationManager?.ShowError("Lost connection to the server");
     }
 
     /// <summary>
