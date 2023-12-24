@@ -51,8 +51,6 @@ public class NotificationManager : ReactiveObject
     /// <returns></returns>
     public void InvokeNotification(Contact? contact, Message? message)
     {
-        PlaySound();
-
         delaySource?.Cancel();
         delaySource = new CancellationTokenSource();
 

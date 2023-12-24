@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using AvaMSN.Models;
 using AvaMSN.ViewModels;
 using AvaMSN.Views;
 using ReactiveUI;
@@ -26,6 +27,8 @@ public partial class App : Application
     {
         RxApp.DefaultExceptionHandler = handler;
         ViewModelBase.NotificationManager = handler.NotificationManager;
+        Conversation.NotificationManager = handler.NotificationManager;
+
         SettingsManager.ReadFile();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

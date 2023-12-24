@@ -46,9 +46,9 @@ public class Conversation : ReactiveObject
 
     public Switchboard? Switchboard { get; set; }
     public NotificationServer? NotificationServer { get; set; }
+    public static NotificationManager? NotificationManager { get; set; }
 
     public event EventHandler? DisplayPictureUpdated;
-    public event EventHandler<NewMessageEventArgs>? NewMessage;
 
     public Conversation(Contact contact, Profile profile, Database? database = null)
     {
@@ -369,11 +369,13 @@ public class Conversation : ReactiveObject
         if (conversationWindow == null || !conversationWindow.IsActive)
             Contact.NewMessages = true;
 
-        NewMessage?.Invoke(this, new NewMessageEventArgs()
+        if (Profile.Presence != PresenceStatus.GetFullName(PresenceStatus.Busy))
         {
-            Contact = Contact,
-            Message = message
-        });
+            if (conversationWindow == null || !conversationWindow.IsActive)
+                NotificationManager?.PlaySound();
+
+            NotificationManager?.InvokeNotification(Contact, message);
+        }
     }
 
     /// <summary>

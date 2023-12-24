@@ -265,7 +265,6 @@ public class ContactListViewModel : ViewModelBase
                 NotificationServer = NotificationServer
             };
 
-            conversation.NewMessage += Conversation_NewMessage;
             conversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
             NotificationServer.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
 
@@ -294,11 +293,6 @@ public class ContactListViewModel : ViewModelBase
                 await conversation.Switchboard.GetDisplayPicture();
         }
         catch (OperationCanceledException) { return; }
-    }
-
-    private void Conversation_NewMessage(object? sender, NewMessageEventArgs e)
-    {
-        NotificationManager?.InvokeNotification(e.Contact, e.Message);
     }
 
     /// <summary>
@@ -392,7 +386,6 @@ public class ContactListViewModel : ViewModelBase
                 Switchboard = e.Switchboard
             };
 
-            conversation.NewMessage += Conversation_NewMessage;
             conversation.SubscribeToEvents();
             NotificationServer!.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
 
@@ -412,7 +405,6 @@ public class ContactListViewModel : ViewModelBase
             await conversation.Disconnect();
             NotificationServer!.SwitchboardChanged -= conversation.NotificationServer_SwitchboardChanged;
             conversation.DisplayPictureUpdated -= Conversation_DisplayPictureUpdated;
-            conversation.NewMessage -= Conversation_NewMessage;
 
             conversation.CloseWindow();
         }
@@ -436,14 +428,15 @@ public class ContactListViewModel : ViewModelBase
         if (ContactGroups == null)
             return;
 
-        Conversation? conversation = sender as Conversation;
-
-        foreach (ContactGroup group in ContactGroups)
+        if (sender is Conversation conversation)
         {
-            Contact? contact = group.Contacts.FirstOrDefault(contact => contact.Email == conversation?.Contact.Email);
+            foreach (ContactGroup group in ContactGroups)
+            {
+                Contact? contact = group.Contacts.FirstOrDefault(contact => contact.Email == conversation?.Contact.Email);
 
-            if (contact != null)
-                contact.DisplayPicture = conversation?.Contact.DisplayPicture!;
+                if (contact != null)
+                    contact.DisplayPicture = conversation.Contact.DisplayPicture!;
+            }
         }
     }
 }
