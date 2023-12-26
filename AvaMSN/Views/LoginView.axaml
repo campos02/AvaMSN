@@ -56,7 +56,8 @@
                   Grid.Column="1"
                   Name="userBox"
                   ToolTip.Tip="Change users or open options window"
-                  ToolTip.ShowDelay="1000">
+                  ToolTip.ShowDelay="1000"
+                  SelectionChanged="ComboBox_SelectionChanged">
           <ComboBox.DataTemplates>
             <DataTemplate DataType="models:User">
               <Button Command="{Binding $parent[ComboBox].((vm:LoginViewModel)DataContext).ChangeUserCommand}"

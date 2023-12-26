@@ -18,7 +18,11 @@ public partial class ContactListView : UserControl
     private async void Display_Picture_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
         TopLevel? topLevel = TopLevel.GetTopLevel(this);
-
         await (DataContext as ContactListViewModel)!.ChangeDisplayPicture(topLevel!);
+    }
+
+    private void ComboBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        presenceBox.SelectedIndex = 0;
     }
 }

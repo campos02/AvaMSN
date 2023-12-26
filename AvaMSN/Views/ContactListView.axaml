@@ -53,7 +53,8 @@
                   Name="presenceBox"
                   Background="Transparent"
                   ToolTip.Tip="Change your status or enter options"
-                  ToolTip.ShowDelay="1000">
+                  ToolTip.ShowDelay="1000"
+                  SelectionChanged="ComboBox_SelectionChanged">
 
           <ComboBoxItem Padding="3"
                         Height="0">

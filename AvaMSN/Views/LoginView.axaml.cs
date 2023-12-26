@@ -13,4 +13,9 @@ public partial class LoginView : UserControl
     {
         userBox.IsDropDownOpen = false;
     }
+
+    private void ComboBox_SelectionChanged(object? sender, Avalonia.Controls.SelectionChangedEventArgs e)
+    {
+        userBox.SelectedIndex = -1;
+    }
 }
