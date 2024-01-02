@@ -24,9 +24,47 @@ public class Database
             Directory.CreateDirectory(FileDirectory);
 
         connection = new SQLiteConnection(FilePath);
+
+        // Drop old versions User table
+        List<TableInfo> tableInfo = connection.Query<TableInfo>("SELECT type FROM pragma_table_info('User') WHERE name == 'Ticket'");
+        if (tableInfo.Count > 0 && tableInfo[0].Type == "varchar")
+            connection.DropTable<User>();
+
         connection.CreateTable<User>();
         connection.CreateTable<Message>();
         connection.CreateTable<DisplayPicture>();
+        connection.CreateTable<Keys>();
+    }
+
+    /// <summary>
+    /// Gets all keys belonging to a user.
+    /// </summary>
+    /// <param name="user">User to get keys.</param>
+    /// <returns></returns>
+    public Keys? GetUserKeys(User user)
+    {
+        return connection.Table<Keys>().LastOrDefault(keys => keys.UserEmail == user.UserEmail);
+    }
+
+    /// <summary>
+    /// Saves a row of keys.
+    /// </summary>
+    /// <param name="keys">Keys to save.</param>
+    /// <returns></returns>
+    public int SaveKeys(Keys keys)
+    {
+        connection.Table<Keys>().Where(keys => keys.UserEmail == keys.UserEmail).Delete();
+        return connection.Insert(keys);
+    }
+
+    /// <summary>
+    /// Deletes a row of keys.
+    /// </summary>
+    /// <param name="keys">Keys to delete.</param>
+    /// <returns></returns>
+    public int DeleteKeys(Keys keys)
+    {
+        return connection.Delete(keys);
     }
 
     /// <summary>
@@ -45,11 +83,7 @@ public class Database
     /// <returns></returns>
     public int SaveUser(User user)
     {
-        if (user.ID != 0)
-            return connection.Update(user);
-
-        else
-            return connection.Insert(user);
+        return connection.Insert(user);
     }
 
     /// <summary>
@@ -59,6 +93,7 @@ public class Database
     /// <returns></returns>
     public int DeleteUser(User user)
     {
+        connection.Table<Keys>().Where(keys => keys.UserEmail == user.UserEmail).Delete();
         return connection.Delete(user);
     }
 

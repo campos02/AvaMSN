@@ -124,7 +124,6 @@ public partial class NotificationServer : Connection
     public async Task Authenticate(string password)
     {
         TransactionID++;
-
         string USR = string.Empty;
 
         // Send USR I
@@ -200,7 +199,6 @@ public partial class NotificationServer : Connection
     public async Task AuthenticateWithToken()
     {
         TransactionID++;
-
         string USR = string.Empty;
 
         // Send USR I

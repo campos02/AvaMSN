@@ -193,8 +193,8 @@ public partial class NotificationServer : Connection
         int length = Convert.ToInt32(parameters[3]);
 
         // Get payload and deserialize it
-        byte[] totalbytes = Encoding.UTF8.GetBytes(responses[1]);
-        byte[] payloadBytes = new Span<byte>(totalbytes, 0, length).ToArray();
+        byte[] totalBytes = Encoding.UTF8.GetBytes(responses[1]);
+        byte[] payloadBytes = new Span<byte>(totalBytes, 0, length).ToArray();
         string payload = Encoding.UTF8.GetString(payloadBytes);
 
         XmlSerializer serializer = new XmlSerializer(typeof(Data));

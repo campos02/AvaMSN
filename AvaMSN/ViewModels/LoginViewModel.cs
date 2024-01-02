@@ -10,6 +10,9 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using System.IO;
 using AvaMSN.Views;
+using AvaMSN.MSNP.Exceptions;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace AvaMSN.ViewModels;
 
@@ -132,12 +135,12 @@ public class LoginViewModel : ViewModelBase
             return;
 
         Email = user.UserEmail;
-        Password = user.BinarySecret;
+        Password = Encoding.UTF8.GetString(user.BinarySecret);
 
-        if (user.UserEmail != "")
+        if (Email != "")
             RememberMe = true;
 
-        if (user.BinarySecret != "")
+        if (Password != "")
             RememberPassword = true;
 
         Profile.PersonalMessage = user.PersonalMessage;
@@ -189,20 +192,91 @@ public class LoginViewModel : ViewModelBase
         await NotificationServer.SendVersion();
 
         // Use token and binary secret if available
-        User user = Users?.FirstOrDefault(user => user.UserEmail == Email) ?? new User();
+        User user = Users?.LastOrDefault(user => user.UserEmail == Email) ?? new User();
 
-        if (user.BinarySecret != "" & user.TicketToken != "" & user.Ticket != "")
+        if (user.BinarySecret.Length > 0 & user.TicketToken.Length > 0 & user.Ticket.Length > 0)
         {
-            NotificationServer.SSO.Ticket = user.Ticket;
-            NotificationServer.SSO.BinarySecret = user.BinarySecret;
-            NotificationServer.SSO.TicketToken = user.TicketToken;
+            Keys? keys = Database.GetUserKeys(user);
 
-            await NotificationServer.AuthenticateWithToken();
+            // Decrypt and read user data
+            if (keys != null)
+            {
+                using (MemoryStream ticketStream = new MemoryStream(user.Ticket))
+                {
+                    using (Aes aes = Aes.Create())
+                    {
+                        using CryptoStream cryptoStream = new CryptoStream(ticketStream, aes.CreateDecryptor(keys.Key1, keys.IV1), CryptoStreamMode.Read);
+                        using StreamReader encryptReader = new StreamReader(cryptoStream);
+                        NotificationServer.SSO.Ticket = await encryptReader.ReadToEndAsync();
+                    }
+                }
+
+                using (MemoryStream ticketTokenStream = new MemoryStream(user.TicketToken))
+                {
+                    using (Aes aes = Aes.Create())
+                    {
+                        using CryptoStream cryptoStream = new CryptoStream(ticketTokenStream, aes.CreateDecryptor(keys.Key3, keys.IV3), CryptoStreamMode.Read);
+                        using StreamReader encryptReader = new StreamReader(cryptoStream);
+                        NotificationServer.SSO.TicketToken = await encryptReader.ReadToEndAsync();
+                    }
+                }
+
+                using (MemoryStream binarySecretStream = new MemoryStream(user.BinarySecret))
+                {
+                    using (Aes aes = Aes.Create())
+                    {
+                        using CryptoStream cryptoStream = new CryptoStream(binarySecretStream, aes.CreateDecryptor(keys.Key4, keys.IV4), CryptoStreamMode.Read);
+                        using StreamReader encryptReader = new StreamReader(cryptoStream);
+                        NotificationServer.SSO.BinarySecret = await encryptReader.ReadToEndAsync();
+                    }
+                }
+            }
+
+            try
+            {
+                await NotificationServer.AuthenticateWithToken();
+            }
+            catch (AuthException)
+            {
+                // Create new connection and try to login again with the password
+                await NotificationServer.DisconnectAsync();
+
+                NotificationServer = new NotificationServer(SettingsManager.Settings.Server)
+                {
+                    Port = 1863
+                };
+
+                NotificationServer.Profile.Presence = SelectedStatus.ShortName;
+                NotificationServer.Profile.Email = Email;
+                NotificationServer.Profile.PersonalMessage = Profile.PersonalMessage;
+                NotificationServer.Profile.DisplayPicture = Profile.DisplayPictureData ?? NotificationServer.Profile.DisplayPicture;
+
+                await NotificationServer.SendVersion();
+
+                string password = string.Empty;
+
+                using (MemoryStream passwordStream = new MemoryStream(user.Password))
+                {
+                    using (Aes aes = Aes.Create())
+                    {
+                        if (keys != null)
+                        {
+                            using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateDecryptor(keys.Key2, keys.IV2), CryptoStreamMode.Read);
+                            using StreamReader encryptReader = new StreamReader(cryptoStream);
+                            password = await encryptReader.ReadToEndAsync();
+                        }
+                    }
+                }
+
+                await NotificationServer.Authenticate(password);
+                SaveUserData(user, password);
+            }
         }
 
         else
         {
             await NotificationServer.Authenticate(Password);
+            SaveUserData(user, Password);
         }
 
         await NotificationServer.GetContactList();
@@ -218,21 +292,90 @@ public class LoginViewModel : ViewModelBase
         // Navigate to contact list
         LoggedIn?.Invoke(this, EventArgs.Empty);
 
+        Email = string.Empty;
+        Password = string.Empty;
+    }
+
+    /// <summary>
+    /// Saves user data to the database.
+    /// </summary>
+    /// <param name="user">User to save.</param>
+    /// <param name="password">User password to save.</param>
+    private void SaveUserData(User user, string password)
+    {
+        user.UserEmail = Email;
+
         if (RememberPassword)
         {
-            user.Ticket = NotificationServer.SSO.Ticket;
-            user.BinarySecret = NotificationServer.SSO.BinarySecret;
-            user.TicketToken = NotificationServer.ContactList.TicketToken;
+            Database?.DeleteUser(user);
+
+            Keys keys = new Keys();
+            using (MemoryStream ticketStream = new MemoryStream())
+            {
+                using (Aes aes = Aes.Create())
+                {
+                    using CryptoStream cryptoStream = new CryptoStream(ticketStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
+                    using StreamWriter encryptWriter = new StreamWriter(cryptoStream);
+                    encryptWriter.WriteLine(NotificationServer?.SSO.Ticket);
+
+                    keys.Key1 = aes.Key;
+                    keys.IV1 = aes.IV;
+                }
+
+                user.Ticket = ticketStream.ToArray();
+            }
+
+            using (MemoryStream passwordStream = new MemoryStream())
+            {
+                using (Aes aes = Aes.Create())
+                {
+                    using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
+                    using StreamWriter encryptWriter = new StreamWriter(cryptoStream);
+                    encryptWriter.WriteLine(password);
+
+                    keys.Key2 = aes.Key;
+                    keys.IV2 = aes.IV;
+                }
+
+                user.Password = passwordStream.ToArray();
+            }
+
+            using (MemoryStream ticketTokenStream = new MemoryStream())
+            {
+                using (Aes aes = Aes.Create())
+                {
+                    using CryptoStream cryptoStream = new CryptoStream(ticketTokenStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
+                    using StreamWriter encryptWriter = new StreamWriter(cryptoStream);
+                    encryptWriter.WriteLine(NotificationServer?.ContactList.TicketToken);
+
+                    keys.Key3 = aes.Key;
+                    keys.IV3 = aes.IV;
+                }
+
+                user.TicketToken = ticketTokenStream.ToArray();
+            }
+
+            using (MemoryStream binarySecretStream = new MemoryStream())
+            {
+                using (Aes aes = Aes.Create())
+                {
+                    using CryptoStream cryptoStream = new CryptoStream(binarySecretStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
+                    using StreamWriter encryptWriter = new StreamWriter(cryptoStream);
+                    encryptWriter.WriteLine(NotificationServer?.SSO.BinarySecret);
+
+                    keys.Key4 = aes.Key;
+                    keys.IV4 = aes.IV;
+                }
+
+                user.BinarySecret = binarySecretStream.ToArray();
+            }
+
+            keys.UserEmail = user.UserEmail;
+            Database?.SaveKeys(keys);
         }
 
         if (RememberMe)
-        {
-            user.UserEmail = Email;
             Database?.SaveUser(user);
-        }
-
-        Email = string.Empty;
-        Password = string.Empty;
     }
 
     /// <summary>

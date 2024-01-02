@@ -20,7 +20,9 @@ public class User : ReactiveObject
     }
 
     public string PersonalMessage { get; set; } = string.Empty;
-    public string BinarySecret { get; set; } = string.Empty;
-    public string Ticket { get; set; } = string.Empty;
-    public string TicketToken { get; set; } = string.Empty;
+
+    public byte[] Password { get; set; } = [];
+    public byte[] BinarySecret { get; set; } = [];
+    public byte[] Ticket { get; set; } = [];
+    public byte[] TicketToken { get; set; } = [];
 }
