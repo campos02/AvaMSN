@@ -83,7 +83,7 @@ public partial class NotificationServer : Connection
             if (response.StartsWith("VER") && response.Split(" ")[1] == TransactionID.ToString())
             {
                 if (!response.Contains(Protocol))
-                    throw new ProtocolException("Protocol version not supported by the server");
+                    throw new ProtocolException("Protocol version is not supported by the server");
 
                 break;
             }
@@ -101,7 +101,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Send CVR
-            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.9.3 msmsgs\r\n";
+            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.9.4 msmsgs\r\n";
             await SendAsync(message);
 
             // Receive CVR

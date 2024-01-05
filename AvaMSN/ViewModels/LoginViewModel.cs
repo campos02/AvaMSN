@@ -13,6 +13,7 @@ using AvaMSN.Views;
 using AvaMSN.MSNP.Exceptions;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace AvaMSN.ViewModels;
 
@@ -208,6 +209,7 @@ public class LoginViewModel : ViewModelBase
                         using CryptoStream cryptoStream = new CryptoStream(ticketStream, aes.CreateDecryptor(keys.Key1, keys.IV1), CryptoStreamMode.Read);
                         using StreamReader encryptReader = new StreamReader(cryptoStream);
                         NotificationServer.SSO.Ticket = await encryptReader.ReadToEndAsync();
+                        NotificationServer.SSO.Ticket = Regex.Replace(NotificationServer.SSO.Ticket, @"\t|\r|\n", "");
                     }
                 }
 
@@ -218,6 +220,7 @@ public class LoginViewModel : ViewModelBase
                         using CryptoStream cryptoStream = new CryptoStream(ticketTokenStream, aes.CreateDecryptor(keys.Key3, keys.IV3), CryptoStreamMode.Read);
                         using StreamReader encryptReader = new StreamReader(cryptoStream);
                         NotificationServer.SSO.TicketToken = await encryptReader.ReadToEndAsync();
+                        NotificationServer.SSO.TicketToken = Regex.Replace(NotificationServer.SSO.TicketToken, @"\t|\r|\n", "");
                     }
                 }
 
@@ -228,6 +231,7 @@ public class LoginViewModel : ViewModelBase
                         using CryptoStream cryptoStream = new CryptoStream(binarySecretStream, aes.CreateDecryptor(keys.Key4, keys.IV4), CryptoStreamMode.Read);
                         using StreamReader encryptReader = new StreamReader(cryptoStream);
                         NotificationServer.SSO.BinarySecret = await encryptReader.ReadToEndAsync();
+                        NotificationServer.SSO.BinarySecret = Regex.Replace(NotificationServer.SSO.BinarySecret, @"\t|\r|\n", "");
                     }
                 }
             }
@@ -264,6 +268,7 @@ public class LoginViewModel : ViewModelBase
                             using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateDecryptor(keys.Key2, keys.IV2), CryptoStreamMode.Read);
                             using StreamReader encryptReader = new StreamReader(cryptoStream);
                             password = await encryptReader.ReadToEndAsync();
+                            password = Regex.Replace(password, @"\t|\r|\n", "");
                         }
                     }
                 }
