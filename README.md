@@ -7,8 +7,6 @@ The default server is [CrossTalk](https://crosstalk.hiden.pw), which is currentl
 
 ## To do
 - [x] Come up with a better way to do the "remember your password" feature
-> [!WARNING]
-> Due to protocol limitations, this feature has to use reversible encryption to store credentials
 - [ ] Complete message formatting options
 - [ ] Offline messages
 - [x] Tray icon
