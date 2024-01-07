@@ -146,7 +146,7 @@ public class ContactListViewModel : ViewModelBase
     {
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Open display picture",
+            Title = "Select display picture",
             FileTypeFilter = new[] { FilePickerFileTypes.ImageAll }
         });
 

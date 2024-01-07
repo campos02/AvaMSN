@@ -1,7 +1,15 @@
-﻿namespace AvaMSN.Models;
+﻿using SQLite;
 
+namespace AvaMSN.Models;
+
+/// <summary>
+/// Represents a collection of keys used in encryption.
+/// </summary>
 public class Keys
 {
+    [PrimaryKey, AutoIncrement]
+    public int ID { get; set; }
+
     public string UserEmail { get; set; } = string.Empty;
 
     // Ticket

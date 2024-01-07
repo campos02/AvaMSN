@@ -37,9 +37,9 @@ public class Database
     }
 
     /// <summary>
-    /// Gets all keys belonging to a user.
+    /// Gets keys belonging to a user.
     /// </summary>
-    /// <param name="user">User to get keys.</param>
+    /// <param name="user">User whose keys to get.</param>
     /// <returns></returns>
     public Keys? GetUserKeys(User user)
     {
@@ -53,7 +53,7 @@ public class Database
     /// <returns></returns>
     public int SaveKeys(Keys keys)
     {
-        connection.Table<Keys>().Where(keys => keys.UserEmail == keys.UserEmail).Delete();
+        connection.Table<Keys>().Where(oldKeys => oldKeys.UserEmail == keys.UserEmail).Delete();
         return connection.Insert(keys);
     }
 
@@ -83,6 +83,10 @@ public class Database
     /// <returns></returns>
     public int SaveUser(User user)
     {
+        List<User> users = connection.Table<User>().Where(usr => usr.UserEmail == user.UserEmail).ToList();
+        if (users.Count > 0)
+            connection.Table<User>().Where(usr => usr.UserEmail == user.UserEmail).Delete();
+
         return connection.Insert(user);
     }
 
@@ -94,7 +98,7 @@ public class Database
     public int DeleteUser(User user)
     {
         connection.Table<Keys>().Where(keys => keys.UserEmail == user.UserEmail).Delete();
-        return connection.Delete(user);
+        return connection.Table<User>().Where(usr => usr.UserEmail == user.UserEmail).Delete();
     }
 
     /// <summary>
@@ -160,9 +164,9 @@ public class Database
     /// <param name="personalMessage"></param>
     public void SavePersonalMessage(string userEmail, string personalMessage)
     {
-        List<User> users = connection.Table<User>().Where(user => user.UserEmail == userEmail).ToList();
+        User? user = connection.Table<User>().LastOrDefault(user => user.UserEmail == userEmail);
 
-        foreach (User user in users)
+        if (user != null)
         {
             user.PersonalMessage = personalMessage;
             SaveUser(user);

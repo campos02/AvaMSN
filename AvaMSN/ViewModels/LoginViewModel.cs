@@ -312,8 +312,6 @@ public class LoginViewModel : ViewModelBase
 
         if (RememberPassword)
         {
-            Database?.DeleteUser(user);
-
             Keys keys = new Keys();
             using (MemoryStream ticketStream = new MemoryStream())
             {
@@ -388,7 +386,7 @@ public class LoginViewModel : ViewModelBase
     /// </summary>
     public void ForgetMe()
     {
-        User? user = Users?.FirstOrDefault(user => user.UserEmail == Email);
+        User? user = Users?.LastOrDefault(user => user.UserEmail == Email);
 
         if (user == null)
             return;
