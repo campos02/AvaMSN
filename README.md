@@ -11,4 +11,4 @@ The default server is [CrossTalk](https://crosstalk.hiden.pw), which is currentl
 - [ ] Offline messages
 - [x] Tray icon
 
-![image](https://github.com/campos02/AvaMSN/assets/45215327/2f4196f5-e4be-4b95-9e77-bdb6df297ede)
+![avamsn](https://github.com/campos02/AvaMSN/assets/45215327/063441f5-008e-4885-a227-a16eb21e7c74)
