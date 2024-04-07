@@ -3,7 +3,7 @@
              x:Class="AvaMSN.App"
              xmlns:local="using:AvaMSN"
              xmlns:vm="using:AvaMSN.ViewModels"
-             RequestedThemeVariant="Default"
+             RequestedThemeVariant="Light"
              x:DataType="vm:ApplicationViewModel">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
