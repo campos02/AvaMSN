@@ -10,10 +10,10 @@ using Avalonia.Media.Imaging;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using System.IO;
-using Avalonia;
 using AvaMSN.MSNP.Exceptions;
 using AvaMSN.Views;
 using System.Collections.Generic;
+using SkiaSharp;
 
 namespace AvaMSN.ViewModels;
 
@@ -147,34 +147,64 @@ public class ContactListViewModel : ViewModelBase
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Select display picture",
-            FileTypeFilter = new[] { FilePickerFileTypes.ImageAll }
+            FileTypeFilter = [FilePickerFileTypes.ImageAll]
         });
 
         if (files.Count > 0)
         {
+            // Scale to height
+            int pictureSize = 100;
             await using Stream fileStream = await files[0].OpenReadAsync();
-
-            // Load then resize due to a bug in DecodeToWidth
-            // https://github.com/AvaloniaUI/Avalonia/discussions/13239
-            Profile.DisplayPicture = new Bitmap(fileStream).CreateScaledBitmap(new PixelSize(96, 96));
-
+            Bitmap picture = Bitmap.DecodeToHeight(fileStream, pictureSize);
             using MemoryStream pictureStream = new MemoryStream();
-            Profile.DisplayPicture.Save(pictureStream);
+            picture.Save(pictureStream);
+            pictureStream.Seek(0, SeekOrigin.Begin);
+
+            // Crop to width
+            int cropStart = picture.PixelSize.Width / 2 - pictureSize / 2;
+            int cropEnd = picture.PixelSize.Width / 2 + pictureSize / 2;
+
+            using SKBitmap bitmap = SKBitmap.Decode(pictureStream);
+            SKRect cropRect = new SKRect(cropStart, 0, cropEnd, pictureSize);
+            using SKBitmap croppedBitmap = new SKBitmap((int)cropRect.Width,
+                                                  (int)cropRect.Height);
+            SKRect destination = new SKRect(0, 0, cropRect.Width, cropRect.Height);
+            SKRect source = new SKRect(cropRect.Left, cropRect.Top,
+                                       cropRect.Right, cropRect.Bottom);
+
+            using SKCanvas canvas = new SKCanvas(croppedBitmap);
+            canvas.DrawBitmap(bitmap, source, destination);
+
+            // Set and save cropped picture
+            using MemoryStream croppedPictureStream = new MemoryStream();
+            croppedBitmap.Encode(SKEncodedImageFormat.Png, 100).SaveTo(croppedPictureStream);
+            croppedPictureStream.Seek(0, SeekOrigin.Begin);
+            Profile.DisplayPicture = new Bitmap(croppedPictureStream);
 
             Database?.DeleteUserDisplayPictures(Profile.Email);
             Database?.SaveDisplayPicture(new DisplayPicture()
             {
                 ContactEmail = Profile.Email,
-                PictureData = pictureStream.ToArray(),
+                PictureData = croppedPictureStream.ToArray(),
                 IsUserPicture = true
             });
 
             if (NotificationServer == null)
                 return;
 
-            NotificationServer.Profile.DisplayPicture = pictureStream.ToArray();
+            NotificationServer.Profile.DisplayPicture = croppedPictureStream.ToArray();
             NotificationServer.CreateMSNObject();
-            await NotificationServer.SendCHG();
+
+            // Flash presence because otherwise the new picture isn't broadcast
+            string oldPresence = NotificationServer.Profile.Presence;
+            if (oldPresence != PresenceStatus.Invisible)
+            {
+                NotificationServer.Profile.Presence = PresenceStatus.Idle;
+                await NotificationServer.SendCHG();
+
+                NotificationServer.Profile.Presence = oldPresence;
+                await NotificationServer.SendCHG();
+            }
         }
     }
 
