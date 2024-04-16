@@ -1,14 +1,14 @@
-﻿using Avalonia.Platform;
+﻿using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Avalonia.Platform;
 using AvaMSN.Models;
 using AvaMSN.ViewModels;
 using ManagedBass;
 using ReactiveUI;
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace AvaMSN;
+namespace AvaMSN.Utils;
 
 /// <summary>
 /// Contains functions to show notifications and display errors.

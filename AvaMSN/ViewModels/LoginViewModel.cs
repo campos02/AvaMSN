@@ -14,6 +14,7 @@ using AvaMSN.MSNP.Exceptions;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using AvaMSN.Utils;
 
 namespace AvaMSN.ViewModels;
 

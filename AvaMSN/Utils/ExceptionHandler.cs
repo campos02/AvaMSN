@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AvaMSN;
+namespace AvaMSN.Utils;
 
 /// <summary>
 /// Custom reactive command exception handler.

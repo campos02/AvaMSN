@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using AvaMSN.Models;
+using AvaMSN.Utils;
 using AvaMSN.ViewModels;
 using AvaMSN.Views;
 using ReactiveUI;

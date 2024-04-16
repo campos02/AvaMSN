@@ -13,7 +13,6 @@ public class DesignConversationWindowViewModel : ConversationWindowViewModel
             DisplayName = "test",
             Presence = "Online"
         },
-
         new Profile()
         {
             DisplayName = "test"
@@ -33,13 +32,13 @@ public class DesignConversationWindowViewModel : ConversationWindowViewModel
             {
                 new Message()
                 {
-                    SenderDisplayName= "test",
+                    SenderDisplayName = "test",
                     DateTime = DateTime.Now,
                     Text = "test message",
                 },
                 new Message()
                 {
-                    SenderDisplayName= "test",
+                    SenderDisplayName = "test",
                     DateTime = DateTime.Now,
                     Text = "test message",
                     Bold = true,
@@ -50,5 +49,6 @@ public class DesignConversationWindowViewModel : ConversationWindowViewModel
 
             TypingUser = true
         };
+        Message = "Test message";
     }
 }

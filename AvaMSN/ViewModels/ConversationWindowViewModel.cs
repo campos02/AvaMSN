@@ -4,6 +4,7 @@ using ReactiveUI;
 using System;
 using System.Reactive;
 using System.Threading.Tasks;
+using AvaMSN.Utils;
 
 namespace AvaMSN.ViewModels;
 
@@ -34,8 +35,10 @@ public class ConversationWindowViewModel : ViewModelBase
     }
 
     private bool bold;
-    private bool strikethrough;
+    private bool italic;
     private bool underline;
+    private bool strikethrough;
+    private string decorations = string.Empty;
 
     public bool Bold
     {
@@ -43,16 +46,36 @@ public class ConversationWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref bold, value);
     }
 
-    public bool Strikethrough
+    public bool Italic
     {
-        get => strikethrough;
-        set => this.RaiseAndSetIfChanged(ref strikethrough, value);
+        get => italic;
+        set => this.RaiseAndSetIfChanged(ref italic, value);
     }
 
     public bool Underline
     {
         get => underline;
-        set => this.RaiseAndSetIfChanged(ref underline, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref underline, value);
+            SetDecorations();
+        }
+    }
+    
+    public bool Strikethrough
+    {
+        get => strikethrough;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref strikethrough, value);
+            SetDecorations();
+        }
+    }
+
+    public string Decorations
+    {
+        get => decorations;
+        set => this.RaiseAndSetIfChanged(ref decorations, value);
     }
 
     public ReactiveCommand<Unit, Unit> SendCommand { get; }
@@ -140,16 +163,18 @@ public class ConversationWindowViewModel : ViewModelBase
         if (Conversation == null)
             return;
 
-        TextPlain message = new TextPlain()
+        TextPlain textMessage = new TextPlain
         {
             Bold = Bold,
+            Italic = Italic,
             Strikethrough = Strikethrough,
             Underline = Underline,
+            Decorations = Decorations,
             Content = Message
         };
 
         Message = string.Empty;
-        await Conversation.SendTextMessage(message);
+        await Conversation.SendTextMessage(textMessage);
     }
 
     private async Task SendTypingUser()
@@ -166,6 +191,18 @@ public class ConversationWindowViewModel : ViewModelBase
             return;
 
         await Conversation.SendNudge();
+    }
+
+    private void SetDecorations()
+    {
+        string newDecorations = string.Empty;
+        
+        if (Underline)
+            newDecorations += "Underline";
+        if (Strikethrough)
+            newDecorations += " Strikethrough";
+
+        Decorations = newDecorations;
     }
 
     /// <summary>

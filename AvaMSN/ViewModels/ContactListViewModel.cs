@@ -13,6 +13,7 @@ using System.IO;
 using AvaMSN.MSNP.Exceptions;
 using AvaMSN.Views;
 using System.Collections.Generic;
+using AvaMSN.Utils;
 using SkiaSharp;
 
 namespace AvaMSN.ViewModels;

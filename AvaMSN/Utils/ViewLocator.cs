@@ -1,9 +1,9 @@
-﻿using Avalonia.Controls.Templates;
+﻿using System;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using AvaMSN.ViewModels;
-using System;
 
-namespace AvaMSN;
+namespace AvaMSN.Utils;
 
 public class ViewLocator : IDataTemplate
 {

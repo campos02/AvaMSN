@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.Json;
 using AvaMSN.Models;
 
-namespace AvaMSN;
+namespace AvaMSN.Utils;
 
 /// <summary>
 /// Static class that provides access to client settings as well as functions to save and read from the settings file.

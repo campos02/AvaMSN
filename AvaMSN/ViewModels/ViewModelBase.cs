@@ -1,4 +1,5 @@
-﻿using AvaMSN.Views;
+﻿using AvaMSN.Utils;
+using AvaMSN.Views;
 using ReactiveUI;
 
 namespace AvaMSN.ViewModels;

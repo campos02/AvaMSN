@@ -3,6 +3,7 @@
              x:Class="AvaMSN.App"
              xmlns:local="using:AvaMSN"
              xmlns:vm="using:AvaMSN.ViewModels"
+             xmlns:utils="clr-namespace:AvaMSN.Utils"
              RequestedThemeVariant="Light"
              x:DataType="vm:ApplicationViewModel">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
@@ -15,9 +16,18 @@
         </FluentTheme.Palettes>
       </FluentTheme>
     </Application.Styles>
+             
+    <Application.Resources>
+      <ResourceDictionary>
+        <ResourceDictionary.MergedDictionaries>
+          <ResourceInclude Source="/Controls/DecoratedTextBox.axaml"/>
+        </ResourceDictionary.MergedDictionaries>
+        <FontFamily x:Key="NotoSansFont">avares://AvaMSN/Assets/Fonts#Noto Sans</FontFamily>
+      </ResourceDictionary>
+    </Application.Resources>
 
     <Application.DataTemplates>
-      <local:ViewLocator/>
+      <utils:ViewLocator/>
     </Application.DataTemplates>
 
     <TrayIcon.Icons>

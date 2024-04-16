@@ -1,11 +1,11 @@
-﻿using AvaMSN.Models;
-using SQLite;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using AvaMSN.Models;
+using SQLite;
 
-namespace AvaMSN;
+namespace AvaMSN.Utils;
 
 /// <summary>
 /// Provides functions for saving and retrieving from the database.

@@ -17,6 +17,7 @@ public class TextPlain
     public bool Italic { get; set; }
     public bool Strikethrough { get; set; }
     public bool Underline { get; set; }
+    public string Decorations { get; set; } = string.Empty;
 
     public string Color { get; set; } = "0";
     public int FontSize { get; set; } = 22;

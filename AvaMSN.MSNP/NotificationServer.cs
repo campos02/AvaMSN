@@ -101,7 +101,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Send CVR
-            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.9.5 msmsgs\r\n";
+            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.10 msmsgs\r\n";
             await SendAsync(message);
 
             // Receive CVR

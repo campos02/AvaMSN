@@ -9,6 +9,7 @@ using AvaMSN.MSNP;
 using AvaMSN.MSNP.Exceptions;
 using AvaMSN.MSNP.Messages;
 using AvaMSN.MSNP.PresenceStatus;
+using AvaMSN.Utils;
 using AvaMSN.ViewModels;
 using AvaMSN.Views;
 using ReactiveUI;
@@ -134,7 +135,6 @@ public class Conversation : ReactiveObject
             }
 
             await Switchboard.SendTextMessage(textMessage);
-
             TypingUser = false;
 
             Message message = new Message
@@ -146,16 +146,11 @@ public class Conversation : ReactiveObject
 
                 Bold = textMessage.Bold,
                 Italic = textMessage.Italic,
+                Decorations = textMessage.Decorations,
 
                 Text = textMessage.Content,
                 DateTime = DateTime.Now
             };
-
-            if (textMessage.Strikethrough)
-                message.Decorations = "Strikethrough";
-
-            if (textMessage.Underline)
-                message.Decorations += " Underline";
 
             Messages.Add(message);
             
