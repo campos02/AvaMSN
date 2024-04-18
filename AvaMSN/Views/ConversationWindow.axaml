@@ -176,9 +176,11 @@
                                  FontStyle="{Binding Italic, Converter={StaticResource italicConverter}}"
                                  TextDecorations="{Binding Decorations, Converter={StaticResource decorationsConverter}}"
                                  Watermark="Write your message"
-                                 ToolTip.Tip="Enter your message here"
                                  ToolTip.ShowDelay="1000"
                                  Theme="{StaticResource DecoratedTextBox}">
+        <ToolTip.Tip>
+          <TextBlock>Enter your message here</TextBlock>
+        </ToolTip.Tip>
         <i:Interaction.Behaviors>
           <ia:EventTriggerBehavior EventName="TextChanged">
             <InvokeCommandAction Command="{Binding TypingUserCommand}"/>

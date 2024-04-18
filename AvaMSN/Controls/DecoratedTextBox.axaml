@@ -111,7 +111,7 @@
                              Grid.Column="1"
                              Cursor="IBeam"
                              Margin="{TemplateBinding Padding}">
-                    <TextBlock Name="PART_FloatingWatermark"
+                    <controls:NormalTextBlock Name="PART_FloatingWatermark"
                                Foreground="{DynamicResource SystemAccentColor}"
                                FontSize="{TemplateBinding FontSize}"
                                IsVisible="False"
@@ -124,7 +124,7 @@
                                   AllowAutoHide="{TemplateBinding (ScrollViewer.AllowAutoHide)}"
                                   BringIntoViewOnFocusChange="{TemplateBinding (ScrollViewer.BringIntoViewOnFocusChange)}">
                       <Panel>
-                        <TextBlock Name="PART_Watermark"
+                        <controls:NormalTextBlock Name="PART_Watermark"
                                    Opacity="0.5"
                                    Text="{TemplateBinding Watermark}"
                                    TextAlignment="{TemplateBinding TextAlignment}"
@@ -168,7 +168,7 @@
           <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushDisabled}" />
         </Style>
 
-        <Style Selector="^ /template/ TextBlock#PART_Watermark, ^ /template/ TextBlock#PART_FloatingWatermark">
+        <Style Selector="^ /template/ controls|NormalTextBlock#PART_Watermark, ^ /template/ controls|NormalTextBlock#PART_FloatingWatermark">
           <Setter Property="Foreground" Value="{DynamicResource TextControlPlaceholderForegroundDisabled}" />
         </Style>
       </Style>
@@ -182,7 +182,7 @@
           <Setter Property="Background" Value="{DynamicResource TextControlBackgroundPointerOver}" />
         </Style>
 
-        <Style Selector="^ /template/ TextBlock#PART_Watermark">
+        <Style Selector="^ /template/ controls|NormalTextBlock#PART_Watermark">
           <Setter Property="Foreground" Value="{DynamicResource TextControlPlaceholderForegroundPointerOver}" />
         </Style>
       </Style>
@@ -191,7 +191,7 @@
       <Style Selector="^:focus">
         <Setter Property="Foreground" Value="{DynamicResource TextControlForegroundFocused}" />
 
-        <Style Selector="^ /template/ TextBlock#PART_Watermark">
+        <Style Selector="^ /template/ controls|NormalTextBlock#PART_Watermark">
           <Setter Property="Foreground" Value="{DynamicResource TextControlPlaceholderForegroundFocused}" />
         </Style>
 
@@ -206,7 +206,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
       </Style>
 
-      <Style Selector="^[UseFloatingWatermark=true]:not(:empty) /template/ TextBlock#PART_FloatingWatermark">
+      <Style Selector="^[UseFloatingWatermark=true]:not(:empty) /template/ controls|NormalTextBlock#PART_FloatingWatermark">
         <Setter Property="IsVisible" Value="True" />
       </Style>
 
