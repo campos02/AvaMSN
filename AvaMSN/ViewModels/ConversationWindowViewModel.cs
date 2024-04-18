@@ -4,6 +4,7 @@ using ReactiveUI;
 using System;
 using System.Reactive;
 using System.Threading.Tasks;
+using Avalonia.Media;
 using AvaMSN.Utils;
 
 namespace AvaMSN.ViewModels;
@@ -39,6 +40,8 @@ public class ConversationWindowViewModel : ViewModelBase
     private bool underline;
     private bool strikethrough;
     private string decorations = string.Empty;
+    private string color = string.Empty;
+    private Color pickerColor = Colors.Black;
 
     public bool Bold
     {
@@ -76,6 +79,22 @@ public class ConversationWindowViewModel : ViewModelBase
     {
         get => decorations;
         set => this.RaiseAndSetIfChanged(ref decorations, value);
+    }
+
+    public string MessageColor
+    {
+        get => color;
+        set => this.RaiseAndSetIfChanged(ref color, value);
+    }
+
+    public Color PickerColor
+    {
+        get => pickerColor;
+        set
+        {
+            pickerColor = value;
+            MessageColor = $"#{pickerColor.R:x2}{pickerColor.G:x2}{pickerColor.B:x2}";
+        }
     }
 
     public ReactiveCommand<Unit, Unit> SendCommand { get; }
@@ -170,6 +189,7 @@ public class ConversationWindowViewModel : ViewModelBase
             Strikethrough = Strikethrough,
             Underline = Underline,
             Decorations = Decorations,
+            Color = MessageColor,
             Content = Message
         };
 

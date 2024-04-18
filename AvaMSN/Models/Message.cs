@@ -20,6 +20,7 @@ public class Message
     public bool Bold { get; set; }
     public bool Italic { get; set; }
     public string Decorations { get; set; } = string.Empty;
+    public string Color { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
 
     public DateTime DateTime { get; set; }

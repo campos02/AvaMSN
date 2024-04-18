@@ -3,7 +3,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="550"
-        xmlns:views="clr-namespace:AvaMSN.Views"
         xmlns:vm="using:AvaMSN.ViewModels"
         xmlns:dvm="clr-namespace:AvaMSN.ViewModels.Design"
         xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
@@ -133,6 +132,7 @@
                 <TextBlock Text="{Binding Text}"
                            TextWrapping="Wrap"
                            Grid.Row="3"
+                           Foreground="{Binding Color}"
                            FontFamily="{StaticResource NotoSansFont}"
                            FontWeight="{Binding Bold, Converter={StaticResource boldConverter}}"
                            FontStyle="{Binding Italic, Converter={StaticResource italicConverter}}"
@@ -171,6 +171,7 @@
                                  TextWrapping="Wrap"
                                  Height="75"
                                  KeyDown="TextBox_KeyDown"
+                                 Foreground="{Binding MessageColor}"
                                  FontFamily="{StaticResource NotoSansFont}"
                                  FontWeight="{Binding Bold, Converter={StaticResource boldConverter}}"
                                  FontStyle="{Binding Italic, Converter={StaticResource italicConverter}}"
@@ -191,10 +192,18 @@
       <StackPanel Orientation="Horizontal"
                   Spacing="10"
                   HorizontalAlignment="Stretch">
+        
         <Button Command="{Binding NudgeCommand}"
                 Padding="7"
                 ToolTip.Tip="Send a nudge"
                 ToolTip.ShowDelay="1000">Send a Nudge</Button>
+        
+        <ColorPicker Color="{Binding PickerColor}"
+                     IsColorComponentsVisible="False"
+                     IsAlphaEnabled="False"
+                     IsAlphaVisible="False"
+                     ToolTip.Tip="Pick a message color"
+                     ToolTip.ShowDelay="1000"/>
         
         <ToggleButton IsChecked="{Binding Bold}"
                       ToolTip.Tip="Toggle bold"
@@ -219,6 +228,7 @@
                       ToolTip.ShowDelay="1000">
           <PathIcon Data="{StaticResource text_underline_regular}"/>
         </ToggleButton>
+        
       </StackPanel>
     </StackPanel>
 

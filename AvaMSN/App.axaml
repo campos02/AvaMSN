@@ -15,6 +15,7 @@
           <ColorPaletteResources x:Key="Dark" RegionColor="#ff07171e"/>
         </FluentTheme.Palettes>
       </FluentTheme>
+      <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml"/>
     </Application.Styles>
              
     <Application.Resources>

@@ -20,7 +20,7 @@ public class TextPlain
     public string Decorations { get; set; } = string.Empty;
 
     public string Color { get; set; } = "0";
-    public int FontSize { get; set; } = 22;
+    public int PitchFamily { get; set; } = 22;
 
     // Contains message text
     public string Content { get ; set; } = string.Empty;
@@ -33,16 +33,24 @@ public class TextPlain
     {
         formatParameter = formatParameter.Replace("X-MMS-IM-Format: ", "");
         string[] parameters = formatParameter.Split(";");
-        string ef = parameters[1];
+        string effect = parameters[1];
 
-        if (ef.Contains("B"))
+        if (effect.Contains("B"))
             Bold = true;
-        if (ef.Contains("I"))
+        if (effect.Contains("I"))
             Italic = true;
-        if (ef.Contains("S"))
+        if (effect.Contains("S"))
             Strikethrough = true;
-        if (ef.Contains("U"))
+        if (effect.Contains("U"))
             Underline = true;
+
+        string color = parameters[2].Replace(" CO=", "");
+        // Add trailing zeroes back
+        while (color.Length < 6)
+            color += "0";
+
+        // Reverse from BGR to RGB and add hex sign
+        Color = $"#{color.Substring(4,2)}{color.Substring(2,2)}{color.Substring(0,2)}";
     }
 
     /// <summary>
@@ -51,20 +59,27 @@ public class TextPlain
     /// <returns>Message payload.</returns>
     public string CreatePayload()
     {
-        string ef = string.Empty;
+        string effect = string.Empty;
 
         if (Bold)
-            ef += "B";
+            effect += "B";
         if (Italic)
-            ef += "I";
+            effect += "I";
         if (Strikethrough)
-            ef += "S";
+            effect += "S";
         if (Underline)
-            ef += "U";
+            effect += "U";
+
+        string color = Color.Replace("#", "");
+        if (color.Length >= 6)
+        {
+            // Reverse from RGB to BGR
+            color = $"{color.Substring(4,2)}{color.Substring(2,2)}{color.Substring(0,2)}";
+        }
 
         return $"MIME-Version: {MimeVersion}\r\n" +
                $"Content-Type: {ContentType}; charset={Charset}\r\n" +
-               $"X-MMS-IM-Format: FN={Uri.EscapeDataString(FontName)}; EF={ef}; CO={Color}; CS=0; PF={FontSize}\r\n\r\n" +
+               $"X-MMS-IM-Format: FN={Uri.EscapeDataString(FontName)}; EF={effect}; CO={color}; CS=1; PF={PitchFamily}\r\n\r\n" +
                Content;
     }
 }

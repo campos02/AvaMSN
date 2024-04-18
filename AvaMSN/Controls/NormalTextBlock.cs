@@ -12,5 +12,6 @@ public class NormalTextBlock : TextBlock
         FontWeight = FontWeight.Normal;
         FontStyle = FontStyle.Normal;
         TextDecorations = null;
+        Foreground = Brushes.Black;
     }
 }

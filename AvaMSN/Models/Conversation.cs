@@ -147,6 +147,7 @@ public class Conversation : ReactiveObject
                 Bold = textMessage.Bold,
                 Italic = textMessage.Italic,
                 Decorations = textMessage.Decorations,
+                Color = textMessage.Color,
 
                 Text = textMessage.Content,
                 DateTime = DateTime.Now
@@ -337,6 +338,7 @@ public class Conversation : ReactiveObject
 
             Bold = e.Message.Bold,
             Italic = e.Message.Italic,
+            Color = e.Message.Color,
 
             Text = e.Message?.Content!,
             DateTime = DateTime.Now,
