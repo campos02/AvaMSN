@@ -2,6 +2,7 @@
 using AvaMSN.MSNP.Messages.MSNSLP;
 using System.Security.Cryptography;
 using System.Text;
+using AvaMSN.MSNP.Utils;
 
 namespace AvaMSN.MSNP;
 

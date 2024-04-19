@@ -1,6 +1,7 @@
 ﻿using AvaMSN.Models;
-using AvaMSN.MSNP.PresenceStatus;
 using System.Collections.ObjectModel;
+using AvaMSN.MSNP.Utils;
+using Contact = AvaMSN.Models.Contact;
 
 namespace AvaMSN.ViewModels.Design;
 
@@ -10,7 +11,7 @@ public class DesignContactListViewModel : ContactListViewModel
     {
         ListData = new ContactListData()
         {
-            Profile = new Profile()
+            Profile = new Models.Profile()
             {
                 DisplayName = "Testing",
                 Presence = PresenceStatus.GetFullName(PresenceStatus.Online)

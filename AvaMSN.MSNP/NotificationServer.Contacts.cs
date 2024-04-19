@@ -1,4 +1,5 @@
 ﻿using AvaMSN.MSNP.Exceptions;
+using AvaMSN.MSNP.Utils;
 
 namespace AvaMSN.MSNP;
 
@@ -44,7 +45,6 @@ public partial class NotificationServer : Connection
         {
             Allow = true
         });
-
         await SendADL(payload);
 
         // Add to forward list and send FQY
@@ -52,7 +52,6 @@ public partial class NotificationServer : Connection
         {
             Forward = true
         });
-
         await SendADL(payload);
         await SendFQY(ContactService.ContactPayload(contact));
 
@@ -155,7 +154,6 @@ public partial class NotificationServer : Connection
         {
             Block = true
         });
-
         await SendRML(payload);
 
         // Add to allow lists

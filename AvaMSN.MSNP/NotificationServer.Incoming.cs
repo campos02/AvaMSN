@@ -2,6 +2,7 @@
 using AvaMSN.MSNP.XML.SerializableClasses;
 using System.Text;
 using System.Xml.Serialization;
+using AvaMSN.MSNP.Utils;
 
 namespace AvaMSN.MSNP;
 
@@ -164,7 +165,7 @@ public partial class NotificationServer : Connection
         string[] parameters = response.Split(" ");
 
         Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[1]) ?? throw new ContactException("Contact does not exist");
-        contact.Presence = PresenceStatus.PresenceStatus.Offline;
+        contact.Presence = PresenceStatus.Offline;
 
         List<Switchboard> switchboards = Switchboards.Where(sb => sb.Contact.Email == contact.Email && sb.Connected).ToList();
         foreach (Switchboard switchboard in switchboards)

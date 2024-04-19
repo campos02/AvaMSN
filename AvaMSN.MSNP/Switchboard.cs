@@ -3,6 +3,7 @@ using AvaMSN.MSNP.Messages;
 using AvaMSN.MSNP.Messages.MSNSLP;
 using System.Text;
 using System.Timers;
+using AvaMSN.MSNP.Utils;
 
 namespace AvaMSN.MSNP;
 

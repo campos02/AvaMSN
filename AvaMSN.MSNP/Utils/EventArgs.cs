@@ -1,6 +1,6 @@
 ﻿using AvaMSN.MSNP.Messages;
 
-namespace AvaMSN.MSNP;
+namespace AvaMSN.MSNP.Utils;
 
 public class DisconnectedEventArgs : EventArgs
 {

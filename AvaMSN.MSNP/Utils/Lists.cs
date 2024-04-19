@@ -1,4 +1,4 @@
-﻿namespace AvaMSN.MSNP;
+﻿namespace AvaMSN.MSNP.Utils;
 
 /// <summary>
 /// Contains what lists a contact is in, as well as list functions.

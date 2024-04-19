@@ -1,4 +1,4 @@
-﻿namespace AvaMSN.MSNP;
+﻿namespace AvaMSN.MSNP.Utils;
 
 /// <summary>
 /// List numbers of MSNP.

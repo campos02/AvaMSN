@@ -2,7 +2,6 @@
 using System.Reactive;
 using System.Collections.ObjectModel;
 using AvaMSN.Models;
-using AvaMSN.MSNP.PresenceStatus;
 using System.Threading.Tasks;
 using System;
 using System.Linq;
@@ -13,8 +12,12 @@ using System.IO;
 using AvaMSN.MSNP.Exceptions;
 using AvaMSN.Views;
 using System.Collections.Generic;
+using AvaMSN.MSNP.Utils;
 using AvaMSN.Utils;
 using SkiaSharp;
+using Contact = AvaMSN.Models.Contact;
+using ContactEventArgs = AvaMSN.Models.ContactEventArgs;
+using Profile = AvaMSN.Models.Profile;
 
 namespace AvaMSN.ViewModels;
 
@@ -286,8 +289,8 @@ public class ContactListViewModel : ViewModelBase
         SelectedContact.NewMessages = false;
 
         Conversation? conversation = Conversations.LastOrDefault(conv => conv.Contact == SelectedContact);
-        MSNP.Contact? contact = NotificationServer.ContactList.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ??
-                                throw new ContactException("Could not find the selected contact");
+        MSNP.Utils.Contact? contact = NotificationServer.ContactList.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ??
+                                      throw new ContactException("Could not find the selected contact");
 
         if (conversation == null)
         {
@@ -391,7 +394,7 @@ public class ContactListViewModel : ViewModelBase
     /// <summary>
     /// If a new switchboard session is taking place and it's not with the current contact, creates a new conversation instance.
     /// </summary>
-    public void NotificationServer_SwitchboardChanged(object? sender, MSNP.SwitchboardEventArgs e)
+    public void NotificationServer_SwitchboardChanged(object? sender, SwitchboardEventArgs e)
     {
         if (ContactGroups == null || e.Switchboard == null)
             return;
@@ -428,7 +431,7 @@ public class ContactListViewModel : ViewModelBase
     /// Resets data, closes chat windows and returns to login page when disconnected from the server.
     /// </summary>
     /// <exception cref="ConnectionException">Thrown if the disconnection wasn't requested.</exception>
-    public async void NotificationServer_Disconnected(object? sender, MSNP.DisconnectedEventArgs e)
+    public async void NotificationServer_Disconnected(object? sender, DisconnectedEventArgs e)
     {
         // Close every conversation
         foreach (Conversation conversation in Conversations)

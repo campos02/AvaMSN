@@ -1,4 +1,4 @@
-﻿namespace AvaMSN.MSNP;
+﻿namespace AvaMSN.MSNP.Utils;
 
 /// <summary>
 /// Represents a user profile, which extends contact data.

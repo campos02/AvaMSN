@@ -4,6 +4,7 @@ using System.Xml.Serialization;
 using AvaMSN.MSNP.Exceptions;
 using AvaMSN.MSNP.SOAP;
 using AvaMSN.MSNP.SOAP.RequestObjects;
+using AvaMSN.MSNP.Utils;
 using AvaMSN.MSNP.XML.SerializableClasses;
 
 namespace AvaMSN.MSNP;
@@ -160,9 +161,8 @@ public class ContactService
     public async Task ChangeDisplayName()
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.ABContactUpdate.Envelope));
-
-        var envelope = RequestObjects.AbContactUpdate();
         
+        var envelope = RequestObjects.AbContactUpdate();
         envelope.Header.ABAuthHeader.TicketToken = TicketToken;
 
         // Update user display name
@@ -196,7 +196,6 @@ public class ContactService
     public async Task AddMember(string memberRole, string email, string scenario = "BlockUnblock")
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.AddMember.Envelope));
-
         var envelope = RequestObjects.AddMember();
 
         envelope.Header.ABAuthHeader.TicketToken = TicketToken;
@@ -232,7 +231,6 @@ public class ContactService
     public async Task DeleteMember(string memberRole, string email, string scenario = "BlockUnblock")
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.DeleteMember.Envelope));
-
         var envelope = RequestObjects.DeleteMember();
 
         envelope.Header.ABAuthHeader.TicketToken = TicketToken;
@@ -266,7 +264,6 @@ public class ContactService
     public async Task ABContactAdd(string email)
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.ABContactAdd.Envelope));
-
         var envelope = RequestObjects.ABContactAdd();
 
         envelope.Header.ABAuthHeader.TicketToken = TicketToken;
@@ -386,7 +383,6 @@ public class ContactService
 
         // Remove namespaces
         var namespaces = new XmlSerializerNamespaces([XmlQualifiedName.Empty]);
-
         XmlSerializer mlSerializer = new(typeof(XML.SerializableClasses.InitialListPayload.ml));
 
         using (StringWriter stream = new StringWriter())

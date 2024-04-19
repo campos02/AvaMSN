@@ -1,4 +1,4 @@
-﻿namespace AvaMSN.MSNP.PresenceStatus;
+﻿namespace AvaMSN.MSNP.Utils;
 
 /// <summary>
 /// Contains all presence statuses used in MSNP.

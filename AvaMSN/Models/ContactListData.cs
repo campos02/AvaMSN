@@ -5,7 +5,7 @@ using System.Linq;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using AvaMSN.MSNP;
-using AvaMSN.MSNP.PresenceStatus;
+using AvaMSN.MSNP.Utils;
 
 namespace AvaMSN.Models;
 
@@ -70,7 +70,7 @@ public class ContactListData
             new ContactGroup("Offline", [])
         ];
 
-        foreach (MSNP.Contact contact in NotificationServer.ContactList.Contacts)
+        foreach (MSNP.Utils.Contact contact in NotificationServer.ContactList.Contacts)
         {
             // Only add contacts in forward list
             if (!contact.InLists.Forward)

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Serialization;
 using System.Xml;
+using AvaMSN.MSNP.Utils;
 
 namespace AvaMSN.MSNP;
 
@@ -499,7 +500,7 @@ public partial class NotificationServer : Connection
         }
 
         // Disconnect from switchboards when going invisible
-        if (Profile.Presence == PresenceStatus.PresenceStatus.Invisible)
+        if (Profile.Presence == PresenceStatus.Invisible)
         {
             foreach (Switchboard switchboard in Switchboards)
             {

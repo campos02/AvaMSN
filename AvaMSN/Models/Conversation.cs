@@ -8,7 +8,7 @@ using Avalonia.Media.Imaging;
 using AvaMSN.MSNP;
 using AvaMSN.MSNP.Exceptions;
 using AvaMSN.MSNP.Messages;
-using AvaMSN.MSNP.PresenceStatus;
+using AvaMSN.MSNP.Utils;
 using AvaMSN.Utils;
 using AvaMSN.ViewModels;
 using AvaMSN.Views;
