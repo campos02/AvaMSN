@@ -20,7 +20,7 @@ public static class SettingsManager
     public static Settings Settings { get; set; } = new Settings()
     {
         // Default settings
-        Server = "crosstalksrv.hiden.pw",
+        Server = "crosstalksrv.hiden.cc",
         SaveMessagingHistory = true,
         MinimizeToTray = true
     };
