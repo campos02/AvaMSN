@@ -190,7 +190,6 @@ public partial class NotificationServer : Connection
     {
         string[] responses = response.Split("\r\n");
         string[] parameters = responses[0].Split(" ");
-
         int length = Convert.ToInt32(parameters[3]);
 
         // Get payload and deserialize it
@@ -235,14 +234,13 @@ public partial class NotificationServer : Connection
 
         string host = parameters[2].Split(":")[0];
         string port = parameters[2].Split(":")[1];
-
+        
         string sessionID = parameters[1];
         string authString = parameters[4];
         string email = parameters[5];
         string displayName = Uri.UnescapeDataString(parameters[6]);
 
         Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email);
-
         if (contact == null)
         {
             contact = new Contact()

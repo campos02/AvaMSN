@@ -32,7 +32,6 @@ public partial class NotificationServer : Connection
     public NotificationServer(string host)
     {
         Host = host;
-
         SSO = new SingleSignOn(Host);
         ContactList = new ContactService(Host);
     }
@@ -102,7 +101,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Send CVR
-            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.10 msmsgs\r\n";
+            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.10.1 msmsgs\r\n";
             await SendAsync(message);
 
             // Receive CVR
@@ -168,7 +167,6 @@ public partial class NotificationServer : Connection
         string returnValue = SSO.GetReturnValue(nonce);
 
         TransactionID++;
-
         // Send USR S
         message = $"USR {TransactionID} SSO S {SSO.Ticket} {returnValue}\r\n";
         await SendAsync(message);
@@ -207,7 +205,6 @@ public partial class NotificationServer : Connection
         await SendAsync(message);
 
         string responses = string.Empty;
-
         while (true)
         {
             // Receive GCF and USR S
@@ -317,7 +314,6 @@ public partial class NotificationServer : Connection
     private async Task SendInitialADL(string payload)
     {
         int length = Encoding.UTF8.GetByteCount(payload);
-
         if (length > 1160)
             throw new PayloadException("Payload too big");
 
@@ -357,7 +353,6 @@ public partial class NotificationServer : Connection
     private async Task SendADL(string payload)
     {
         int length = Encoding.UTF8.GetByteCount(payload);
-
         if (length > 1160)
             throw new PayloadException("Payload too big");
 
@@ -377,7 +372,6 @@ public partial class NotificationServer : Connection
     private async Task SendFQY(string payload)
     {
         int length = Encoding.UTF8.GetByteCount(payload);
-
         if (length > 1160)
             throw new PayloadException("Payload too big");
 
@@ -397,12 +391,10 @@ public partial class NotificationServer : Connection
     private async Task SendRML(string payload)
     {
         int length = Encoding.UTF8.GetByteCount(payload);
-
         if (length > 1160)
             throw new PayloadException("Payload too big");
 
         TransactionID++;
-
         string message = $"RML {TransactionID} {length}\r\n";
 
         // Send RML and payload
@@ -640,7 +632,6 @@ public partial class NotificationServer : Connection
 
         // Remove namespaces
         var namespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
-
         XmlSerializer msnobjectSerializer = new(typeof(msnobj));
 
         using StringWriter stream = new StringWriter();

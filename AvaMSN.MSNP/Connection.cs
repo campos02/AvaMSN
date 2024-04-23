@@ -27,7 +27,6 @@ public class Connection
     {
         IPHostEntry ipHostInfo = await Dns.GetHostEntryAsync(Host);
         IPAddress ipAddress = ipHostInfo.AddressList[0];
-
         IPEndPoint ipEndPoint = new(ipAddress, Port);
 
         Client = new(

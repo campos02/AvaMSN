@@ -304,6 +304,8 @@ public class ContactListViewModel : ViewModelBase
 
             Conversations.Add(conversation);
         }
+        
+        conversation.OpenWindow();
 
         if (conversation.Switchboard == null || !conversation.Switchboard.Connected)
         {
@@ -312,18 +314,11 @@ public class ContactListViewModel : ViewModelBase
                 conversation.Switchboard = await NotificationServer.SendXFR(contact);
                 conversation.SubscribeToEvents();
             }
-
-            else
-            {
-                conversation.OpenWindow();
-                return;
-            }
         }
-
-        conversation.OpenWindow();
+        
         try
         {
-            if (contact.DisplayPictureHash != SelectedContact.DisplayPictureHash)
+            if (contact.DisplayPictureHash != SelectedContact.DisplayPictureHash && conversation.Switchboard != null)
                 await conversation.Switchboard.GetDisplayPicture();
         }
         catch (OperationCanceledException) { return; }

@@ -107,45 +107,15 @@ public partial class Switchboard : Connection
     }
 
     /// <summary>
-    /// Invites a contact into the session and waits for it to join.
+    /// Invites a contact into the session
     /// </summary>
     /// <returns></returns>
     public async Task SendCAL()
     {
         TransactionID++;
-
         // Send CAL
         string message = $"CAL {TransactionID} {Contact.Email}\r\n";
         await SendAsync(message);
-
-        // Receive CAL
-        while (true)
-        {
-            string response = await ReceiveStringAsync();
-
-            // Break if response is a command reply
-            if (response.StartsWith("CAL")
-                && response.Split(" ")[1] == TransactionID.ToString())
-            {
-                break;
-            }
-        }
-
-        // Wait for the contact to join
-        while (true)
-        {
-            string response = await ReceiveStringAsync();
-
-            // Break if the contact has joined
-            if (response.StartsWith("JOI")
-                && Uri.UnescapeDataString(response.Split(" ")[1]) == Contact.Email)
-            {
-                break;
-            }
-        }
-
-        // Start receiving incoming commands again
-        _ = ReceiveIncomingAsync();
     }
 
     /// <summary>

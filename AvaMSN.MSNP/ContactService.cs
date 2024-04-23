@@ -176,7 +176,6 @@ public class ContactService
         string response = await Requests.MakeRequest(soapXML, ABServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.ABContactUpdateResponse.Envelope));
-
         using (StringReader reader = new StringReader(response))
         {
             // Throw exception if deserialization is not possible
@@ -211,7 +210,6 @@ public class ContactService
         string response = await Requests.MakeRequest(soapXML, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/AddMember");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.AddMemberResponse.Envelope));
-
         using (StringReader reader = new StringReader(response))
         {
             // Throw exception if deserialization is not possible
@@ -246,7 +244,6 @@ public class ContactService
         string response = await Requests.MakeRequest(soapXML, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/DeleteMember");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.DeleteMemberResponse.Envelope));
-
         using (StringReader reader = new StringReader(response))
         {
             // Throw exception if deserialization is not possible
@@ -276,7 +273,6 @@ public class ContactService
         string response = await Requests.MakeRequest(soapXML, ABServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactAdd");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.ABContactAddResponse.Envelope));
-
         using (StringReader reader = new StringReader(response))
         {
             // Throw exception if deserialization is not possible
@@ -307,7 +303,6 @@ public class ContactService
         string response = await Requests.MakeRequest(soapXML, ABServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactDelete");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.ABContactDeleteResponse.Envelope));
-
         using (StringReader reader = new StringReader(response))
         {
             // Throw exception if deserialization is not possible
@@ -420,17 +415,16 @@ public class ContactService
         };
 
         ml.d = domains.ToArray();
-
-        // Remove namespaces
+        
         var settings = new XmlWriterSettings()
         {
             OmitXmlDeclaration = true,
         };
-
+        
+        // Remove namespaces
         var namespaces = new XmlSerializerNamespaces([XmlQualifiedName.Empty]);
-
+        
         XmlSerializer mlSerializer = new(typeof(XML.SerializableClasses.ListPayload.ml));
-
         using (StringWriter stream = new StringWriter())
         using (XmlWriter writer = XmlWriter.Create(stream, settings))
         {
@@ -473,7 +467,6 @@ public class ContactService
         var namespaces = new XmlSerializerNamespaces([XmlQualifiedName.Empty]);
 
         XmlSerializer mlSerializer = new(typeof(XML.SerializableClasses.ContactPayload.ml));
-
         using (StringWriter stream = new StringWriter())
         using (XmlWriter writer = XmlWriter.Create(stream, settings))
         {
@@ -503,7 +496,6 @@ public class ContactService
         var namespaces = new XmlSerializerNamespaces([XmlQualifiedName.Empty]);
 
         XmlSerializer mlSerializer = new(typeof(Data));
-
         using (StringWriter stream = new StringWriter())
         using (XmlWriter writer = XmlWriter.Create(stream, settings))
         {

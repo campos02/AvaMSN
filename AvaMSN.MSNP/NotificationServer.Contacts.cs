@@ -95,8 +95,8 @@ public partial class NotificationServer : Connection
         {
             Forward = true
         });
-
         await SendRML(payload);
+        
         contact.InLists.Forward = false;
 
         // Start receiving incoming commands again
@@ -115,22 +115,18 @@ public partial class NotificationServer : Connection
 
         // Remove from allow lists
         await ContactList.DeleteMember("Allow", contact.Email);
-
         string payload = ContactService.ListPayload(contact, new Lists
         {
             Allow = true
         });
-
         await SendRML(payload);
 
         // Add to block lists
         await ContactList.AddMember("Block", contact.Email);
-
         payload = ContactService.ListPayload(contact, new Lists
         {
             Block = true
         });
-
         await SendADL(payload);
 
         // Start receiving incoming commands again
@@ -149,7 +145,6 @@ public partial class NotificationServer : Connection
 
         // Remove from block lists
         await ContactList.DeleteMember("Block", contact.Email);
-
         string payload = ContactService.ListPayload(contact, new Lists
         {
             Block = true
@@ -158,12 +153,10 @@ public partial class NotificationServer : Connection
 
         // Add to allow lists
         await ContactList.AddMember("Allow", contact.Email);
-
         payload = ContactService.ListPayload(contact, new Lists
         {
             Allow = true
         });
-
         await SendADL(payload);
 
         // Start receiving incoming commands again

@@ -49,7 +49,6 @@ public class SingleSignOn
     /// <returns></returns>
     public async Task RstRequest(string username, string password)
     {
-
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.RST.Envelope));
 
         var envelope = RequestObjects.RSTRequest();
@@ -91,9 +90,8 @@ public class SingleSignOn
         byte[] hash4 = hMACSHA1.ComputeHash(hash3.Concat(wsSecureBytes).ToArray());
 
         byte[] hash4Fourbytes = new byte[4];
-
         Buffer.BlockCopy(hash4, 0, hash4Fourbytes, 0, hash4Fourbytes.Length);
-
+        
         byte[] returnKey = hash2.Concat(hash4Fourbytes).ToArray();
         return returnKey;
     }
@@ -116,7 +114,6 @@ public class SingleSignOn
         byte[] key2Hash = hMACSHA1.ComputeHash(nonceBytes);
         byte[] eight8Bytes = { 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08 };
         byte[] paddedNonce = nonceBytes.Concat(eight8Bytes).ToArray();
-
         byte[] randomBytes = RandomNumberGenerator.GetBytes(8);
 
         TripleDES tripleDES = TripleDES.Create();
@@ -137,11 +134,10 @@ public class SingleSignOn
         };
 
         byte[] returnStruct = UIntBytes(headerValues);
-
         returnStruct = returnStruct.Concat(randomBytes).ToArray();//aIVBytes
         returnStruct = returnStruct.Concat(key2Hash).ToArray();//aHashBytes
         returnStruct = returnStruct.Concat(encryptedData).ToArray();//aCipherBytes
-
+        
         return Convert.ToBase64String(returnStruct);
     }
 }
