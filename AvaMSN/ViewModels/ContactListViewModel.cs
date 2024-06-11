@@ -165,8 +165,8 @@ public class ContactListViewModel : ViewModelBase
             pictureStream.Seek(0, SeekOrigin.Begin);
 
             // Crop to width
-            int cropStart = picture.PixelSize.Width / 2 - pictureSize / 2;
-            int cropEnd = picture.PixelSize.Width / 2 + pictureSize / 2;
+            int cropStart = (picture.PixelSize.Width - pictureSize) / 2;
+            int cropEnd = (picture.PixelSize.Width + pictureSize) / 2;
 
             using SKBitmap bitmap = SKBitmap.Decode(pictureStream);
             SKRect cropRect = new SKRect(cropStart, 0, cropEnd, pictureSize);
