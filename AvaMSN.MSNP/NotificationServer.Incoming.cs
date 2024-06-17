@@ -54,7 +54,7 @@ public partial class NotificationServer : Connection
     {
         string[] parameters = response.Split(" ");
 
-        Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[3]) ?? throw new ContactException("Contact does not exist");
+        Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == parameters[3]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = parameters[2];
         contact.DisplayName = Uri.UnescapeDataString(parameters[5]);
         
@@ -113,7 +113,7 @@ public partial class NotificationServer : Connection
     {
         string[] parameters = response.Split(" ");
 
-        Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[2]) ?? throw new ContactException("Contact does not exist");
+        Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == parameters[2]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = parameters[1];
         contact.DisplayName = Uri.UnescapeDataString(parameters[4]);
 
@@ -164,7 +164,7 @@ public partial class NotificationServer : Connection
     {
         string[] parameters = response.Split(" ");
 
-        Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[1]) ?? throw new ContactException("Contact does not exist");
+        Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == parameters[1]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = PresenceStatus.Offline;
 
         List<Switchboard> switchboards = Switchboards.Where(sb => sb.Contact.Email == contact.Email && sb.Connected).ToList();
@@ -203,7 +203,7 @@ public partial class NotificationServer : Connection
         {
             var data = (Data?)serializer.Deserialize(reader);
 
-            Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == parameters[1]);
+            Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == parameters[1]);
 
             if (contact == null || data == null)
                 throw new ContactException("Contact does not exist");
@@ -240,7 +240,7 @@ public partial class NotificationServer : Connection
         string email = parameters[5];
         string displayName = Uri.UnescapeDataString(parameters[6]);
 
-        Contact? contact = ContactList.Contacts.FirstOrDefault(c => c.Email == email);
+        Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == email);
         if (contact == null)
         {
             contact = new Contact()
@@ -251,14 +251,14 @@ public partial class NotificationServer : Connection
             if (string.IsNullOrEmpty(contact.DisplayName))
                 contact.DisplayName = displayName;
 
-            ContactList.Contacts.Add(contact);
+            ContactService.Contacts.Add(contact);
         }
 
         Switchboard switchboard = new Switchboard()
         {
             Host = host,
             Port = Convert.ToInt32(port),
-            Profile = ContactList.Profile,
+            Profile = ContactService.Profile,
             Contact = contact
         };
 

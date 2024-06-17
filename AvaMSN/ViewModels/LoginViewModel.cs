@@ -350,7 +350,7 @@ public class LoginViewModel : ViewModelBase
                 {
                     using CryptoStream cryptoStream = new CryptoStream(ticketTokenStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
                     using StreamWriter encryptWriter = new StreamWriter(cryptoStream);
-                    encryptWriter.WriteLine(NotificationServer?.ContactList.TicketToken);
+                    encryptWriter.WriteLine(NotificationServer?.ContactService.TicketToken);
 
                     keys.Key3 = aes.Key;
                     keys.IV3 = aes.IV;

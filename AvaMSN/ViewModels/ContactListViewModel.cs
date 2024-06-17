@@ -289,7 +289,7 @@ public class ContactListViewModel : ViewModelBase
         SelectedContact.NewMessages = false;
 
         Conversation? conversation = Conversations.LastOrDefault(conv => conv.Contact == SelectedContact);
-        MSNP.Utils.Contact? contact = NotificationServer.ContactList.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ??
+        MSNP.Utils.Contact? contact = NotificationServer.ContactService.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ??
                                       throw new ContactException("Could not find the selected contact");
 
         if (conversation == null)

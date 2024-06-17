@@ -71,7 +71,7 @@ public class TextPlain
             effect += "U";
 
         string color = Color.Replace("#", "");
-        if (color.Length >= 6)
+        if (color.Length == 6)
         {
             // Reverse from RGB to BGR
             color = $"{color.Substring(4,2)}{color.Substring(2,2)}{color.Substring(0,2)}";

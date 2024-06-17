@@ -70,7 +70,7 @@ public class ContactListData
             new ContactGroup("Offline", [])
         ];
 
-        foreach (MSNP.Utils.Contact contact in NotificationServer.ContactList.Contacts)
+        foreach (MSNP.Utils.Contact contact in NotificationServer.ContactService.Contacts)
         {
             // Only add contacts in forward list
             if (!contact.InLists.Forward)

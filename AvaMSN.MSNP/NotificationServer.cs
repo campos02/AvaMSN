@@ -16,11 +16,11 @@ public partial class NotificationServer : Connection
     // Protocol version
     public static string Protocol => "MSNP15";
 
-    public ContactService ContactList { get; }
+    public ContactService ContactService { get; }
     public Profile Profile
     {
-        get => ContactList.Profile;
-        set => ContactList.Profile = value;
+        get => ContactService.Profile;
+        set => ContactService.Profile = value;
     }
 
     public SingleSignOn SSO { get; }
@@ -33,7 +33,7 @@ public partial class NotificationServer : Connection
     {
         Host = host;
         SSO = new SingleSignOn(Host);
-        ContactList = new ContactService(Host);
+        ContactService = new ContactService(Host);
     }
 
     /// <summary>
@@ -53,11 +53,11 @@ public partial class NotificationServer : Connection
     /// <returns></returns>
     public async Task GetContactList()
     {
-        await ContactList.FindMembership();
-        await ContactList.ABFindAll();
+        await ContactService.FindMembership();
+        await ContactService.ABFindAll();
 
         await SendBLP();
-        await SendInitialADL(ContactList.InitialListPayload());
+        await SendInitialADL(ContactService.InitialListPayload());
         await SendPRP();
     }
 
@@ -127,7 +127,7 @@ public partial class NotificationServer : Connection
         string USR = string.Empty;
 
         // Send USR I
-        var message = $"USR {TransactionID} SSO I {ContactList.Profile.Email}\r\n";
+        var message = $"USR {TransactionID} SSO I {ContactService.Profile.Email}\r\n";
         await SendAsync(message);
 
         string responses = string.Empty;
@@ -155,7 +155,7 @@ public partial class NotificationServer : Connection
 
         try
         {
-            await SSO.RstRequest(ContactList.Profile.Email, password);
+            await SSO.RstRequest(ContactService.Profile.Email, password);
         }
         catch (NullReferenceException)
         {
@@ -181,7 +181,7 @@ public partial class NotificationServer : Connection
                 && response.Split(" ")[1] == TransactionID.ToString()
                 && response.Contains("OK"))
             {
-                ContactList.TicketToken = SSO.TicketToken;
+                ContactService.TicketToken = SSO.TicketToken;
                 break;
             }
 
@@ -201,7 +201,7 @@ public partial class NotificationServer : Connection
         string USR = string.Empty;
 
         // Send USR I
-        var message = $"USR {TransactionID} SSO I {ContactList.Profile.Email}\r\n";
+        var message = $"USR {TransactionID} SSO I {ContactService.Profile.Email}\r\n";
         await SendAsync(message);
 
         string responses = string.Empty;
@@ -246,7 +246,7 @@ public partial class NotificationServer : Connection
                 && response.Split(" ")[1] == TransactionID.ToString()
                 && response.Contains("OK"))
             {
-                ContactList.TicketToken = SSO.TicketToken;
+                ContactService.TicketToken = SSO.TicketToken;
                 break;
             }
 
@@ -272,7 +272,7 @@ public partial class NotificationServer : Connection
     private async Task SendBLP()
     {
         // Value the server reads
-        string blp = ContactList.Profile.BLP switch
+        string blp = ContactService.Profile.BLP switch
         {
             2 => "BL",
             _ => "AL"
@@ -427,7 +427,7 @@ public partial class NotificationServer : Connection
         TransactionID++;
 
         // Send PRP
-        string message = $"PRP {TransactionID} MFN {Uri.EscapeDataString(ContactList.Profile.DisplayName)}\r\n";
+        string message = $"PRP {TransactionID} MFN {Uri.EscapeDataString(ContactService.Profile.DisplayName)}\r\n";
         await SendAsync(message);
 
         while (true)
@@ -473,7 +473,7 @@ public partial class NotificationServer : Connection
 
             // Make sure response contains a command reply
             if (response.Contains("CHG")
-                && response.Contains(ContactList.Profile.Presence))
+                && response.Contains(ContactService.Profile.Presence))
             {
                 // Remove other data before reply
                 string chgResponse = response[response.IndexOf("CHG")..];
@@ -511,7 +511,7 @@ public partial class NotificationServer : Connection
     /// <exception cref="PayloadException">Thrown if payload exceeds max size.</exception>
     public async Task SendUUX()
     {
-        string payload = ContactList.UUXPayload();
+        string payload = ContactService.UUXPayload();
         int length = Encoding.UTF8.GetByteCount(payload);
 
         if (length > 1160)
@@ -580,7 +580,7 @@ public partial class NotificationServer : Connection
         {
             Host = host,
             Port = Convert.ToInt32(port),
-            Profile = ContactList.Profile,
+            Profile = ContactService.Profile,
             Contact = contact
         };
 
@@ -599,7 +599,7 @@ public partial class NotificationServer : Connection
     /// <returns>New switchboard session.</returns>
     public async Task<Switchboard> SendXFR(string contactEmail)
     {
-        Contact? contact = ContactList.Contacts.LastOrDefault(ct => ct.Email == contactEmail);
+        Contact? contact = ContactService.Contacts.LastOrDefault(ct => ct.Email == contactEmail);
 
         if (contact != null)
             return await SendXFR(contact);
@@ -612,17 +612,17 @@ public partial class NotificationServer : Connection
     /// </summary>
     public void CreateMSNObject()
     {
-        if (ContactList.Profile.DisplayPicture == null)
+        if (ContactService.Profile.DisplayPicture == null)
             return;
 
         msnobj displayPicture = new msnobj()
         {
-            Creator = ContactList.Profile.Email,
-            Size = (ushort)ContactList.Profile.DisplayPicture.Length,
+            Creator = ContactService.Profile.Email,
+            Size = (ushort)ContactService.Profile.DisplayPicture.Length,
             Type = 3,
             Location = 0,
             Friendly = "AAA",
-            SHA1D = Convert.ToBase64String(SHA1.HashData(ContactList.Profile.DisplayPicture))
+            SHA1D = Convert.ToBase64String(SHA1.HashData(ContactService.Profile.DisplayPicture))
         };
 
         var settings = new XmlWriterSettings()
@@ -639,7 +639,7 @@ public partial class NotificationServer : Connection
 
         // Serialize with options
         msnobjectSerializer.Serialize(writer, displayPicture, namespaces);
-        ContactList.Profile.DisplayPictureObject = stream.ToString();
+        ContactService.Profile.DisplayPictureObject = stream.ToString();
     }
 
     /// <summary>

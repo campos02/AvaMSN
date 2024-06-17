@@ -28,18 +28,16 @@ public class NotificationManager : ReactiveObject
     public event EventHandler? ApplicationExit;
 
     private CancellationTokenSource? delaySource;
-
-    private readonly int AudioStream;
+    private readonly int audioStream;
 
     public NotificationManager()
     {
         if (Bass.Init())
         {
-            using MemoryStream audioStream = new();
-            AssetLoader.Open(new Uri("avares://AvaMSN/Assets/type.wav")).CopyTo(audioStream);
-            byte[] audio = audioStream.ToArray();
-
-            AudioStream = Bass.CreateStream(audio, 0, audio.LongLength, BassFlags.Default);
+            using MemoryStream stream = new();
+            AssetLoader.Open(new Uri("avares://AvaMSN/Assets/type.wav")).CopyTo(stream);
+            byte[] audio = stream.ToArray();
+            audioStream = Bass.CreateStream(audio, 0, audio.LongLength, BassFlags.Default);
         }
     }
 
@@ -89,7 +87,7 @@ public class NotificationManager : ReactiveObject
     /// </summary>
     public void PlaySound()
     {
-        Bass.ChannelPlay(AudioStream);
+        Bass.ChannelPlay(audioStream);
     }
 
     /// <summary>
@@ -97,7 +95,7 @@ public class NotificationManager : ReactiveObject
     /// </summary>
     public void FreeStream()
     {
-        Bass.StreamFree(AudioStream);
+        Bass.StreamFree(audioStream);
         Bass.Free();
     }
 
