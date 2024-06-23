@@ -30,14 +30,14 @@ public class MainWindowViewModel : ViewModelBase
         loginPage.LoggedIn += LoginPage_LoggedIn;
         contactListPage.Disconnected += ContactListPage_Disconnected;
 
-        if (NotificationManager != null)
-            NotificationManager.NewNotification += NotificationManager_Notification;
+        if (NotificationHandler != null)
+            NotificationHandler.NewNotification += NotificationHandler_Notification;
     }
 
     /// <summary>
     /// Shows notification on screen for the amount of time determined by the event.
     /// </summary>
-    private async void NotificationManager_Notification(object? sender, NotificationEventArgs e)
+    private async void NotificationHandler_Notification(object? sender, NotificationEventArgs e)
     {
         NotificationPage = new NotificationViewModel()
         {
@@ -66,7 +66,7 @@ public class MainWindowViewModel : ViewModelBase
     private void NotificationPage_ReplyTapped(object? sender, EventArgs e)
     {
         if (sender is NotificationViewModel notification)
-            NotificationManager?.InvokeReplyTapped(notification.Sender);
+            NotificationHandler?.InvokeReplyTapped(notification.Sender);
 
         CloseNotification();
     }

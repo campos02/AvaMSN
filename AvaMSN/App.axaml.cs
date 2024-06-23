@@ -33,8 +33,8 @@ public class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         RxApp.DefaultExceptionHandler = handler;
-        ViewModelBase.NotificationManager = handler.NotificationManager;
-        Conversation.NotificationManager = handler.NotificationManager;
+        ViewModelBase.NotificationHandler = handler.NotificationHandler;
+        Conversation.NotificationHandler = handler.NotificationHandler;
         SettingsManager.ReadFile();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -90,6 +90,14 @@ public class App : Application
 
         //TODO Any better way of doing this?
         NotificationManager?.Initialize().GetAwaiter().GetResult();
+        
+        if (NotificationManager != null)
+            NotificationManager.NotificationActivated += NotificationManager_NotificationActivated;
+    }
+
+    private static void NotificationManager_NotificationActivated(object? sender, NotificationActivatedEventArgs e)
+    {
+        ApplicationViewModel.OpenWindows();
     }
 
     private void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
@@ -112,8 +120,8 @@ public class App : Application
 
     private void Desktop_Exit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
-        handler.NotificationManager.FreeStream();
-        handler.NotificationManager.InvokeExit();
+        handler.NotificationHandler.FreeStream();
+        handler.NotificationHandler.InvokeExit();
         NotificationManager?.Dispose();
     }
 }

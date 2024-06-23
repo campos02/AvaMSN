@@ -7,21 +7,14 @@ namespace AvaMSN.ViewModels;
 
 public class ApplicationViewModel : ViewModelBase
 {
-    public ReactiveCommand<Unit, Unit> OpenCommand { get; }
-    public ReactiveCommand<Unit, Unit> MinimizeCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExitCommand { get; }
-
-    public ApplicationViewModel()
-    {
-        OpenCommand = ReactiveCommand.Create(Open);
-        MinimizeCommand = ReactiveCommand.Create(MinimizeToTray);
-        ExitCommand = ReactiveCommand.Create(Exit);
-    }
+    public ReactiveCommand<Unit, Unit> OpenCommand { get; } = ReactiveCommand.Create(OpenWindows);
+    public ReactiveCommand<Unit, Unit> MinimizeCommand { get; } = ReactiveCommand.Create(MinimizeToTray);
+    public ReactiveCommand<Unit, Unit> ExitCommand { get; } = ReactiveCommand.Create(Exit);
 
     /// <summary>
     /// Opens all windows and brings them to focus.
     /// </summary>
-    public void Open()
+    public static void OpenWindows()
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -36,7 +29,7 @@ public class ApplicationViewModel : ViewModelBase
     /// <summary>
     /// Hides all windows.
     /// </summary>
-    public void MinimizeToTray()
+    public static void MinimizeToTray()
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -47,11 +40,9 @@ public class ApplicationViewModel : ViewModelBase
         }
     }
 
-    public void Exit()
+    public static void Exit()
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
             desktop.Shutdown();
-        }
     }
 }

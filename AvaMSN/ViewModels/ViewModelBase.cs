@@ -6,6 +6,6 @@ namespace AvaMSN.ViewModels;
 
 public class ViewModelBase : ReactiveObject
 {
-    public static NotificationManager? NotificationManager { get; set; }
+    public static NotificationHandler? NotificationHandler { get; set; }
     protected static SettingsWindow? SettingsWindow { get; set; }
 }

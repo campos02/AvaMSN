@@ -251,7 +251,7 @@
       </TransitioningContentControl.PageTransition>
     </TransitioningContentControl>
 
-    <TransitioningContentControl Content="{Binding NotificationManager.ErrorPage}"
+    <TransitioningContentControl Content="{Binding NotificationHandler.ErrorPage}"
                                  VerticalAlignment="Bottom"
                                  HorizontalAlignment="Center"
                                  Grid.ColumnSpan="3"

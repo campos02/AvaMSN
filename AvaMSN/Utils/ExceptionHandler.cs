@@ -8,7 +8,7 @@ namespace AvaMSN.Utils;
 /// </summary>
 public class ExceptionHandler : IObserver<Exception>
 {
-    public NotificationManager NotificationManager { get; set; } = new NotificationManager();
+    public NotificationHandler NotificationHandler { get; } = new NotificationHandler();
 
     public void OnCompleted()
     {
@@ -18,18 +18,18 @@ public class ExceptionHandler : IObserver<Exception>
     public void OnError(Exception error)
     {
 #if DEBUG
-        NotificationManager.ShowError(error.ToString());
+        NotificationHandler.ShowError(error.ToString());
 #else
-        NotificationManager.ShowError(error.Message);
+        NotificationHandler.ShowError(error.Message);
 #endif
     }
 
     public void OnNext(Exception exception)
     {
 #if DEBUG
-        NotificationManager.ShowError(exception.ToString());
+        NotificationHandler.ShowError(exception.ToString());
 #else
-        NotificationManager.ShowError(exception.Message);
+        NotificationHandler.ShowError(exception.Message);
 #endif
     }
 }

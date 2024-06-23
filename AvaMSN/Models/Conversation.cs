@@ -48,7 +48,7 @@ public class Conversation : ReactiveObject
 
     public Switchboard? Switchboard { get; set; }
     public NotificationServer? NotificationServer { get; set; }
-    public static NotificationManager? NotificationManager { get; set; }
+    public static NotificationHandler? NotificationHandler { get; set; }
 
     public event EventHandler? DisplayPictureUpdated;
 
@@ -370,9 +370,10 @@ public class Conversation : ReactiveObject
         if (Profile.Presence != PresenceStatus.GetFullName(PresenceStatus.Busy))
         {
             if (conversationWindow == null || !conversationWindow.IsActive)
-                NotificationManager?.PlaySound();
+                NotificationHandler?.PlaySound();
 
-            NotificationManager?.ShowNotification(Contact, message);
+            if (NotificationHandler != null)
+                await NotificationHandler.ShowNotification(Contact, message);
         }
     }
 

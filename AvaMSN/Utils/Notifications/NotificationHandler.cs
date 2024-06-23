@@ -15,7 +15,7 @@ namespace AvaMSN.Utils.Notifications;
 /// <summary>
 /// Contains functions to show notifications and display errors.
 /// </summary>
-public class NotificationManager : ReactiveObject
+public class NotificationHandler : ReactiveObject
 {
     private ErrorViewModel? errorPage;
 
@@ -32,7 +32,7 @@ public class NotificationManager : ReactiveObject
     private CancellationTokenSource delaySource = new CancellationTokenSource();
     private readonly int audioStream;
 
-    public NotificationManager()
+    public NotificationHandler()
     {
         if (Bass.Init())
         {

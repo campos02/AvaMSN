@@ -99,10 +99,10 @@ public class ContactListViewModel : ViewModelBase
 
         SignOutCommand = ReactiveCommand.CreateFromTask(SignOut);
 
-        if (NotificationManager != null)
+        if (NotificationHandler != null)
         {
-            NotificationManager.ReplyTapped += NotificationManager_ReplyTapped;
-            NotificationManager.ApplicationExit += NotificationManager_ApplicationExit;
+            NotificationHandler.ReplyTapped += NotificationHandler_ReplyTapped;
+            NotificationHandler.ApplicationExit += NotificationHandler_ApplicationExit;
         }
     }
 
@@ -375,12 +375,12 @@ public class ContactListViewModel : ViewModelBase
         NotificationServer.SwitchboardChanged -= NotificationServer_SwitchboardChanged;
     }
 
-    private async void NotificationManager_ApplicationExit(object? sender, EventArgs e)
+    private async void NotificationHandler_ApplicationExit(object? sender, EventArgs e)
     {
         await SignOut();
     }
 
-    private async void NotificationManager_ReplyTapped(object? sender, ContactEventArgs e)
+    private async void NotificationHandler_ReplyTapped(object? sender, ContactEventArgs e)
     {
         SelectedContact = e.Contact;
         await Chat();
@@ -446,7 +446,7 @@ public class ContactListViewModel : ViewModelBase
         Disconnected?.Invoke(this, EventArgs.Empty);
 
         if (!e.Requested)
-            NotificationManager?.ShowError("Lost connection to the server");
+            NotificationHandler?.ShowError("Lost connection to the server");
     }
 
     /// <summary>
