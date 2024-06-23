@@ -1,4 +1,4 @@
-﻿using AvaMSN.Utils;
+﻿using AvaMSN.Utils.Notifications;
 using AvaMSN.Views;
 using ReactiveUI;
 

@@ -43,6 +43,7 @@ public class DecoratedTextPresenter : TextPresenter
 
     /// <summary>
     /// Creates the <see cref="TextLayout"/> used to render the text.
+    /// Modified from the original to work with text decorations.
     /// </summary>
     /// <param name="constraint">The constraint of the text.</param>
     /// <param name="text">The text to format.</param>

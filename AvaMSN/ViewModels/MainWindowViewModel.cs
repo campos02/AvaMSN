@@ -31,7 +31,7 @@ public class MainWindowViewModel : ViewModelBase
         contactListPage.Disconnected += ContactListPage_Disconnected;
 
         if (NotificationManager != null)
-            NotificationManager.Notification += NotificationManager_Notification;
+            NotificationManager.NewNotification += NotificationManager_Notification;
     }
 
     /// <summary>

@@ -10,6 +10,7 @@ using AvaMSN.MSNP.Exceptions;
 using AvaMSN.MSNP.Messages;
 using AvaMSN.MSNP.Utils;
 using AvaMSN.Utils;
+using AvaMSN.Utils.Notifications;
 using AvaMSN.ViewModels;
 using AvaMSN.Views;
 using ReactiveUI;
@@ -371,7 +372,7 @@ public class Conversation : ReactiveObject
             if (conversationWindow == null || !conversationWindow.IsActive)
                 NotificationManager?.PlaySound();
 
-            NotificationManager?.InvokeNotification(Contact, message);
+            NotificationManager?.ShowNotification(Contact, message);
         }
     }
 

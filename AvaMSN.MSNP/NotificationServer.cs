@@ -55,7 +55,6 @@ public partial class NotificationServer : Connection
     {
         await ContactService.FindMembership();
         await ContactService.ABFindAll();
-
         await SendBLP();
         await SendInitialADL(ContactService.InitialListPayload());
         await SendPRP();
@@ -101,7 +100,7 @@ public partial class NotificationServer : Connection
         while (true)
         {
             // Send CVR
-            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.10.1 msmsgs\r\n";
+            var message = $"CVR {TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.11 msmsgs\r\n";
             await SendAsync(message);
 
             // Receive CVR

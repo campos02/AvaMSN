@@ -116,7 +116,7 @@ public class ConversationWindowViewModel : ViewModelBase
         DeleteHistoryCommand = ReactiveCommand.Create(DeleteHistory);
 
         if (NotificationManager != null)
-            NotificationManager.Notification += NotificationManager_Notification;
+            NotificationManager.NewNotification += NotificationManager_Notification;
     }
 
     /// <summary>

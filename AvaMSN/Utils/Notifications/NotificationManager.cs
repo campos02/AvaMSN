@@ -7,8 +7,10 @@ using AvaMSN.Models;
 using AvaMSN.ViewModels;
 using ManagedBass;
 using ReactiveUI;
+using DesktopNotifications;
+using NotificationEventArgs = AvaMSN.Models.NotificationEventArgs;
 
-namespace AvaMSN.Utils;
+namespace AvaMSN.Utils.Notifications;
 
 /// <summary>
 /// Contains functions to show notifications and display errors.
@@ -24,10 +26,10 @@ public class NotificationManager : ReactiveObject
     }
 
     public event EventHandler<ContactEventArgs>? ReplyTapped;
-    public event EventHandler<NotificationEventArgs>? Notification;
+    public event EventHandler<NotificationEventArgs>? NewNotification;
     public event EventHandler? ApplicationExit;
 
-    private CancellationTokenSource? delaySource;
+    private CancellationTokenSource delaySource = new CancellationTokenSource();
     private readonly int audioStream;
 
     public NotificationManager()
@@ -47,17 +49,31 @@ public class NotificationManager : ReactiveObject
     /// <param name="contact">Message sender.</param>
     /// <param name="message">The message itself.</param>
     /// <returns></returns>
-    public void InvokeNotification(Contact? contact, Message? message)
+    public async Task ShowNotification(Contact contact, Message message)
     {
-        delaySource?.Cancel();
+        await delaySource.CancelAsync();
         delaySource = new CancellationTokenSource();
 
-        Notification?.Invoke(this, new NotificationEventArgs
+        NewNotification?.Invoke(this, new NotificationEventArgs
         {
             Contact = contact,
             Message = message,
             DelayTask = Task.Delay(5000, delaySource.Token)
         });
+        
+        if (OperatingSystem.IsMacOSVersionAtLeast(10, 14))
+            MacOsNotifications.showNotification($"{contact.DisplayName} says:", message.Text);
+        else
+        {
+            var notification = new Notification
+            {
+                Title = $"{contact.DisplayName} says:",
+                Body = message.Text
+            };
+            
+            if (App.NotificationManager != null)
+                await App.NotificationManager.ShowNotification(notification);
+        }
     }
 
     /// <summary>
