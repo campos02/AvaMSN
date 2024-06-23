@@ -37,7 +37,7 @@ public class NotificationManager : ReactiveObject
         if (Bass.Init())
         {
             using MemoryStream stream = new();
-            AssetLoader.Open(new Uri("avares://AvaMSN/Assets/type.wav")).CopyTo(stream);
+            AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/type.wav")).CopyTo(stream);
             byte[] audio = stream.ToArray();
             audioStream = Bass.CreateStream(audio, 0, audio.LongLength, BassFlags.Default);
         }

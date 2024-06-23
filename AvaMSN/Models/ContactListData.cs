@@ -195,7 +195,7 @@ public class ContactListData
 
                 // Remove display picture if the contact doesn't have it anymore
                 if (!e.HasDisplayPicture)
-                    contact.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
+                    contact.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
             }
         }
     }

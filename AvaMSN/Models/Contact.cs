@@ -74,6 +74,6 @@ public class Contact : ReactiveObject
 
     public Contact()
     {
-        displayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
+        displayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
     }
 }

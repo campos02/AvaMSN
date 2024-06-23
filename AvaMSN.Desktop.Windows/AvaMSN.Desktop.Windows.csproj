@@ -10,6 +10,7 @@
     <ApplicationIcon>avalonia-logo.ico</ApplicationIcon>
     <Company>campos</Company>
     <Product>AvaMSN</Product>
+    <AssemblyName>AvaMSN.Windows</AssemblyName>
   </PropertyGroup>
   
   <ItemGroup>

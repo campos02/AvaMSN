@@ -23,7 +23,7 @@
         <ResourceDictionary.MergedDictionaries>
           <ResourceInclude Source="/Controls/DecoratedTextBox.axaml"/>
         </ResourceDictionary.MergedDictionaries>
-        <FontFamily x:Key="NotoSansFont">avares://AvaMSN/Assets/Fonts#Noto Sans</FontFamily>
+        <FontFamily x:Key="NotoSansFont">avares://AvaMSN.Shared/Assets/Fonts#Noto Sans</FontFamily>
       </ResourceDictionary>
     </Application.Resources>
 

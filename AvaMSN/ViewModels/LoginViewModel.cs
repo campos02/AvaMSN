@@ -80,7 +80,7 @@ public class LoginViewModel : ViewModelBase
 
         SelectedStatus = Statuses[0];
 
-        Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
+        Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
         GetUsers();
     }
 
@@ -123,7 +123,7 @@ public class LoginViewModel : ViewModelBase
                 RememberMe = false;
                 RememberPassword = false;
 
-                Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
+                Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
                 return;
 
             case "Options":
@@ -169,7 +169,7 @@ public class LoginViewModel : ViewModelBase
         }
         else
         {
-            Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
+            Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
         }
     }
 
@@ -397,7 +397,7 @@ public class LoginViewModel : ViewModelBase
 
         Users?.Remove(user);
         Database?.DeleteUser(user);
-        Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN/Assets/default-display-picture.png")));
+        Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
     }
 
     /// <summary>
