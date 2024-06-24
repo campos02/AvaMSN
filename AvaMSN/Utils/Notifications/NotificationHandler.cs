@@ -71,8 +71,7 @@ public class NotificationHandler : ReactiveObject
                 Body = message.Text
             };
             
-            if (App.NotificationManager != null)
-                await App.NotificationManager.ShowNotification(notification);
+            _ = App.NotificationManager?.ShowNotification(notification);
         }
     }
 

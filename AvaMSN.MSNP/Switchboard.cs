@@ -90,12 +90,23 @@ public partial class Switchboard : Connection
             // Receive ANS
             string response = await ReceiveStringAsync();
 
-            // Break if response is an ANS reply and authentication was successful
-            if (response.StartsWith("ANS")
-                && response.Split(" ")[1] == TransactionID.ToString()
+            // Make sure response contains a command reply
+            if (response.Contains("ANS")
                 && response.Contains("OK"))
             {
-                break;
+                // Remove other data before reply
+                string ansResponse = response[response.IndexOf("ANS")..];
+
+                // Remove and handle other responses if they were also received
+                string[] responses = ansResponse.Split("\r\n");
+                string command = response.Replace(responses[0] + "\r\n", "");
+
+                if (command != "")
+                    await HandleIncoming(command);
+
+                // Break if response is a command reply
+                if (ansResponse.Split(" ")[1] == TransactionID.ToString())
+                    break;
             }
 
             else if (response.Contains("911"))

@@ -12,6 +12,15 @@ public partial class Switchboard : Connection
     public event EventHandler<DisplayPictureEventArgs>? DisplayPictureUpdated;
 
     /// <summary>
+    /// Overload that takes a string response and converts to a byte array.
+    /// </summary>
+    /// <param name="response">Incoming response.</param>
+    private async Task HandleIncoming(string response)
+    {
+        await HandleIncoming(Encoding.UTF8.GetBytes(response));
+    }
+    
+    /// <summary>
     /// Handles responses that aren't the result of a command.
     /// </summary>
     /// <param name="response">Incoming response.</param>

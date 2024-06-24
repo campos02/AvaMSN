@@ -87,9 +87,8 @@ public class App : Application
             //TODO: OSX once implemented/stable
             NotificationManager = null;
         }
-
-        //TODO Any better way of doing this?
-        NotificationManager?.Initialize().GetAwaiter().GetResult();
+        
+        _ = NotificationManager?.Initialize();
         
         if (NotificationManager != null)
             NotificationManager.NotificationActivated += NotificationManager_NotificationActivated;
