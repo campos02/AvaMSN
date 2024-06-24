@@ -26,9 +26,9 @@ public class Conversation : ReactiveObject
     private ObservableCollection<Message>? messageHistory;
     private ConversationWindow? conversationWindow;
 
-    public Profile Profile { get; private set; }
-    public Contact Contact { get; private set; }
-    private Database? Database { get; set; }
+    public Profile Profile { get; }
+    public Contact Contact { get; }
+    private Database? Database { get; }
 
     public ObservableCollection<Message> Messages { get; set; } = new ObservableCollection<Message>();
     public ObservableCollection<Message>? MessageHistory
@@ -58,18 +58,15 @@ public class Conversation : ReactiveObject
         Profile = profile;
         Database = database;
 
-        if (Database != null)
+        DisplayPicture? displayPicture = Database?.GetContactDisplayPicture(Contact.Email);
+        if (displayPicture != null)
         {
-            DisplayPicture? displayPicture = Database.GetContactDisplayPicture(Contact.Email);
-            if (displayPicture != null)
-            {
-                using MemoryStream pictureStream = new MemoryStream(displayPicture.PictureData);
-                Contact.DisplayPicture = new Bitmap(pictureStream);
-                Contact.DisplayPictureHash = displayPicture.PictureHash;
-            }
+            using MemoryStream pictureStream = new MemoryStream(displayPicture.PictureData);
+            Contact.DisplayPicture = new Bitmap(pictureStream);
+            Contact.DisplayPictureHash = displayPicture.PictureHash;
         }
 
-        // Load only last four messages by default
+        // Load only last four messages, the user needs to click on the menu item to show more
         GetHistory(4);
     }
 
@@ -370,10 +367,13 @@ public class Conversation : ReactiveObject
         if (Profile.Presence != PresenceStatus.GetFullName(PresenceStatus.Busy))
         {
             if (conversationWindow == null || !conversationWindow.IsActive)
+            {
                 NotificationHandler?.PlaySound();
+                NotificationHandler.ShowNativeNotification(message);
+            }
 
             if (NotificationHandler != null)
-                await NotificationHandler.ShowNotification(Contact, message);
+                await NotificationHandler.InvokeNotification(Contact, message);
         }
     }
 

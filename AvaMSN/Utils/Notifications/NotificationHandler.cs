@@ -49,7 +49,7 @@ public class NotificationHandler : ReactiveObject
     /// <param name="contact">Message sender.</param>
     /// <param name="message">The message itself.</param>
     /// <returns></returns>
-    public async Task ShowNotification(Contact contact, Message message)
+    public async Task InvokeNotification(Contact contact, Message message)
     {
         await delaySource.CancelAsync();
         delaySource = new CancellationTokenSource();
@@ -58,16 +58,23 @@ public class NotificationHandler : ReactiveObject
         {
             Contact = contact,
             Message = message,
-            DelayTask = Task.Delay(5000, delaySource.Token)
+            DelayTask = Task.Delay(10000, delaySource.Token)
         });
-        
+    }
+
+    /// <summary>
+    /// Shows a native notification.
+    /// </summary>
+    /// <param name="message">Message to show.</param>
+    public static void ShowNativeNotification(Message message)
+    {
         if (OperatingSystem.IsMacOSVersionAtLeast(10, 14))
-            MacOsNotifications.showNotification($"{contact.DisplayName} says:", message.Text);
+            MacOsNotifications.showNotification($"{message.SenderDisplayName} says:", message.Text);
         else
         {
             var notification = new Notification
             {
-                Title = $"{contact.DisplayName} says:",
+                Title = $"{message.SenderDisplayName} says:",
                 Body = message.Text
             };
             
