@@ -152,7 +152,6 @@ public class Conversation : ReactiveObject
             };
 
             Messages.Add(message);
-            
             if (SettingsManager.Settings.SaveMessagingHistory)
                 Database?.SaveMessage(message);
         }
@@ -208,7 +207,6 @@ public class Conversation : ReactiveObject
             };
 
             Messages.Add(message);
-
             if (SettingsManager.Settings.SaveMessagingHistory)
                 Database?.SaveMessage(message);
         }
@@ -306,7 +304,6 @@ public class Conversation : ReactiveObject
 
         await Disconnect();
         Switchboard = e.Switchboard;
-
         SubscribeToEvents();
     }
 
@@ -333,11 +330,9 @@ public class Conversation : ReactiveObject
         {
             Sender = Contact.Email,
             Recipient = Profile.Email,
-
             Bold = e.Message.Bold,
             Italic = e.Message.Italic,
             Color = e.Message.Color,
-
             Text = e.Message?.Content!,
             DateTime = DateTime.Now,
             IsNudge = e.IsNudge

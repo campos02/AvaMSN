@@ -31,7 +31,6 @@ public partial class NotificationServer : Connection
     private async Task HandleIncoming(string response)
     {
         string command = response.Split(" ")[0];
-
         await (command switch
         {
             "ILN" => HandleILN(response),
@@ -53,8 +52,7 @@ public partial class NotificationServer : Connection
     private async Task HandleILN(string response)
     {
         string[] parameters = response.Split(" ");
-
-        Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == parameters[3]) ?? throw new ContactException("Contact does not exist");
+        Contact contact = ContactService.Contacts.FirstOrDefault(c => c.Email == parameters[3]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = parameters[2];
         contact.DisplayName = Uri.UnescapeDataString(parameters[5]);
         
@@ -81,11 +79,8 @@ public partial class NotificationServer : Connection
             {
                 msnobj? msnobj = (msnobj?)serializer.Deserialize(reader);
                 contact.DisplayPictureHash = msnobj?.SHA1D;
-
                 if (msnobj == null || msnobj.Size <= 0)
-                {
                     hasDisplayPicture = false;
-                }
             }
         }
 
@@ -112,8 +107,7 @@ public partial class NotificationServer : Connection
     private void HandleNLN(string response)
     {
         string[] parameters = response.Split(" ");
-
-        Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == parameters[2]) ?? throw new ContactException("Contact does not exist");
+        Contact contact = ContactService.Contacts.FirstOrDefault(c => c.Email == parameters[2]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = parameters[1];
         contact.DisplayName = Uri.UnescapeDataString(parameters[4]);
 
@@ -121,7 +115,6 @@ public partial class NotificationServer : Connection
         {
             contact.DisplayPictureObject = Uri.UnescapeDataString(parameters[6]);
             contact.DisplayPictureObject = contact.DisplayPictureObject.Replace("\r\n", "");
-
             if (contact.DisplayPictureObject == "0")
                 contact.DisplayPictureObject = null;
         }
@@ -139,11 +132,8 @@ public partial class NotificationServer : Connection
             {
                 msnobj? msnobj = (msnobj?)serializer.Deserialize(reader);
                 contact.DisplayPictureHash = msnobj?.SHA1D;
-
                 if (msnobj == null || msnobj.Size <= 0)
-                {
                     hasDisplayPicture = false;
-                }
             }
         }
 
@@ -163,8 +153,7 @@ public partial class NotificationServer : Connection
     private async void HandleFLN(string response)
     {
         string[] parameters = response.Split(" ");
-
-        Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == parameters[1]) ?? throw new ContactException("Contact does not exist");
+        Contact contact = ContactService.Contacts.FirstOrDefault(c => c.Email == parameters[1]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = PresenceStatus.Offline;
 
         List<Switchboard> switchboards = Switchboards.Where(sb => sb.Contact.Email == contact.Email && sb.Connected).ToList();
@@ -198,13 +187,11 @@ public partial class NotificationServer : Connection
         string payload = Encoding.UTF8.GetString(payloadBytes);
 
         XmlSerializer serializer = new XmlSerializer(typeof(Data));
-
         using (StringReader reader = new StringReader(payload))
         {
             var data = (Data?)serializer.Deserialize(reader);
 
             Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == parameters[1]);
-
             if (contact == null || data == null)
                 throw new ContactException("Contact does not exist");
 
@@ -231,10 +218,8 @@ public partial class NotificationServer : Connection
     private async Task HandleRNG(string response)
     {
         string[] parameters = response.Split(" ");
-
         string host = parameters[2].Split(":")[0];
         string port = parameters[2].Split(":")[1];
-        
         string sessionID = parameters[1];
         string authString = parameters[4];
         string email = parameters[5];

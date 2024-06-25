@@ -47,17 +47,14 @@ public partial class Switchboard : Connection
     {
         ResetTimeout();
         string responseString = Encoding.UTF8.GetString(response);
-
         string[] responses = responseString.Split("\r\n");
         string[] parameters = responses[0].Split(" ");
-
         int length = Convert.ToInt32(parameters[3]);
 
         // Get payload
         byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
         byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
         string payloadString = Encoding.UTF8.GetString(payload);
-
         string[] payloadParameters = payloadString.Split("\r\n");
 
         // Handle "is writing..." notification
@@ -66,7 +63,6 @@ public partial class Switchboard : Connection
             if (payloadParameters[2].Contains("TypingUser"))
             {
                 string user = payloadParameters[2].Split(" ")[1];
-
                 MessageReceived?.Invoke(this, new MessageEventArgs()
                 {
                     Email = user,
@@ -81,18 +77,15 @@ public partial class Switchboard : Connection
             if (payloadParameters[3].Contains("ID:"))
             {
                 string ID = payloadParameters[3].Split(" ")[1];
-
                 if (ID == "1")
                 {
                     MessageReceived?.Invoke(this, new MessageEventArgs()
                     {
                         Email = parameters[1],
-
-                        Message = new Messages.TextPlain()
+                        Message = new TextPlain()
                         {
                             Content = $"{Uri.UnescapeDataString(parameters[2])} just sent you a nudge!"
                         },
-
                         IsNudge = true
                     });
                 }
@@ -108,7 +101,6 @@ public partial class Switchboard : Connection
             };
 
             message.SetFormatting(payloadParameters[2]);
-
             MessageReceived?.Invoke(this, new MessageEventArgs()
             {
                 Email = parameters[1],
@@ -202,19 +194,16 @@ public partial class Switchboard : Connection
                     responses = responses.Skip(1).ToArray();
 
                 string[] parameters = responses[0].Split(" ");
-
                 int length = Convert.ToInt32(parameters[3]);
 
                 byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
                 payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                 payloadString = Encoding.UTF8.GetString(payload);
-
                 string[] payloadParameters = payloadString.Split("\r\n");
 
                 if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                 {
                     messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
-
                     if (messageHeaders.Split("\r\n")[2].Contains(Profile.Email))
                     {
                         break;
@@ -251,19 +240,16 @@ public partial class Switchboard : Connection
                     responses = responses.Skip(1).ToArray();
 
                 string[] parameters = responses[0].Split(" ");
-
                 int length = Convert.ToInt32(parameters[3]);
 
                 byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
                 payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                 payloadString = Encoding.UTF8.GetString(payload);
-
                 string[] payloadParameters = payloadString.Split("\r\n");
 
                 if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                 {
                     messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
-
                     if (messageHeaders.Split("\r\n")[2].Contains(Profile.Email))
                     {
                         break;

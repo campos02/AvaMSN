@@ -145,7 +145,6 @@ public class ContactListData
         foreach (ContactGroup group in ContactGroups)
         {
             contact = group.Contacts.FirstOrDefault(c => c.Email == e.Email);
-
             if (contact != null)
                 break;
         }
@@ -187,7 +186,6 @@ public class ContactListData
         foreach (ContactGroup group in ContactGroups)
         {
             contact = group.Contacts.FirstOrDefault(c => c.Email == e.Email);
-
             if (contact != null)
             {
                 contact.Presence = PresenceStatus.GetFullName(e.Presence);
@@ -206,7 +204,6 @@ public class ContactListData
             return;
 
         Contact? contact;
-
         foreach (ContactGroup group in ContactGroups)
         {
             contact = group.Contacts.FirstOrDefault(c => c.Email == e.Email);

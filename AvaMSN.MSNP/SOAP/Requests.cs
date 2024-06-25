@@ -19,7 +19,6 @@ public static class Requests
     public static async Task<string> MakeRequest(string soapXml, string url, string soapAction)
     {
         using (HttpContent content = new StringContent(soapXml, Encoding.UTF8, "text/xml"))
-
         using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url))
         {
             request.Headers.Add("SOAPAction", soapAction);

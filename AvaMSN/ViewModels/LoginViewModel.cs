@@ -79,7 +79,6 @@ public class LoginViewModel : ViewModelBase
         ChangeUserCommand = ReactiveCommand.Create<string>(ChangeUser);
 
         SelectedStatus = Statuses[0];
-
         Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
         GetUsers();
     }
@@ -132,7 +131,6 @@ public class LoginViewModel : ViewModelBase
         }
 
         User? user = Users?.FirstOrDefault(user => user.UserEmail == option);
-
         if (user == null)
             return;
 
@@ -163,7 +161,6 @@ public class LoginViewModel : ViewModelBase
                 using MemoryStream pictureStream = new MemoryStream(picture.PictureData);
                 Profile.DisplayPicture = new Bitmap(pictureStream);
                 pictureStream.Position = 0;
-
                 Profile.DisplayPictureData = pictureStream.ToArray();
             }
         }
@@ -190,12 +187,10 @@ public class LoginViewModel : ViewModelBase
         NotificationServer.Profile.Email = Email;
         NotificationServer.Profile.PersonalMessage = Profile.PersonalMessage;
         NotificationServer.Profile.DisplayPicture = Profile.DisplayPictureData ?? NotificationServer.Profile.DisplayPicture;
-
         await NotificationServer.SendVersion();
 
         // Use token and binary secret if available
         User user = Users?.LastOrDefault(user => user.UserEmail == Email) ?? new User();
-
         if (user.BinarySecret.Length > 0 & user.TicketToken.Length > 0 & user.Ticket.Length > 0)
         {
             Keys? keys = Database.GetUserKeys(user);
@@ -245,7 +240,6 @@ public class LoginViewModel : ViewModelBase
             {
                 // Create new connection and try to login again with the password
                 await NotificationServer.DisconnectAsync();
-
                 NotificationServer = new NotificationServer(SettingsManager.Settings.Server)
                 {
                     Port = 1863
@@ -255,11 +249,9 @@ public class LoginViewModel : ViewModelBase
                 NotificationServer.Profile.Email = Email;
                 NotificationServer.Profile.PersonalMessage = Profile.PersonalMessage;
                 NotificationServer.Profile.DisplayPicture = Profile.DisplayPictureData ?? NotificationServer.Profile.DisplayPicture;
-
                 await NotificationServer.SendVersion();
 
                 string password = string.Empty;
-
                 using (MemoryStream passwordStream = new MemoryStream(user.Password))
                 {
                     using (Aes aes = Aes.Create())

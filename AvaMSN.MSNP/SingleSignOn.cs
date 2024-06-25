@@ -62,11 +62,9 @@ public class SingleSignOn
         string response = await Requests.MakeRequest(soapXML, RstAddress, "http://www.msn.com/webservices/storage/w10/");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.RstResponse.Envelope));
-        
         using (StringReader reader = new StringReader(response))
         {
             var responseEnvelope = (SOAP.SerializableClasses.RstResponse.Envelope?)responseSerializer.Deserialize(reader);
-
             Ticket = responseEnvelope!.Body.RequestSecurityTokenResponseCollection[1].RequestedSecurityToken.BinarySecurityToken.Value;
             BinarySecret = responseEnvelope.Body.RequestSecurityTokenResponseCollection[1].RequestedProofToken.BinarySecret;
             TicketToken = responseEnvelope.Body.RequestSecurityTokenResponseCollection[2].RequestedSecurityToken.BinarySecurityToken.Value;
@@ -110,7 +108,6 @@ public class SingleSignOn
         byte[] key3 = WsKey(key1, "WS-SecureConversationSESSION KEY ENCRYPTION");
 
         HMACSHA1 hMACSHA1 = new HMACSHA1(key2);
-
         byte[] key2Hash = hMACSHA1.ComputeHash(nonceBytes);
         byte[] eight8Bytes = { 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08 };
         byte[] paddedNonce = nonceBytes.Concat(eight8Bytes).ToArray();
@@ -118,7 +115,6 @@ public class SingleSignOn
 
         TripleDES tripleDES = TripleDES.Create();
         tripleDES.Mode = CipherMode.CBC;
-
         byte[] encryptedData = new byte[72];
         tripleDES.CreateEncryptor(key3, randomBytes).TransformBlock(paddedNonce, 0, paddedNonce.Length, encryptedData, 0);
 
@@ -137,7 +133,6 @@ public class SingleSignOn
         returnStruct = returnStruct.Concat(randomBytes).ToArray();//aIVBytes
         returnStruct = returnStruct.Concat(key2Hash).ToArray();//aHashBytes
         returnStruct = returnStruct.Concat(encryptedData).ToArray();//aCipherBytes
-        
         return Convert.ToBase64String(returnStruct);
     }
 }

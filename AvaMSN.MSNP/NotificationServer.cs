@@ -68,7 +68,6 @@ public partial class NotificationServer : Connection
     private async Task SendVER()
     {
         TransactionID++;
-
         while (true)
         {
             // Send version
@@ -96,7 +95,6 @@ public partial class NotificationServer : Connection
     private async Task SendCVR()
     {
         TransactionID++;
-
         while (true)
         {
             // Send CVR
@@ -130,7 +128,6 @@ public partial class NotificationServer : Connection
         await SendAsync(message);
 
         string responses = string.Empty;
-
         while (true)
         {
             // Receive GCF and USR S
@@ -141,7 +138,6 @@ public partial class NotificationServer : Connection
             if (responses.Contains("USR") && responses.StartsWith("GCF"))
             {
                 USR = HandleGCF(responses);
-
                 if (USR.Split(" ")[1] == TransactionID.ToString())
                     break;
             }
@@ -166,6 +162,7 @@ public partial class NotificationServer : Connection
         string returnValue = SSO.GetReturnValue(nonce);
 
         TransactionID++;
+        
         // Send USR S
         message = $"USR {TransactionID} SSO S {SSO.Ticket} {returnValue}\r\n";
         await SendAsync(message);
@@ -464,7 +461,6 @@ public partial class NotificationServer : Connection
             message += "\r\n";
 
         await SendAsync(message);
-
         while (true)
         {
             // Receive CHG
@@ -551,7 +547,6 @@ public partial class NotificationServer : Connection
         await SendAsync(message);
 
         string response;
-
         while (true)
         {
             // Receive XFR
@@ -569,10 +564,8 @@ public partial class NotificationServer : Connection
         _ = ReceiveIncomingAsync();
 
         string[] parameters = response.Split(" ");
-
         string host = parameters[3].Split(":")[0];
         string port = parameters[3].Split(":")[1];
-
         string authString = parameters[5];
 
         Switchboard switchboard = new Switchboard()
@@ -649,7 +642,6 @@ public partial class NotificationServer : Connection
     public override async Task DisconnectAsync(bool requested = true)
     {
         await base.DisconnectAsync(requested);
-        
         foreach (Switchboard switchboard in Switchboards)
         {
             await switchboard.DisconnectAsync();

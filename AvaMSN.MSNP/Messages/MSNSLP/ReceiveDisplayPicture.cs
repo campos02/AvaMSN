@@ -19,7 +19,6 @@ public class ReceiveDisplayPicture : DisplayPictureSession
         SessionID = (uint)RandomNumberGenerator.GetInt32(10000000);
         Branch = $"{{{Guid.NewGuid().ToString().ToUpper()}}}";
         CallID = $"{{{Guid.NewGuid().ToString().ToUpper()}}}";
-
         string bodyText = "EUF-GUID: {A4268EEC-FEC5-49E5-95C3-F126696BDBF6}\r\n" +
                           $"SessionID: {SessionID}\r\n" +
                           "SChannelState: 0\r\n" +
@@ -27,7 +26,6 @@ public class ReceiveDisplayPicture : DisplayPictureSession
                           $"Context: {Convert.ToBase64String(Encoding.UTF8.GetBytes(MSNObject))}\r\n\r\n";
 
         byte[] body = Encoding.UTF8.GetBytes(bodyText);
-
         string headersText = $"INVITE MSNMSGR:{To} MSNSLP/1.0\r\n" +
                              $"To: <msnmsgr:{To}>\r\n" +
                              $"From: <msnmsgr:{From}>\r\n" +
@@ -75,7 +73,6 @@ public class ReceiveDisplayPicture : DisplayPictureSession
                              "Content-Length: 3\r\n\r\n";
 
         byte[] headers = Encoding.UTF8.GetBytes(headersText);
-
         BinaryHeader binaryHeader = new BinaryHeader()
         {
             Identifier = Identifier - 2,

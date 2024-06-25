@@ -100,18 +100,14 @@ public class ConversationWindowViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit> SendCommand { get; }
     public ReactiveCommand<Unit, Unit> NudgeCommand { get; }
     public ReactiveCommand<Unit, Unit> TypingUserCommand { get; }
-
     public ReactiveCommand<Unit, Unit> CompleteHistoryCommand { get; }
     public ReactiveCommand<Unit, Unit> DeleteHistoryCommand { get; }
-
-    public Database? Database { get; set; }
 
     public ConversationWindowViewModel()
     {
         SendCommand = ReactiveCommand.CreateFromTask(SendMessage);
         NudgeCommand = ReactiveCommand.CreateFromTask(SendNudge);
         TypingUserCommand = ReactiveCommand.CreateFromTask(SendTypingUser);
-
         CompleteHistoryCommand = ReactiveCommand.Create(GetCompleteHistory);
         DeleteHistoryCommand = ReactiveCommand.Create(DeleteHistory);
 
@@ -216,7 +212,6 @@ public class ConversationWindowViewModel : ViewModelBase
     private void SetDecorations()
     {
         string newDecorations = string.Empty;
-        
         if (Underline)
             newDecorations += "Underline";
         if (Strikethrough)

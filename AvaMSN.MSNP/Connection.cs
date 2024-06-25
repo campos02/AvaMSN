@@ -20,7 +20,7 @@ public class Connection
     private CancellationTokenSource receiveSource = new CancellationTokenSource();
 
     /// <summary>
-    /// Resolves host address and stablishes a connection to it.
+    /// Resolves host address and establishes a connection to it.
     /// </summary>
     /// <returns></returns>
     protected virtual async Task Connect()
@@ -81,7 +81,6 @@ public class Connection
 
         var buffer = new byte[1664];
         var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
-
         return Encoding.UTF8.GetString(buffer, 0, received);
     }
 
@@ -97,10 +96,8 @@ public class Connection
 
         var buffer = new byte[1664];
         var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
-
         byte[] response = new byte[received];
         Buffer.BlockCopy(buffer, 0, response, 0, received);
-
         return response;
     }
 
@@ -126,7 +123,6 @@ public class Connection
 
             byte[] response = new byte[received];
             Buffer.BlockCopy(buffer, 0, response, 0, received);
-
             HandleIncoming(response);
         }
     }

@@ -89,7 +89,6 @@ public class App : Application
         }
         
         _ = NotificationManager?.Initialize();
-        
         if (NotificationManager != null)
             NotificationManager.NotificationActivated += NotificationManager_NotificationActivated;
     }

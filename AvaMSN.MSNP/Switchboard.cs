@@ -123,8 +123,8 @@ public partial class Switchboard : Connection
     /// <returns></returns>
     public async Task SendCAL()
     {
-        TransactionID++;
         // Send CAL
+        TransactionID++;
         string message = $"CAL {TransactionID} {Contact.Email}\r\n";
         await SendAsync(message);
     }
@@ -142,7 +142,6 @@ public partial class Switchboard : Connection
 
         ResetTimeout();
         TransactionID++;
-
         string payload = textMessage.CreatePayload();
         int length = Encoding.UTF8.GetByteCount(payload);
 
@@ -154,7 +153,6 @@ public partial class Switchboard : Connection
         {
             // Receive ACK or NAK
             string response = await ReceiveStringAsync();
-
             if (response.StartsWith("ACK")
                 && response.Split(" ")[1].Replace("\r\n", "") == TransactionID.ToString())
             {
@@ -213,7 +211,6 @@ public partial class Switchboard : Connection
         {
             // Receive ACK or NAK
             string response = await ReceiveStringAsync();
-
             if (response.StartsWith("ACK")
                 && response.Split(" ")[1].Replace("\r\n", "") == TransactionID.ToString())
             {
@@ -255,7 +252,6 @@ public partial class Switchboard : Connection
         await SendAsync(message.Concat(messagePayload).ToArray());
 
         byte[] response;
-
         while (true)
         {
             // Receive MSG with acknowledgement
@@ -269,7 +265,6 @@ public partial class Switchboard : Connection
             if (responseString.Contains("MSG"))
             {
                 string[] parameters = responses[0].Split(" ");
-
                 int length = Convert.ToInt32(parameters[3]);
 
                 response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
@@ -278,17 +273,14 @@ public partial class Switchboard : Connection
                 string[] payloadParameters = payloadString.Split("\r\n");
 
                 response = response.Skip(length).ToArray();
-
                 if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                 {
                     string messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
                     string[] payloadHeaderParameters = payloadString.Split("\r\n\r\n")[1].Split("\r\n");
-
                     if (messageHeaders.Split("\r\n")[2].Contains(Profile.Email) && payloadHeaderParameters[0].Contains("200 OK"))
                     {
                         byte[] header = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).Take(BinaryHeader.HeaderSize).ToArray();
                         binaryHeader = new BinaryHeader(header);
-
                         break;
                     }
                 }
@@ -320,7 +312,6 @@ public partial class Switchboard : Connection
             }
 
             string responseString = Encoding.UTF8.GetString(response);
-
             if (responseString.Contains("MSG"))
             {
                 if (!responseString.StartsWith("MSG"))
@@ -332,7 +323,6 @@ public partial class Switchboard : Connection
 
                 string[] responses = responseString.Split("\r\n");
                 string[] parameters = responses[0].Split(" ");
-
                 if (parameters.Length < 4)
                 {
                     response = response.Concat(await ReceiveAsync()).ToArray();
@@ -340,7 +330,6 @@ public partial class Switchboard : Connection
                 }
 
                 int length = Convert.ToInt32(parameters[3]);
-
                 if (length > response.Length - Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length)
                 {
                     response = response.Concat(await ReceiveAsync()).ToArray();
@@ -351,7 +340,6 @@ public partial class Switchboard : Connection
                 byte[] payload = new Span<byte>(response, 0, length).ToArray();
                 string payloadString = Encoding.UTF8.GetString(payload);
                 string[] payloadParameters = payloadString.Split("\r\n");
-
                 response = response.Skip(length).ToArray();
 
                 // Ignore invites other than the current one
@@ -361,13 +349,11 @@ public partial class Switchboard : Connection
                 if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                 {
                     string messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
-
                     if (messageHeaders.Split("\r\n")[2].Contains(Profile.Email))
                     {
                         byte[] binaryPayload = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).ToArray();
                         byte[] header = binaryPayload.Take(BinaryHeader.HeaderSize).ToArray();
                         binaryPayload = binaryPayload.Skip(BinaryHeader.HeaderSize).ToArray();
-
                         binaryHeader = new BinaryHeader(header);
                         binaryPayload = binaryPayload[..^4];
 
@@ -385,7 +371,6 @@ public partial class Switchboard : Connection
                         }
 
                         picture = picture.Concat(binaryPayload).ToArray();
-
                         if (binaryHeader.DataOffset + binaryHeader.Length == binaryHeader.DataSize)
                         {
                             break;
