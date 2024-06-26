@@ -3,6 +3,7 @@ using System.Text;
 using System.Xml.Serialization;
 using AvaMSN.MSNP.SOAP;
 using AvaMSN.MSNP.SOAP.RequestObjects;
+using Serilog;
 
 namespace AvaMSN.MSNP;
 
@@ -15,7 +16,7 @@ public class SingleSignOn
     public string Ticket { get; set; } = string.Empty;
     public string TicketToken { get; set; } = string.Empty;
 
-    public string RstAddress { get; private set; } = string.Empty;
+    public string RstAddress { get; } = string.Empty;
 
     public SingleSignOn(string host) 
     {
@@ -58,6 +59,7 @@ public class SingleSignOn
         using MemoryStream memory = new();
         requestSerializer.Serialize(memory, envelope);
 
+        Log.Information("Making SOAP request {Request} to {Url}", "RST", RstAddress);
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
         string response = await Requests.MakeRequest(soapXML, RstAddress, "http://www.msn.com/webservices/storage/w10/");
 

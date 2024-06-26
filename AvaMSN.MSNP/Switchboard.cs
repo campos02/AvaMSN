@@ -4,6 +4,7 @@ using AvaMSN.MSNP.Messages.MSNSLP;
 using System.Text;
 using System.Timers;
 using AvaMSN.MSNP.Utils;
+using Serilog;
 
 namespace AvaMSN.MSNP;
 
@@ -23,7 +24,6 @@ public partial class Switchboard : Connection
         {
             AutoReset = false
         };
-
         timeout.Elapsed += Timer_Elapsed;
     }
 
@@ -31,6 +31,7 @@ public partial class Switchboard : Connection
     {
         await base.Connect();
         ResetTimeout();
+        Log.Information("Connected to SB {Server} on port {Port}", Host, Port);
     }
 
     /// <summary>
@@ -61,7 +62,7 @@ public partial class Switchboard : Connection
                 break;
             }
 
-            else if (response.Contains("911"))
+            if (response.Contains("911"))
                 throw new AuthException("Authentication failed");
         }
 
@@ -372,9 +373,7 @@ public partial class Switchboard : Connection
 
                         picture = picture.Concat(binaryPayload).ToArray();
                         if (binaryHeader.DataOffset + binaryHeader.Length == binaryHeader.DataSize)
-                        {
                             break;
-                        }
                     }
                     else
                     {
@@ -444,6 +443,7 @@ public partial class Switchboard : Connection
 
     private async void Timer_Elapsed(object? sender, ElapsedEventArgs e)
     {
+        Log.Information("SB {Server} on port {Port} has timed out", Host, Port);
         await DisconnectAsync();
     }
 }

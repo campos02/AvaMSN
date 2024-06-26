@@ -150,7 +150,6 @@ public class Database
     public void DeleteMessages(string contact1, string contact2)
     {
         List<Message> messages = GetMessages(contact1, contact2);
-
         foreach (Message message in messages)
         {
             connection.Delete(message);
@@ -165,7 +164,6 @@ public class Database
     public void SavePersonalMessage(string userEmail, string personalMessage)
     {
         User? user = connection.Table<User>().LastOrDefault(user => user.UserEmail == userEmail);
-
         if (user != null)
         {
             user.PersonalMessage = personalMessage;
@@ -220,7 +218,6 @@ public class Database
     public void DeleteContactDisplayPictures(string contactEmail)
     {
         List<DisplayPicture> pictures = connection.Table<DisplayPicture>().Where(picture => picture.ContactEmail == contactEmail && !picture.IsUserPicture).ToList();
-
         foreach (DisplayPicture picture in pictures)
         {
             DeleteDisplayPicture(picture);
@@ -234,7 +231,6 @@ public class Database
     public void DeleteUserDisplayPictures(string userEmail)
     {
         List<DisplayPicture> pictures = connection.Table<DisplayPicture>().Where(picture => picture.ContactEmail == userEmail && picture.IsUserPicture).ToList();
-
         foreach (DisplayPicture picture in pictures)
         {
             DeleteDisplayPicture(picture);

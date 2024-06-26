@@ -12,6 +12,8 @@ using ReactiveUI;
 using DesktopNotifications;
 using DesktopNotifications.FreeDesktop;
 using DesktopNotifications.Windows;
+using Serilog;
+using System.IO;
 
 namespace AvaMSN;
 
@@ -51,6 +53,12 @@ public class App : Application
             SetupDesktopNotifications();
             if (OperatingSystem.IsMacOSVersionAtLeast(10, 14))
                 MacOsNotifications.requestAuthorization();
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.Conditional(_ => SettingsManager.Settings.SaveConnectionLog,
+                    writeTo => writeTo.File(Path.Combine(SettingsManager.FileDirectory, "connection.log")))
+                .CreateLogger();
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
@@ -82,11 +90,6 @@ public class App : Application
             var context = FreeDesktopApplicationContext.FromCurrentProcess();
             NotificationManager = new FreeDesktopNotificationManager(context);
         }
-        else
-        {
-            //TODO: OSX once implemented/stable
-            NotificationManager = null;
-        }
         
         _ = NotificationManager?.Initialize();
         if (NotificationManager != null)
@@ -109,7 +112,7 @@ public class App : Application
         }
     }
 
-    private void MainWindow_Closed(object? sender, System.EventArgs e)
+    private void MainWindow_Closed(object? sender, EventArgs e)
     {
         if (!SettingsManager.Settings.MinimizeToTray)
             if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -121,5 +124,6 @@ public class App : Application
         handler.NotificationHandler.FreeStream();
         handler.NotificationHandler.InvokeExit();
         NotificationManager?.Dispose();
+        Log.CloseAndFlush();
     }
 }

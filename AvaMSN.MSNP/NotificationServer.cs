@@ -5,6 +5,7 @@ using System.Text;
 using System.Xml.Serialization;
 using System.Xml;
 using AvaMSN.MSNP.Utils;
+using Serilog;
 
 namespace AvaMSN.MSNP;
 
@@ -36,8 +37,14 @@ public partial class NotificationServer : Connection
         ContactService = new ContactService(Host);
     }
 
+    protected override async Task Connect()
+    {
+        await base.Connect();
+        Log.Information("Connected to NS {Server} on port {Port}", Host, Port);
+    }
+
     /// <summary>
-    /// Stablishes a connection, does version negotiation and sends client info.
+    /// Establishes a connection, does version negotiation and sends client info.
     /// </summary>
     /// <returns></returns>
     public async Task SendVersion()
@@ -106,9 +113,7 @@ public partial class NotificationServer : Connection
 
             // Break if response is a command reply
             if (response.StartsWith("CVR") && response.Split(" ")[1] == TransactionID.ToString())
-            {
                 break;
-            }
         }
     }
 
@@ -181,7 +186,7 @@ public partial class NotificationServer : Connection
                 break;
             }
 
-            else if (response.Contains("911"))
+            if (response.Contains("911"))
                 throw new AuthException("Authentication failed. Make sure email and password are correct.");
         }
     }
@@ -211,7 +216,6 @@ public partial class NotificationServer : Connection
             if (responses.Contains("USR") && responses.StartsWith("GCF"))
             {
                 USR = HandleGCF(responses);
-
                 if (USR.Split(" ")[1] == TransactionID.ToString())
                     break;
             }
@@ -246,7 +250,7 @@ public partial class NotificationServer : Connection
                 break;
             }
 
-            else if (response.Contains("911"))
+            if (response.Contains("911"))
                 throw new AuthException("Authentication failed. Make sure email and password are correct.");
         }
     }
@@ -474,7 +478,7 @@ public partial class NotificationServer : Connection
                 string chgResponse = response[response.IndexOf("CHG")..];
 
                 // Remove and handle other responses if they were also received
-                string[] responses = response.Split("\r\n");
+                string[] responses = chgResponse.Split("\r\n");
                 string command = response.Replace(responses[0] + "\r\n", "");
 
                 if (command != "")

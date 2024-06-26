@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using System.IO;
+using ReactiveUI;
 using System.Reactive;
 using System.Threading.Tasks;
 using AvaMSN.Utils;
@@ -9,9 +10,11 @@ public class SettingsWindowViewModel : ViewModelBase
 {
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
 
-    public string Server { get; set; } = string.Empty;
+    public string Server { get; set; }
     public bool SaveMessages { get; set; }
     public bool MinimizeToTray { get; set; }
+    public bool SaveConnectionLog { get; set; }
+    public static string LogPath => $"Log location: {Path.Combine(SettingsManager.FileDirectory, "connection.log")}";
 
     private string resultText = string.Empty;
 
@@ -27,6 +30,7 @@ public class SettingsWindowViewModel : ViewModelBase
         Server = SettingsManager.Settings.Server;
         SaveMessages = SettingsManager.Settings.SaveMessagingHistory;
         MinimizeToTray = SettingsManager.Settings.MinimizeToTray;
+        SaveConnectionLog = SettingsManager.Settings.SaveConnectionLog;
     }
 
     /// <summary>
@@ -39,6 +43,7 @@ public class SettingsWindowViewModel : ViewModelBase
 
         SettingsManager.Settings.SaveMessagingHistory = SaveMessages;
         SettingsManager.Settings.MinimizeToTray = MinimizeToTray;
+        SettingsManager.Settings.SaveConnectionLog = SaveConnectionLog;
         SettingsManager.SaveToFile();
 
         ResultText = "Saved successfully!";

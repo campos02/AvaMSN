@@ -88,7 +88,7 @@ public partial class NotificationServer : Connection
     public async Task RemoveContact(string email)
     {
         // Remove from forward lists
-        Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
+        Contact contact = ContactService.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
         await ContactService.ABContactDelete(contact.Email);
 
         string payload = ContactService.ListPayload(contact, new Lists
@@ -111,7 +111,7 @@ public partial class NotificationServer : Connection
     /// <exception cref="ContactException">Thrown if the provided email is not of any contact.</exception>
     public async Task BlockContact(string email)
     {
-        Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
+        Contact contact = ContactService.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
 
         // Remove from allow lists
         await ContactService.DeleteMember("Allow", contact.Email);
@@ -141,7 +141,7 @@ public partial class NotificationServer : Connection
     /// <exception cref="ContactException">Thrown if the provided email is not of any contact.</exception>
     public async Task UnblockContact(string email)
     {
-        Contact? contact = ContactService.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
+        Contact contact = ContactService.Contacts.FirstOrDefault(c => c.Email == email) ?? throw new ContactException("Contact not in list");
 
         // Remove from block lists
         await ContactService.DeleteMember("Block", contact.Email);

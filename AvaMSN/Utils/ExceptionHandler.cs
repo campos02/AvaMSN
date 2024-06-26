@@ -1,5 +1,6 @@
 ﻿using System;
 using AvaMSN.Utils.Notifications;
+using Serilog;
 
 namespace AvaMSN.Utils;
 
@@ -22,6 +23,7 @@ public class ExceptionHandler : IObserver<Exception>
 #else
         NotificationHandler.ShowError(error.Message);
 #endif
+        Log.Error("Got a {Exception}: {Message}", nameof(error), error.Message);
     }
 
     public void OnNext(Exception exception)
@@ -31,5 +33,6 @@ public class ExceptionHandler : IObserver<Exception>
 #else
         NotificationHandler.ShowError(exception.Message);
 #endif
+        Log.Error("Got a {Exception}: {Message}", nameof(exception), exception.Message);
     }
 }

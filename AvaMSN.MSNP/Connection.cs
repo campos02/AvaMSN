@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text;
 using AvaMSN.MSNP.Utils;
+using Serilog;
 
 namespace AvaMSN.MSNP;
 
@@ -46,6 +47,7 @@ public class Connection
     {
         var messageBytes = Encoding.UTF8.GetBytes(message);
         Client?.Send(messageBytes, SocketFlags.None);
+        Log.Information("Sent: {Message}", message);
     }
 
     /// <summary>
@@ -57,6 +59,7 @@ public class Connection
     {
         var messageBytes = Encoding.UTF8.GetBytes(message);
         await Client!.SendAsync(messageBytes, SocketFlags.None);
+        Log.Information("Sent: {Message}", message);
     }
 
     /// <summary>
@@ -67,30 +70,34 @@ public class Connection
     protected async Task SendAsync(byte[] message)
     {
         await Client!.SendAsync(message, SocketFlags.None);
+        Log.Information("Sent: {Message}", Encoding.UTF8.GetString(message));
     }
 
     /// <summary>
-    /// Waits for a message from the server and returns it as a string.
+    /// Waits for a response from the server and returns it as a string.
     /// </summary>
     /// <returns>Message received in string format.</returns>
     protected async Task<string> ReceiveStringAsync()
     {
-        receiveSource.Cancel();
+        await receiveSource.CancelAsync();
         receiveSource = new CancellationTokenSource();
         receiveSource.CancelAfter(30000);
 
         var buffer = new byte[1664];
         var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
-        return Encoding.UTF8.GetString(buffer, 0, received);
+        string response = Encoding.UTF8.GetString(buffer, 0, received);
+        
+        Log.Information("Received: {Response}", response);
+        return response;
     }
 
     /// <summary>
-    /// Waits for a message from the server and returns it.
+    /// Waits for a response from the server and returns it.
     /// </summary>
     /// <returns>Message received.</returns>
     protected async Task<byte[]> ReceiveAsync()
     {
-        receiveSource.Cancel();
+        await receiveSource.CancelAsync();
         receiveSource = new CancellationTokenSource();
         receiveSource.CancelAfter(30000);
 
@@ -98,16 +105,18 @@ public class Connection
         var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
         byte[] response = new byte[received];
         Buffer.BlockCopy(buffer, 0, response, 0, received);
+        
+        Log.Information("Received: {Response}", Encoding.UTF8.GetString(response));
         return response;
     }
 
     /// <summary>
-    /// Continuously receives and handles incoming messages.
+    /// Continuously receives and handles incoming responses.
     /// </summary>
     /// <returns></returns>
     protected async Task ReceiveIncomingAsync()
     {
-        receiveSource.Cancel();
+        await receiveSource.CancelAsync();
         receiveSource = new CancellationTokenSource();
 
         while (true)
@@ -123,12 +132,14 @@ public class Connection
 
             byte[] response = new byte[received];
             Buffer.BlockCopy(buffer, 0, response, 0, received);
+            
+            Log.Information("Incoming: {Response}", Encoding.UTF8.GetString(response));
             HandleIncoming(response);
         }
     }
 
     /// <summary>
-    /// Virtual function to handle incoming messages that aren't the result of a command.
+    /// Virtual function to handle incoming responses that aren't the result of a command.
     /// </summary>
     /// <param name="response">Message received.</param>
     /// <returns></returns>
@@ -145,22 +156,18 @@ public class Connection
     {
         while (true)
         {
-            // Send ping
             var message = "PNG\r\n";
-            
             try
             {
+                // Send ping
                 await SendAsync(message);
             }
-
             catch (SocketException)
             {
                 // Shutdown socket and invoke event if connection has been lost
                 DisconnectSocket(requested: false);
-
                 break;
             }
-            
             catch (ObjectDisposedException)
             {
                 // Stop if socket has been disposed
@@ -180,6 +187,7 @@ public class Connection
     {
         if (Connected)
         {
+            Log.Information("Sending disconnection command to {Server} on port {Port}", Host, Port);
             await SendAsync("OUT\r\n");
             DisconnectSocket(requested);
         }
@@ -189,7 +197,7 @@ public class Connection
     /// Disconnects the socket and invokes the Disconnected event.
     /// </summary>
     /// <param name="requested">Whether the disconnection was requested by the user.</param>
-    protected void DisconnectSocket(bool requested = true)
+    private void DisconnectSocket(bool requested = true)
     {
         receiveSource.Cancel();
         receiveSource.Dispose();
@@ -202,5 +210,10 @@ public class Connection
         {
             Requested = requested
         });
+        
+        if (!requested)
+            Log.Error("Connection to {Server} on port {Port} has been lost", Host, Port);
+        else
+            Log.Information("Disconnected from {Server} on port {Port}", Host, Port);
     }
 }

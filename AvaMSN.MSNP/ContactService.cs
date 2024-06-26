@@ -6,6 +6,7 @@ using AvaMSN.MSNP.SOAP;
 using AvaMSN.MSNP.SOAP.RequestObjects;
 using AvaMSN.MSNP.Utils;
 using AvaMSN.MSNP.XML.SerializableClasses;
+using Serilog;
 
 namespace AvaMSN.MSNP;
 
@@ -19,10 +20,10 @@ public class ContactService
     /// </summary>
     public string TicketToken { get; set; } = string.Empty;
 
-    public string SharingServiceUrl { get; private set; } = string.Empty;
-    public string ABServiceUrl { get; private set; } = string.Empty;
+    public string SharingServiceUrl { get; }
+    public string ABServiceUrl { get; }
 
-    public List<Contact> Contacts { get; set; } = new List<Contact>();
+    public List<Contact> Contacts { get; } = new List<Contact>();
     public Profile Profile { get; set; } = new Profile();
 
     public ContactService(string host)
@@ -42,10 +43,10 @@ public class ContactService
 
         var envelope = RequestObjects.FindMembership();
         envelope.Header.ABAuthHeader.TicketToken = TicketToken;
-
         using MemoryStream memory = new();
         requestSerializer.Serialize(memory, envelope);
 
+        Log.Information("Making SOAP request {Request} to {Url}", nameof(FindMembership), SharingServiceUrl);
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
         string response = await Requests.MakeRequest(soapXML, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/FindMembership");
 
@@ -55,7 +56,6 @@ public class ContactService
         using (StringReader reader = new StringReader(response))
         {
             var responseEnvelope = (SOAP.SerializableClasses.FindMembershipResponse.Envelope?)responseSerializer.Deserialize(reader);
-
             foreach (var membership in responseEnvelope!.Body.FindMembershipResponse.FindMembershipResult.Services.Service.Memberships)
             {
                 foreach(var member in membership.Members)
@@ -67,19 +67,14 @@ public class ContactService
                     string contactID = member.MembershipId.Replace($"{membership.MemberRole}/", "");
 
                     Contact contact = Contacts.FirstOrDefault(c => c.ContactID == contactID) ?? new Contact();
-
                     contact.InLists.SetMembershipList(membership.MemberRole);
-
                     contact.Email = member.PassportName;
                     contact.ContactID = contactID;
-
                     contact.Type = member.Type;
                     contact.State = member.State;
-
                     contact.MembershipLastChanged = member.LastChanged;
                     contact.JoinedDate = member.JoinedDate;
                     contact.ExpirationDate = member.ExpirationDate;
-
                     contact.IsEmailHidden = member.IsPassportNameHidden;
 
                     // Don't add contacts twice
@@ -104,6 +99,7 @@ public class ContactService
         using MemoryStream memory = new();
         requestSerializer.Serialize(memory, envelope);
 
+        Log.Information("Making SOAP request {Request} to {Url}", nameof(ABFindAll), ABServiceUrl);
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
         string response = await Requests.MakeRequest(soapXML, ABServiceUrl, "http://www.msn.com/webservices/AddressBook/ABFindAll");
 
@@ -113,7 +109,6 @@ public class ContactService
         using (StringReader reader = new StringReader(response))
         {
             var responseEnvelope = (SOAP.SerializableClasses.ABFindAllResponse.Envelope?)responseSerializer.Deserialize(reader);
-
             foreach (var addressBookContact in responseEnvelope!.Body.ABFindAllResponse.ABFindAllResult.contacts)
             {
                 var contactInfo = addressBookContact.contactInfo;
@@ -126,22 +121,16 @@ public class ContactService
                 }
 
                 Contact contact = Contacts.FirstOrDefault(c => c.ContactID == addressBookContact.contactId) ?? new Contact();
-
                 contact.InLists.Forward = true;
-
                 contact.DisplayName = contactInfo.displayName;
                 contact.Email = contactInfo.passportName;
-
                 contact.ContactID = addressBookContact.contactId;
-
                 contact.IsFavorite = contactInfo.isFavorite;
                 contact.HasSpace = contactInfo.hasSpace;
                 contact.IsPrivate = contactInfo.IsPrivate;
                 contact.IsEmailHidden = contactInfo.IsPassportNameHidden;
-
                 contact.Gender = contactInfo.Gender;
                 contact.TimeZone = contactInfo.TimeZone;
-
                 contact.Birthdate = contactInfo.birthdate;
                 contact.ABLastChanged = addressBookContact.lastChange;
                 contact.Type = "Passport";
@@ -172,6 +161,7 @@ public class ContactService
         using MemoryStream memory = new();
         requestSerializer.Serialize(memory, envelope);
 
+        Log.Information("Making SOAP request {Request} to {Url}", nameof(ChangeDisplayName), ABServiceUrl);
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
         string response = await Requests.MakeRequest(soapXML, ABServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
 
@@ -195,17 +185,17 @@ public class ContactService
     public async Task AddMember(string memberRole, string email, string scenario = "BlockUnblock")
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.AddMember.Envelope));
+        
         var envelope = RequestObjects.AddMember();
-
         envelope.Header.ABAuthHeader.TicketToken = TicketToken;
         envelope.Header.ABApplicationHeader.PartnerScenario = scenario;
-
         envelope.Body.AddMember.memberships.Membership.MemberRole = memberRole;
         envelope.Body.AddMember.memberships.Membership.Members.Member.PassportName = email;
 
         using MemoryStream memory = new();
         requestSerializer.Serialize(memory, envelope);
 
+        Log.Information("Making SOAP request {Request} to {Url}", nameof(AddMember), SharingServiceUrl);
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
         string response = await Requests.MakeRequest(soapXML, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/AddMember");
 
@@ -229,17 +219,17 @@ public class ContactService
     public async Task DeleteMember(string memberRole, string email, string scenario = "BlockUnblock")
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.DeleteMember.Envelope));
+        
         var envelope = RequestObjects.DeleteMember();
-
         envelope.Header.ABAuthHeader.TicketToken = TicketToken;
         envelope.Header.ABApplicationHeader.PartnerScenario = scenario;
-
         envelope.Body.DeleteMember.memberships.Membership.MemberRole = memberRole;
         envelope.Body.DeleteMember.memberships.Membership.Members.Member.PassportName = email;
 
         using MemoryStream memory = new();
         requestSerializer.Serialize(memory, envelope);
 
+        Log.Information("Making SOAP request {Request} to {Url}", nameof(DeleteMember), SharingServiceUrl);
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
         string response = await Requests.MakeRequest(soapXML, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/DeleteMember");
 
@@ -261,14 +251,15 @@ public class ContactService
     public async Task ABContactAdd(string email)
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.ABContactAdd.Envelope));
+        
         var envelope = RequestObjects.ABContactAdd();
-
         envelope.Header.ABAuthHeader.TicketToken = TicketToken;
         envelope.Body.ABContactAdd.contacts.Contact.contactInfo.passportName = email;
 
         using MemoryStream memory = new();
         requestSerializer.Serialize(memory, envelope);
 
+        Log.Information("Making SOAP request {Request} to {Url}", nameof(ABContactAdd), ABServiceUrl);
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
         string response = await Requests.MakeRequest(soapXML, ABServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactAdd");
 
@@ -292,13 +283,13 @@ public class ContactService
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.ABContactDelete.Envelope));
 
         var envelope = RequestObjects.ABContactDelete();
-
         envelope.Header.ABAuthHeader.TicketToken = TicketToken;
         envelope.Body.ABContactDelete.contacts.Contact.contactId = contactID;
 
         using MemoryStream memory = new();
         requestSerializer.Serialize(memory, envelope);
 
+        Log.Information("Making SOAP request {Request} to {Url}", nameof(ABContactDelete), ABServiceUrl);
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
         string response = await Requests.MakeRequest(soapXML, ABServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactDelete");
 
@@ -322,20 +313,15 @@ public class ContactService
         Profile.MBEA = Convert.ToInt32(profileInfo.annotations[0].Value);
         Profile.GTC = Convert.ToInt32(profileInfo.annotations[1].Value);
         Profile.BLP = Convert.ToInt32(profileInfo.annotations[2].Value);
-
         Profile.DisplayName = profileInfo.displayName;
         Profile.Email = profileInfo.passportName;
-
         Profile.ContactID = profile.contactId;
-
         Profile.IsFavorite = profileInfo.isFavorite;
         Profile.HasSpace = profileInfo.hasSpace;
         Profile.IsPrivate = profileInfo.IsPrivate;
         Profile.IsEmailHidden = profileInfo.IsPassportNameHidden;
-
         Profile.Gender = profileInfo.Gender;
         Profile.TimeZone = profileInfo.TimeZone;
-
         Profile.Birthdate = profileInfo.birthdate;
         Profile.ABLastChanged = profile.lastChange;
     }

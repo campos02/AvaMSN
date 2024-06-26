@@ -41,16 +41,26 @@
       <StackPanel Grid.Row="4"
                   HorizontalAlignment="Center">
         <CheckBox IsChecked="{Binding SaveMessages}"
-          ToolTip.Tip="Choose whether or not to save your message on this computer"
-          ToolTip.ShowDelay="1000">
+                  ToolTip.Tip="Choose whether or not to save your message on this computer"
+                  ToolTip.ShowDelay="1000">
           Save messaging history
         </CheckBox>
 
         <CheckBox IsChecked="{Binding MinimizeToTray}"
-          ToolTip.Tip="Choose whether to close or minimize to tray when the close button is pressed"
-          ToolTip.ShowDelay="1000">
+                  ToolTip.Tip="Choose whether to close or minimize to tray when the close button is pressed"
+                  ToolTip.ShowDelay="1000">
           Minimize to tray
         </CheckBox>
+        
+        <CheckBox IsChecked="{Binding SaveConnectionLog}"
+                  ToolTip.Tip="Choose whether to save a connection log, which is useful for diagnostic purposes"
+                  ToolTip.ShowDelay="1000">
+          Save a connection log (contains personal information)
+        </CheckBox>
+        
+        <TextBlock Text="{Binding LogPath}"
+                   TextWrapping="Wrap"
+                   Foreground="Gray"/>
       </StackPanel>
       
     </Grid>
