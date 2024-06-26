@@ -45,9 +45,10 @@ public class TextPlain
             Underline = true;
 
         string color = parameters[2].Replace(" CO=", "");
+        
         // Add trailing zeroes back
         while (color.Length < 6)
-            color += "0";
+            color = "0" + color;
 
         // Reverse from BGR to RGB and add hex sign
         Color = $"#{color.Substring(4,2)}{color.Substring(2,2)}{color.Substring(0,2)}";
