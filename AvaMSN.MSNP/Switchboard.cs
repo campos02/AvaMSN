@@ -138,7 +138,7 @@ public partial class Switchboard : Connection
     /// <exception cref="CommandException">Thrown if the message couldn't be sent.</exception>
     public async Task SendTextMessage(TextPlain textMessage)
     {
-        if (string.IsNullOrEmpty(textMessage.Content))
+        if (string.IsNullOrEmpty(textMessage.Text))
             return;
 
         ResetTimeout();

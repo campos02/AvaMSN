@@ -186,7 +186,7 @@ public class ConversationWindowViewModel : ViewModelBase
             Underline = Underline,
             Decorations = Decorations,
             Color = MessageColor,
-            Content = Message
+            Text = Message
         };
 
         Message = string.Empty;

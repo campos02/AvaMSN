@@ -21,9 +21,8 @@ public class TextPlain
 
     public string Color { get; set; } = "0";
     public int PitchFamily { get; set; } = 22;
-
-    // Contains message text
-    public string Content { get ; set; } = string.Empty;
+    
+    public string Text { get ; set; } = string.Empty;
 
     /// <summary>
     /// Parses X-MMS-IM-Format header and sets bold, italic, strikethrough and underline options.
@@ -81,6 +80,6 @@ public class TextPlain
         return $"MIME-Version: {MimeVersion}\r\n" +
                $"Content-Type: {ContentType}; charset={Charset}\r\n" +
                $"X-MMS-IM-Format: FN={Uri.EscapeDataString(FontName)}; EF={effect}; CO={color}; CS=1; PF={PitchFamily}\r\n\r\n" +
-               Content;
+               Text;
     }
 }

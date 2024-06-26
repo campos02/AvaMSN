@@ -68,14 +68,28 @@ public class NotificationHandler : ReactiveObject
     /// <param name="message">Message to show.</param>
     public static void ShowNativeNotification(Message message)
     {
+        string title;
+        string body;
+
+        if (!message.IsNudge)
+        {
+            title = $"{message.SenderDisplayName} says:";
+            body = message.Text;
+        }
+        else
+        {
+            title = message.Text;
+            body = "";
+        }
+        
         if (OperatingSystem.IsMacOSVersionAtLeast(10, 14))
-            MacOsNotifications.showNotification($"{message.SenderDisplayName} says:", message.Text);
+            MacOsNotifications.showNotification(title, body);
         else
         {
             var notification = new Notification
             {
-                Title = $"{message.SenderDisplayName} says:",
-                Body = message.Text
+                Title = title,
+                Body = body
             };
             
             _ = App.NotificationManager?.ShowNotification(notification);

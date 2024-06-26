@@ -52,7 +52,7 @@ public partial class Switchboard : Connection
         int length = Convert.ToInt32(parameters[3]);
 
         // Get payload
-        byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+        byte[] payloadResponse = response.Skip(Encoding.UTF8.GetByteCount(responses[0] + "\r\n")).ToArray();
         byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
         string payloadString = Encoding.UTF8.GetString(payload);
         string[] payloadParameters = payloadString.Split("\r\n");
@@ -84,7 +84,7 @@ public partial class Switchboard : Connection
                         Email = parameters[1],
                         Message = new TextPlain()
                         {
-                            Content = $"{Uri.UnescapeDataString(parameters[2])} just sent you a nudge!"
+                            Text = $"{Uri.UnescapeDataString(parameters[2])} just sent you a nudge!"
                         },
                         IsNudge = true
                     });
@@ -97,7 +97,7 @@ public partial class Switchboard : Connection
         {
             TextPlain message = new TextPlain()
             {
-                Content = payloadParameters[4]
+                Text = payloadString[payloadString.IndexOf(payloadParameters[4])..].Replace("\r\n", "\n")
             };
 
             message.SetFormatting(payloadParameters[2]);
@@ -112,17 +112,11 @@ public partial class Switchboard : Connection
         if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
         {
             if (payloadParameters[4].Contains("INVITE"))
-            {
                 await HandleP2PInvite(payload);
-            }
 
             if (payloadParameters.Length > 5)
-            {
                 if (payloadParameters[5].Contains("INVITE"))
-                {
                     await HandleP2PInvite(payload);
-                }
-            }
         }
     }
 

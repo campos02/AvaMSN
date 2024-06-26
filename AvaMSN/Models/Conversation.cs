@@ -118,7 +118,7 @@ public class Conversation : ReactiveObject
     /// </summary>
     public async Task SendTextMessage(TextPlain textMessage)
     {
-        if (string.IsNullOrEmpty(textMessage.Content))
+        if (string.IsNullOrEmpty(textMessage.Text))
             return;
 
         try
@@ -147,7 +147,7 @@ public class Conversation : ReactiveObject
                 Decorations = textMessage.Decorations,
                 Color = textMessage.Color,
 
-                Text = textMessage.Content,
+                Text = textMessage.Text,
                 DateTime = DateTime.Now
             };
 
@@ -321,7 +321,7 @@ public class Conversation : ReactiveObject
             return;
         }
 
-        if (string.IsNullOrEmpty(e.Message?.Content))
+        if (string.IsNullOrEmpty(e.Message?.Text))
             return;
 
         TypingUser = false;
@@ -333,7 +333,7 @@ public class Conversation : ReactiveObject
             Bold = e.Message.Bold,
             Italic = e.Message.Italic,
             Color = e.Message.Color,
-            Text = e.Message?.Content!,
+            Text = e.Message?.Text!,
             DateTime = DateTime.Now,
             IsNudge = e.IsNudge
         };

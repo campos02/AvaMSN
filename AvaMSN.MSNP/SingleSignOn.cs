@@ -15,8 +15,7 @@ public class SingleSignOn
     public string BinarySecret { get; set; } = string.Empty;
     public string Ticket { get; set; } = string.Empty;
     public string TicketToken { get; set; } = string.Empty;
-
-    public string RstAddress { get; } = string.Empty;
+    private string RstAddress { get; }
 
     public SingleSignOn(string host) 
     {
