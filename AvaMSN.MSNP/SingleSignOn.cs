@@ -88,10 +88,10 @@ public class SingleSignOn
         byte[] hash3 = hMACSHA1.ComputeHash(hash1);
         byte[] hash4 = hMACSHA1.ComputeHash(hash3.Concat(wsSecureBytes).ToArray());
 
-        byte[] hash4Fourbytes = new byte[4];
-        Buffer.BlockCopy(hash4, 0, hash4Fourbytes, 0, hash4Fourbytes.Length);
+        byte[] hash4FourBytes = new byte[4];
+        Buffer.BlockCopy(hash4, 0, hash4FourBytes, 0, hash4FourBytes.Length);
         
-        byte[] returnKey = hash2.Concat(hash4Fourbytes).ToArray();
+        byte[] returnKey = hash2.Concat(hash4FourBytes).ToArray();
         return returnKey;
     }
 

@@ -97,7 +97,9 @@ public partial class Switchboard : Connection
         {
             TextPlain message = new TextPlain()
             {
-                Text = payloadString[payloadString.IndexOf(payloadParameters[4])..].Replace("\r\n", "\n")
+                Text = payloadString[payloadString.IndexOf(payloadParameters[2])..]
+                    .Replace(payloadParameters[2] + "\r\n\r\n", "")
+                    .Replace("\r\n", "\n")
             };
 
             message.SetFormatting(payloadParameters[2]);

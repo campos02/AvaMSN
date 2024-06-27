@@ -10,15 +10,13 @@ public class TextPlain
     public string ContentType { get; set; } = "text/plain";
     public string Charset { get; set; } = "UTF-8";
 
-    // Message formatting
+    // Formatting
     public string FontName { get; set; } = string.Empty;
-    
     public bool Bold { get; set; }
     public bool Italic { get; set; }
     public bool Strikethrough { get; set; }
     public bool Underline { get; set; }
     public string Decorations { get; set; } = string.Empty;
-
     public string Color { get; set; } = "0";
     public int PitchFamily { get; set; } = 22;
     
