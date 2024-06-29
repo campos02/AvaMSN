@@ -13,8 +13,8 @@ namespace AvaMSN.MSNP;
 /// </summary>
 public partial class Switchboard : Connection
 {
-    public Profile Profile { get; set; } = new Profile();
-    public Contact Contact { get; set; } = new Contact();
+    public Profile Profile { get; init; } = new Profile();
+    public Contact Contact { get; init; } = new Contact();
     private readonly System.Timers.Timer timeout;
 
     public Switchboard()

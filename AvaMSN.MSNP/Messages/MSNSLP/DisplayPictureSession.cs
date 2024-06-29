@@ -5,7 +5,7 @@ namespace AvaMSN.MSNP.Messages.MSNSLP;
 /// <summary>
 /// Base class containing session parameters and other common payload functions for a display picture session.
 /// </summary>
-public class DisplayPictureSession
+public abstract class DisplayPictureSession
 {
     // Session parameters
     public string MimeVersion { get; set; } = "1.0";
@@ -21,7 +21,7 @@ public class DisplayPictureSession
     /// <summary>
     /// Last binary header used in a message.
     /// </summary>
-    public BinaryHeader? LastHeader { get; set; }
+    protected BinaryHeader? LastHeader { get; set; }
 
     /// <summary>
     /// Returns the payload for an acknowledgement to the specified binary header.
@@ -40,7 +40,7 @@ public class DisplayPictureSession
             AckDataSize = binaryHeader.DataSize
         };
 
-        byte[] footer = { 00, 00, 00, 00 };
+        byte[] footer = [00, 00, 00, 00];
 
         // Combine to produce full MSNSLP content
         byte[] content = LastHeader.GetBytes().Concat(footer).ToArray();

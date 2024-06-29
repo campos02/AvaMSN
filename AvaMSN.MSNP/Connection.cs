@@ -9,12 +9,12 @@ namespace AvaMSN.MSNP;
 /// <summary>
 /// Base class that represents a connection to a server implementing MSNP.
 /// </summary>
-public class Connection
+public abstract class Connection
 {
-    public Socket? Client { get; private set; }
-    public string Host { get; set; } = string.Empty;
-    public int Port { get; set; } = 1863;
-    public int TransactionID { get; protected set; }
+    private Socket? Client { get; set; }
+    public string Host { get; init; } = string.Empty;
+    public int Port { get; init; } = 1863;
+    protected int TransactionID { get; set; }
     public bool Connected { get; private set; }
 
     public event EventHandler<DisconnectedEventArgs>? Disconnected;
@@ -37,17 +37,6 @@ public class Connection
 
         await Client.ConnectAsync(ipEndPoint);
         Connected = true;
-    }
-
-    /// <summary>
-    /// Sends a text message.
-    /// </summary>
-    /// <param name="message"></param>
-    protected void Send(string message)
-    {
-        var messageBytes = Encoding.UTF8.GetBytes(message);
-        Client?.Send(messageBytes, SocketFlags.None);
-        Log.Information("Sent: {Message}", message);
     }
 
     /// <summary>
@@ -143,10 +132,7 @@ public class Connection
     /// </summary>
     /// <param name="response">Message received.</param>
     /// <returns></returns>
-    protected virtual object HandleIncoming(byte[] response) => response switch
-    {
-        _ => ""
-    };
+    protected abstract object HandleIncoming(byte[] response);
 
     /// <summary>
     /// Pings the server every 30 seconds so connection isn't automatically closed.

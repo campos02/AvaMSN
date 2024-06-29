@@ -68,10 +68,10 @@
                 Grid.Column="2"
                 Height="25"
                 VerticalAlignment="Bottom">
-      <TextBlock Text="{Binding Conversation.Contact.DisplayName}"
+      <SelectableTextBlock Text="{Binding Conversation.Contact.DisplayName}"
                  FontSize="20"
                  FontWeight="ExtraBold"/>
-      <TextBlock Text="{Binding Conversation.Contact.Presence, StringFormat='({0})'}"
+      <SelectableTextBlock Text="{Binding Conversation.Contact.Presence, StringFormat='({0})'}"
                  VerticalAlignment="Bottom"/>
     </StackPanel>
 
@@ -89,12 +89,12 @@
                 <StackPanel Orientation="Horizontal"
                             Spacing="4"
                             IsVisible="{Binding SenderDisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                  <TextBlock Text="{Binding SenderDisplayName}"
+                  <SelectableTextBlock Text="{Binding SenderDisplayName}"
                              Foreground="Gray"/>
-                  <TextBlock Text="{Binding IsHistory, Converter={StaticResource userSaysConverter}}"
+                  <SelectableTextBlock Text="{Binding IsHistory, Converter={StaticResource userSaysConverter}}"
                              Foreground="Gray"/>
                 </StackPanel>
-                <TextBlock Text="{Binding Text}"
+                <SelectableTextBlock Text="{Binding Text}"
                            TextWrapping="Wrap"
                            Foreground="Gray"
                            Grid.Row="2"
@@ -102,7 +102,7 @@
                            FontWeight="{Binding Bold, Converter={StaticResource boldConverter}}"
                            FontStyle="{Binding Italic, Converter={StaticResource italicConverter}}"
                            TextDecorations="{Binding Decorations, Converter={StaticResource decorationsConverter}}"/>
-                <TextBlock Text="{Binding DateTime, StringFormat={}{0:dd MMM yyyy HH:mm}}"
+                <SelectableTextBlock Text="{Binding DateTime, StringFormat={}{0:dd MMM yyyy HH:mm}}"
                            Foreground="Gray"
                            Grid.Row="2"
                            Grid.Column="2"/>
@@ -126,10 +126,10 @@
                             Spacing="4"
                             IsVisible="{Binding SenderDisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                             Grid.Row="1">
-                  <TextBlock Text="{Binding SenderDisplayName}"/>
-                  <TextBlock Text="{Binding IsHistory, Converter={StaticResource userSaysConverter}}"/>
+                  <SelectableTextBlock Text="{Binding SenderDisplayName}"/>
+                  <SelectableTextBlock Text="{Binding IsHistory, Converter={StaticResource userSaysConverter}}"/>
                 </StackPanel>
-                <TextBlock Text="{Binding Text}"
+                <SelectableTextBlock Text="{Binding Text}"
                            TextWrapping="Wrap"
                            Grid.Row="3"
                            Foreground="{Binding Color}"
@@ -137,7 +137,7 @@
                            FontWeight="{Binding Bold, Converter={StaticResource boldConverter}}"
                            FontStyle="{Binding Italic, Converter={StaticResource italicConverter}}"
                            TextDecorations="{Binding Decorations, Converter={StaticResource decorationsConverter}}"/>
-                <TextBlock Text="{Binding DateTime, StringFormat={}{0:dd MMM yyyy HH:mm}}"
+                <SelectableTextBlock Text="{Binding DateTime, StringFormat={}{0:dd MMM yyyy HH:mm}}"
                            Grid.Row="3"
                            Grid.Column="2"/>
               </Grid>
