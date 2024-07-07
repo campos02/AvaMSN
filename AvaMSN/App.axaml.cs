@@ -20,7 +20,7 @@ namespace AvaMSN;
 public class App : Application
 {
     private readonly ExceptionHandler handler = new ExceptionHandler();
-    public static INotificationManager? NotificationManager;
+    public static INotificationManager? NotificationManager { get; private set; }
 
     public App()
     {

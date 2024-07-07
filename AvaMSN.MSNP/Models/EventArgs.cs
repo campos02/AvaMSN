@@ -1,6 +1,6 @@
 ﻿using AvaMSN.MSNP.Messages;
 
-namespace AvaMSN.MSNP.Utils;
+namespace AvaMSN.MSNP.Models;
 
 public class DisconnectedEventArgs : EventArgs
 {
@@ -17,6 +17,7 @@ public class PresenceEventArgs : ContactEventArgs
 {
     public string Presence { get; set; } = string.Empty;
     public bool HasDisplayPicture { get; set; } = true;
+    public string? DisplayPictureHash { get; set; }
 }
 
 public class PersonalMessageEventArgs : ContactEventArgs
@@ -34,7 +35,7 @@ public class MessageEventArgs : ContactEventArgs
 
 public class SwitchboardEventArgs
 {
-    public Switchboard? Switchboard { get; set; }
+    public Switchboard.Switchboard? Switchboard { get; set; }
 }
 
 public class DisplayPictureEventArgs : ContactEventArgs

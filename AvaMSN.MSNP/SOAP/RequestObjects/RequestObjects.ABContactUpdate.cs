@@ -2,7 +2,7 @@
 
 namespace AvaMSN.MSNP.SOAP.RequestObjects;
 
-public static partial class RequestObjects
+internal static partial class RequestObjects
 {
     public static Envelope AbContactUpdate()
     {

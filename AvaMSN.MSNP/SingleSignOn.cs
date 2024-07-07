@@ -12,29 +12,24 @@ namespace AvaMSN.MSNP;
 /// </summary>
 public class SingleSignOn
 {
+    public string Email { get; init; } = string.Empty;
     public string BinarySecret { get; set; } = string.Empty;
     public string Ticket { get; set; } = string.Empty;
     public string TicketToken { get; set; } = string.Empty;
-    private string RstAddress { get; }
-
-    public SingleSignOn(string host) 
-    {
-        RstAddress = $"https://{host}/RST.srf";
-    }
+    public string RstAddress { get; init; } = string.Empty;
 
     /// <summary>
     /// Converts an array of uints into a byte array.
     /// </summary>
     /// <param name="uintArray">Array of uints.</param>
     /// <returns>Converted byte array.</returns>
-    public static byte[] UIntBytes(uint[] uintArray)
+    private static byte[] UIntBytes(uint[] uintArray)
     {
         byte[] bytes = new byte[sizeof(uint) * uintArray.Length];
-        byte[] indexBytes;
 
         for (int i = 0; i < uintArray.Length; i++)
         {
-            indexBytes = BitConverter.GetBytes(uintArray[i]);
+            byte[] indexBytes = BitConverter.GetBytes(uintArray[i]);
             Buffer.BlockCopy(indexBytes, 0, bytes, i * sizeof(uint), sizeof(uint));
         }
 
@@ -63,13 +58,12 @@ public class SingleSignOn
         string response = await Requests.MakeRequest(soapXML, RstAddress, "http://www.msn.com/webservices/storage/w10/");
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.RstResponse.Envelope));
-        using (StringReader reader = new StringReader(response))
-        {
-            var responseEnvelope = (SOAP.SerializableClasses.RstResponse.Envelope?)responseSerializer.Deserialize(reader);
-            Ticket = responseEnvelope!.Body.RequestSecurityTokenResponseCollection[1].RequestedSecurityToken.BinarySecurityToken.Value;
-            BinarySecret = responseEnvelope.Body.RequestSecurityTokenResponseCollection[1].RequestedProofToken.BinarySecret;
-            TicketToken = responseEnvelope.Body.RequestSecurityTokenResponseCollection[2].RequestedSecurityToken.BinarySecurityToken.Value;
-        }
+        using StringReader reader = new StringReader(response);
+        var responseEnvelope = (SOAP.SerializableClasses.RstResponse.Envelope?)responseSerializer.Deserialize(reader);
+        
+        Ticket = responseEnvelope!.Body.RequestSecurityTokenResponseCollection[1].RequestedSecurityToken.BinarySecurityToken.Value;
+        BinarySecret = responseEnvelope.Body.RequestSecurityTokenResponseCollection[1].RequestedProofToken.BinarySecret;
+        TicketToken = responseEnvelope.Body.RequestSecurityTokenResponseCollection[2].RequestedSecurityToken.BinarySecurityToken.Value;
     }
 
     /// <summary>

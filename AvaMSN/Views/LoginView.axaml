@@ -29,7 +29,7 @@
             ClipToBounds="True"
             HorizontalAlignment="Center"
             Grid.ColumnSpan="3">
-      <Image Source="{Binding Profile.DisplayPicture}"
+      <Image Source="{Binding User.DisplayPicture}"
              MaxHeight="110"/>
     </Border>
 
@@ -59,7 +59,7 @@
                   ToolTip.ShowDelay="1000"
                   SelectionChanged="ComboBox_SelectionChanged">
           <ComboBox.DataTemplates>
-            <DataTemplate DataType="models:User">
+            <DataTemplate DataType="models:StoredUser">
               <Button Command="{Binding $parent[ComboBox].((vm:LoginViewModel)DataContext).ChangeUserCommand}"
                       CommandParameter="{Binding UserEmail}"
                       Classes="user-button"

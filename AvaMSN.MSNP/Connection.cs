@@ -1,7 +1,7 @@
 ﻿using System.Net.Sockets;
 using System.Net;
 using System.Text;
-using AvaMSN.MSNP.Utils;
+using AvaMSN.MSNP.Models;
 using Serilog;
 
 namespace AvaMSN.MSNP;
@@ -14,7 +14,7 @@ public abstract class Connection
     private Socket? Client { get; set; }
     public string Host { get; init; } = string.Empty;
     public int Port { get; init; } = 1863;
-    protected int TransactionID { get; set; }
+    internal int TransactionID { get; set; }
     public bool Connected { get; private set; }
 
     public event EventHandler<DisconnectedEventArgs>? Disconnected;
@@ -24,13 +24,13 @@ public abstract class Connection
     /// Resolves host address and establishes a connection to it.
     /// </summary>
     /// <returns></returns>
-    protected virtual async Task Connect()
+    public virtual async Task Connect()
     {
         IPHostEntry ipHostInfo = await Dns.GetHostEntryAsync(Host);
         IPAddress ipAddress = ipHostInfo.AddressList[0];
         IPEndPoint ipEndPoint = new(ipAddress, Port);
 
-        Client = new(
+        Client = new Socket(
             ipEndPoint.AddressFamily,
             SocketType.Stream,
             ProtocolType.Tcp);
@@ -40,40 +40,49 @@ public abstract class Connection
     }
 
     /// <summary>
-    /// Asynchronously sends a text message.
+    /// Asynchronously sends a text command.
     /// </summary>
-    /// <param name="message"></param>
+    /// <param name="command"></param>
     /// <returns></returns>
-    protected async Task SendAsync(string message)
+    internal async Task SendAsync(string command)
     {
-        var messageBytes = Encoding.UTF8.GetBytes(message);
-        await Client!.SendAsync(messageBytes, SocketFlags.None);
-        Log.Information("Sent: {Message}", message);
+        if (Client == null)
+            throw new NullReferenceException("Socket is null");
+        
+        var messageBytes = Encoding.UTF8.GetBytes(command);
+        await Client.SendAsync(messageBytes, SocketFlags.None);
+        Log.Information("Sent: {Message}", command);
     }
 
     /// <summary>
-    /// Asynchronously sends a binary message.
+    /// Asynchronously sends a binary command.
     /// </summary>
-    /// <param name="message"></param>
+    /// <param name="command"></param>
     /// <returns></returns>
-    protected async Task SendAsync(byte[] message)
+    internal async Task SendAsync(byte[] command)
     {
-        await Client!.SendAsync(message, SocketFlags.None);
-        Log.Information("Sent: {Message}", Encoding.UTF8.GetString(message));
+        if (Client == null)
+            throw new NullReferenceException("Socket is null");
+        
+        await Client.SendAsync(command, SocketFlags.None);
+        Log.Information("Sent: {Message}", Encoding.UTF8.GetString(command));
     }
 
     /// <summary>
     /// Waits for a response from the server and returns it as a string.
     /// </summary>
     /// <returns>Message received in string format.</returns>
-    protected async Task<string> ReceiveStringAsync()
+    internal async Task<string> ReceiveStringAsync()
     {
+        if (Client == null)
+            throw new NullReferenceException("Socket is null");
+        
         await receiveSource.CancelAsync();
         receiveSource = new CancellationTokenSource();
         receiveSource.CancelAfter(30000);
 
         var buffer = new byte[1664];
-        var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
+        var received = await Client.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
         string response = Encoding.UTF8.GetString(buffer, 0, received);
         
         Log.Information("Received: {Response}", response);
@@ -84,14 +93,17 @@ public abstract class Connection
     /// Waits for a response from the server and returns it.
     /// </summary>
     /// <returns>Message received.</returns>
-    protected async Task<byte[]> ReceiveAsync()
+    internal async Task<byte[]> ReceiveAsync()
     {
+        if (Client == null)
+            throw new NullReferenceException("Socket is null");
+        
         await receiveSource.CancelAsync();
         receiveSource = new CancellationTokenSource();
         receiveSource.CancelAfter(30000);
 
         var buffer = new byte[1664];
-        var received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
+        var received = await Client.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
         byte[] response = new byte[received];
         Buffer.BlockCopy(buffer, 0, response, 0, received);
         
@@ -103,8 +115,11 @@ public abstract class Connection
     /// Continuously receives and handles incoming responses.
     /// </summary>
     /// <returns></returns>
-    protected async Task ReceiveIncomingAsync()
+    internal async Task ReceiveIncomingAsync()
     {
+        if (Client == null)
+            throw new NullReferenceException("Socket is null");
+        
         await receiveSource.CancelAsync();
         receiveSource = new CancellationTokenSource();
 
@@ -115,7 +130,7 @@ public abstract class Connection
 
             try
             {
-                received = await Client!.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
+                received = await Client.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
             }
             catch (OperationCanceledException) { return; }
 
@@ -123,7 +138,7 @@ public abstract class Connection
             Buffer.BlockCopy(buffer, 0, response, 0, received);
             
             Log.Information("Incoming: {Response}", Encoding.UTF8.GetString(response));
-            HandleIncoming(response);
+            await HandleIncoming(response);
         }
     }
 
@@ -132,13 +147,13 @@ public abstract class Connection
     /// </summary>
     /// <param name="response">Message received.</param>
     /// <returns></returns>
-    protected abstract object HandleIncoming(byte[] response);
+    internal abstract Task HandleIncoming(byte[] response);
 
     /// <summary>
     /// Pings the server every 30 seconds so connection isn't automatically closed.
     /// </summary>
     /// <returns></returns>
-    public async Task Ping()
+    public async Task StartPinging()
     {
         while (true)
         {
@@ -173,7 +188,6 @@ public abstract class Connection
     {
         if (Connected)
         {
-            Log.Information("Sending disconnection command to {Server} on port {Port}", Host, Port);
             await SendAsync("OUT\r\n");
             DisconnectSocket(requested);
         }
@@ -185,14 +199,17 @@ public abstract class Connection
     /// <param name="requested">Whether the disconnection was requested by the user.</param>
     private void DisconnectSocket(bool requested = true)
     {
+        if (Client == null)
+            throw new NullReferenceException("Socket is null");
+        
         receiveSource.Cancel();
         receiveSource.Dispose();
 
-        Client?.Shutdown(SocketShutdown.Both);
-        Client?.Dispose();
+        Client.Shutdown(SocketShutdown.Both);
+        Client.Dispose();
         Connected = false;
 
-        Disconnected?.Invoke(this, new DisconnectedEventArgs()
+        Disconnected?.Invoke(this, new DisconnectedEventArgs
         {
             Requested = requested
         });

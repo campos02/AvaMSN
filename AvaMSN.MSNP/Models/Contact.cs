@@ -1,4 +1,4 @@
-﻿namespace AvaMSN.MSNP.Utils;
+﻿namespace AvaMSN.MSNP.Models;
 
 /// <summary>
 /// Represents a contact.

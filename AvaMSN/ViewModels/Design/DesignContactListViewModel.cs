@@ -1,6 +1,6 @@
 ﻿using AvaMSN.Models;
 using System.Collections.ObjectModel;
-using AvaMSN.MSNP.Utils;
+using AvaMSN.MSNP.Models;
 using Contact = AvaMSN.Models.Contact;
 
 namespace AvaMSN.ViewModels.Design;
@@ -11,7 +11,7 @@ public class DesignContactListViewModel : ContactListViewModel
     {
         ListData = new ContactListData()
         {
-            Profile = new Models.Profile()
+            User = new Models.User()
             {
                 DisplayName = "Testing",
                 Presence = PresenceStatus.GetFullName(PresenceStatus.Online)
@@ -19,7 +19,7 @@ public class DesignContactListViewModel : ContactListViewModel
 
             ContactGroups = new ObservableCollection<ContactGroup>()
             {
-                new ContactGroup("Online", new ObservableCollection<Contact>()
+                new ContactGroup("Online", new ObservableCollection<Contact?>()
                 {
                     new Contact()
                     {
@@ -29,7 +29,7 @@ public class DesignContactListViewModel : ContactListViewModel
                     }
                 }),
 
-                new ContactGroup("Offline", new ObservableCollection<Contact>()
+                new ContactGroup("Offline", new ObservableCollection<Contact?>()
                 {
                     new Contact()
                     {

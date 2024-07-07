@@ -4,8 +4,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using AvaMSN.MSNP;
-using AvaMSN.MSNP.Utils;
+using AvaMSN.MSNP.Models;
+using AvaMSN.MSNP.NotificationServer.Contacts;
+using AvaMSN.MSNP.NotificationServer.UserProfile;
 
 namespace AvaMSN.Models;
 
@@ -14,35 +15,36 @@ namespace AvaMSN.Models;
 /// </summary>
 public class ContactListData
 {
-    public NotificationServer? NotificationServer { get; set; }
-    public Profile Profile { get; set; } = new();
+    public ContactActions? ContactActions { get; set; }
+    public UserProfile? UserProfile { get; set; }
+    public User User { get; set; } = new User();
     public ObservableCollection<ContactGroup>? ContactGroups { get; set; }
     public List<Conversation> Conversations { get; set; } = new List<Conversation>();
 
     public static Presence[] Statuses { get; } =
     {
-        new Presence()
+        new Presence
         {
             Status = PresenceStatus.GetFullName(PresenceStatus.Online),
             Color = "LimeGreen",
             ShortName = PresenceStatus.Online
         },
 
-        new Presence()
+        new Presence
         {
             Status = PresenceStatus.GetFullName(PresenceStatus.Busy),
             Color = "IndianRed",
             ShortName = PresenceStatus.Busy
         },
 
-        new Presence()
+        new Presence
         {
             Status = PresenceStatus.GetFullName(PresenceStatus.Away),
             Color = "DarkOrange",
             ShortName = PresenceStatus.Away
         },
 
-        new Presence()
+        new Presence
         {
             Status = PresenceStatus.GetFullName(PresenceStatus.Invisible),
             Color = "Gray",
@@ -55,14 +57,14 @@ public class ContactListData
     /// </summary>
     public void GetData()
     {
-        if (NotificationServer == null)
+        if (ContactActions == null)
             return;
 
         // Get user profile data
-        Profile.DisplayName = NotificationServer.Profile.DisplayName;
-        Profile.Email = NotificationServer.Profile.Email;
-        Profile.PersonalMessage = NotificationServer.Profile.PersonalMessage;
-        Profile.Presence = PresenceStatus.GetFullName(NotificationServer.Profile.Presence);
+        User.DisplayName = ContactActions.User!.DisplayName;
+        User.Email = ContactActions.User.Email;
+        User.PersonalMessage = ContactActions.User.PersonalMessage;
+        User.Presence = PresenceStatus.GetFullName(ContactActions.User.Presence);
 
         ContactGroups =
         [
@@ -70,7 +72,7 @@ public class ContactListData
             new ContactGroup("Offline", [])
         ];
 
-        foreach (MSNP.Utils.Contact contact in NotificationServer.ContactService.Contacts)
+        foreach (MSNP.Models.Contact contact in ContactActions.ContactList)
         {
             // Only add contacts in forward list
             if (!contact.InLists.Forward)
@@ -82,7 +84,7 @@ public class ContactListData
                 {
                     if (group.Name != "Offline")
                     {
-                        group.Contacts.Add(new Contact()
+                        group.Contacts.Add(new Contact
                         {
                             DisplayName = contact.DisplayName,
                             Email = contact.Email,
@@ -101,7 +103,7 @@ public class ContactListData
                 {
                     if (group.Name != "Online")
                     {
-                        group.Contacts.Add(new Contact()
+                        group.Contacts.Add(new Contact
                         {
                             DisplayName = contact.DisplayName,
                             Email = contact.Email,
@@ -115,8 +117,8 @@ public class ContactListData
             }
         }
 
-        NotificationServer.PresenceChanged += NotificationServer_PresenceChanged;
-        NotificationServer.PersonalMessageChanged += NotificationServer_PersonalMessageChanged;
+        ContactActions.Incoming!.PresenceChanged += ContactActions_PresenceChanged;
+        ContactActions.Incoming.PersonalMessageChanged += ContactActions_PersonalMessageChanged;
     }
 
     public static string GetStatusColor(string status) => status switch
@@ -134,9 +136,9 @@ public class ContactListData
     /// <summary>
     /// Handles presence events, changing groups according to a contact's new status.
     /// </summary>
-    private void NotificationServer_PresenceChanged(object? sender, PresenceEventArgs e)
+    private void ContactActions_PresenceChanged(object? sender, PresenceEventArgs e)
     {
-        if (NotificationServer == null || ContactGroups == null)
+        if (ContactGroups == null)
             return;
 
         Contact? contact = null;
@@ -144,7 +146,7 @@ public class ContactListData
         // Select contact
         foreach (ContactGroup group in ContactGroups)
         {
-            contact = group.Contacts.FirstOrDefault(c => c.Email == e.Email);
+            contact = group.Contacts.FirstOrDefault(c => c?.Email == e.Email);
             if (contact != null)
                 break;
         }
@@ -185,29 +187,31 @@ public class ContactListData
         // Set new presence
         foreach (ContactGroup group in ContactGroups)
         {
-            contact = group.Contacts.FirstOrDefault(c => c.Email == e.Email);
+            contact = group.Contacts.FirstOrDefault(c => c?.Email == e.Email);
             if (contact != null)
             {
                 contact.Presence = PresenceStatus.GetFullName(e.Presence);
                 contact.PresenceColor = GetStatusColor(e.Presence);
-
-                // Remove display picture if the contact doesn't have it anymore
-                if (!e.HasDisplayPicture)
+                
+                if (e.HasDisplayPicture)
+                    contact.DisplayPictureHash = e.DisplayPictureHash;
+                else
+                {
+                    // Remove display picture if the contact doesn't have it anymore
                     contact.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
+                }
             }
         }
     }
 
-    private void NotificationServer_PersonalMessageChanged(object? sender, PersonalMessageEventArgs e)
+    private void ContactActions_PersonalMessageChanged(object? sender, PersonalMessageEventArgs e)
     {
-        if (NotificationServer == null || ContactGroups == null)
+        if (ContactGroups == null)
             return;
 
-        Contact? contact;
         foreach (ContactGroup group in ContactGroups)
         {
-            contact = group.Contacts.FirstOrDefault(c => c.Email == e.Email);
-
+            Contact? contact = group.Contacts.FirstOrDefault(c => c?.Email == e.Email);
             if (contact != null)
                 contact.PersonalMessage = e.PersonalMessage;
         }

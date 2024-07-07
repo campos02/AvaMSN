@@ -158,7 +158,7 @@
             ClipToBounds="True"
             Grid.Row="6"
             VerticalAlignment="Top">
-      <Image Source="{Binding Conversation.Profile.DisplayPicture}"
+      <Image Source="{Binding Conversation.User.DisplayPicture}"
              MaxHeight="100"
              MaxWidth="100"/>
     </Border>

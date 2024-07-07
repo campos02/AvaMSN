@@ -1,23 +1,25 @@
-﻿using ReactiveUI;
-using System.Reactive;
-using System.Collections.ObjectModel;
-using AvaMSN.Models;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
-using Avalonia.Media.Imaging;
-using Avalonia.Controls;
-using Avalonia.Platform.Storage;
-using System.IO;
-using AvaMSN.MSNP.Exceptions;
-using AvaMSN.Views;
+﻿using System;
 using System.Collections.Generic;
-using AvaMSN.MSNP.Utils;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Reactive;
+using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
+using AvaMSN.Models;
+using AvaMSN.MSNP.Exceptions;
+using AvaMSN.MSNP.Models;
+using AvaMSN.MSNP.NotificationServer.Contacts;
+using AvaMSN.MSNP.NotificationServer.UserProfile;
 using AvaMSN.Utils;
+using AvaMSN.Views;
+using ReactiveUI;
 using SkiaSharp;
 using Contact = AvaMSN.Models.Contact;
 using ContactEventArgs = AvaMSN.Models.ContactEventArgs;
-using Profile = AvaMSN.Models.Profile;
+using User = AvaMSN.Models.User;
 
 namespace AvaMSN.ViewModels;
 
@@ -34,7 +36,7 @@ public class ContactListViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit> BlockContactCommand { get; }
     public ReactiveCommand<Unit, Unit> UnblockContactCommand { get; }
 
-    public ContactListData ListData { get; set; } = new();
+    public ContactListData ListData { get; protected set; } = new ContactListData();
     public ObservableCollection<ContactGroup>? ContactGroups => ListData.ContactGroups;
     public static Presence[] Statuses => ContactListData.Statuses;
 
@@ -46,22 +48,28 @@ public class ContactListViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref selectedContact, value);
     }
 
-    public List<Conversation> Conversations
+    private List<Conversation> Conversations
     {
         get => ListData.Conversations;
         set => ListData.Conversations = value;
     }
 
-    public Profile Profile
+    public User User
     {
-        get => ListData.Profile;
-        set => ListData.Profile = value;
+        get => ListData.User;
+        set => ListData.User = value;
     }
 
-    public MSNP.NotificationServer? NotificationServer
+    public ContactActions? ContactActions
     {
-        get => ListData.NotificationServer;
-        set => ListData.NotificationServer = value;
+        get => ListData.ContactActions;
+        set => ListData.ContactActions = value;
+    }
+
+    public UserProfile? UserProfile
+    {
+        get => ListData.UserProfile;
+        set => ListData.UserProfile = value;
     }
 
     private int selectedOptionIndex;
@@ -74,11 +82,10 @@ public class ContactListViewModel : ViewModelBase
 
     public string DisplayName { get; set; } = string.Empty;
     public string PersonalMessage { get; set; } = string.Empty;
-
     public string NewContactEmail { get; set; } = string.Empty;
     public string NewContactDisplayName { get; set; } = string.Empty;
-
     public Database? Database { get; set; }
+    
     public event EventHandler? Disconnected;
 
     public ContactListViewModel()
@@ -103,12 +110,12 @@ public class ContactListViewModel : ViewModelBase
 
     private async Task ChangePresence(string presence)
     {
-        if (NotificationServer == null)
+        if (UserProfile == null || UserProfile.User == null)
             return;
 
-        Profile.Presence = PresenceStatus.GetFullName(presence);
-        NotificationServer.Profile.Presence = presence;
-        await NotificationServer.SendCHG();
+        User.Presence = PresenceStatus.GetFullName(presence);
+        UserProfile.User.Presence = presence;
+        await UserProfile.SendCHG();
 
         SelectedOptionIndex = -1;
         SelectedOptionIndex = 0;
@@ -116,12 +123,12 @@ public class ContactListViewModel : ViewModelBase
 
     private async Task ChangeDisplayName()
     {
-        if (NotificationServer == null)
+        if (UserProfile == null || UserProfile.User == null)
             return;
 
-        Profile.DisplayName = DisplayName;
-        NotificationServer.Profile.DisplayName = DisplayName;
-        await NotificationServer.ChangeDisplayName();
+        User.DisplayName = DisplayName;
+        UserProfile.User.DisplayName = DisplayName;
+        await UserProfile.ChangeDisplayName();
 
         SelectedOptionIndex = -1;
         SelectedOptionIndex = 0;
@@ -129,14 +136,14 @@ public class ContactListViewModel : ViewModelBase
 
     private async Task ChangePersonalMessage()
     {
-        if (NotificationServer == null)
+        if (UserProfile == null || UserProfile.User == null)
             return;
 
-        NotificationServer.Profile.PersonalMessage = PersonalMessage;
-        Profile.PersonalMessage = PersonalMessage;
-        await NotificationServer.SendUUX();
+        UserProfile.User.PersonalMessage = PersonalMessage;
+        User.PersonalMessage = PersonalMessage;
+        await UserProfile.SendUUX();
 
-        Database?.SavePersonalMessage(Profile.Email, Profile.PersonalMessage);
+        Database?.SavePersonalMessage(User.Email, User.PersonalMessage);
     }
 
     public async Task ChangeDisplayPicture(TopLevel topLevel)
@@ -176,31 +183,31 @@ public class ContactListViewModel : ViewModelBase
             using MemoryStream croppedPictureStream = new MemoryStream();
             croppedBitmap.Encode(SKEncodedImageFormat.Png, 100).SaveTo(croppedPictureStream);
             croppedPictureStream.Seek(0, SeekOrigin.Begin);
-            Profile.DisplayPicture = new Bitmap(croppedPictureStream);
+            User.DisplayPicture = new Bitmap(croppedPictureStream);
 
-            Database?.DeleteUserDisplayPictures(Profile.Email);
-            Database?.SaveDisplayPicture(new DisplayPicture()
+            Database?.DeleteUserDisplayPictures(User.Email);
+            Database?.SaveDisplayPicture(new DisplayPicture
             {
-                ContactEmail = Profile.Email,
+                ContactEmail = User.Email,
                 PictureData = croppedPictureStream.ToArray(),
                 IsUserPicture = true
             });
 
-            if (NotificationServer == null)
+            if (UserProfile == null || UserProfile.User == null)
                 return;
 
-            NotificationServer.Profile.DisplayPicture = croppedPictureStream.ToArray();
-            NotificationServer.CreateMSNObject();
+            UserProfile.User.DisplayPicture = croppedPictureStream.ToArray();
+            UserProfile.CreateMSNObject();
 
             // Flash presence because otherwise the new picture isn't broadcast
-            string oldPresence = NotificationServer.Profile.Presence;
+            string oldPresence = UserProfile.User.Presence;
             if (oldPresence != PresenceStatus.Invisible)
             {
-                NotificationServer.Profile.Presence = PresenceStatus.Idle;
-                await NotificationServer.SendCHG();
+                UserProfile.User.Presence = PresenceStatus.Idle;
+                await UserProfile.SendCHG();
 
-                NotificationServer.Profile.Presence = oldPresence;
-                await NotificationServer.SendCHG();
+                UserProfile.User.Presence = oldPresence;
+                await UserProfile.SendCHG();
             }
         }
     }
@@ -210,10 +217,10 @@ public class ContactListViewModel : ViewModelBase
         if (NewContactDisplayName == string.Empty)
             NewContactDisplayName = NewContactEmail;
 
-        if (NotificationServer == null)
+        if (ContactActions == null)
             return;
 
-        await NotificationServer.AddContact(NewContactEmail, NewContactDisplayName);
+        await ContactActions.AddContact(NewContactEmail, NewContactDisplayName);
         foreach (ContactGroup group in ListData.ContactGroups!)
         {
             if (group.Name == "Offline")
@@ -239,10 +246,10 @@ public class ContactListViewModel : ViewModelBase
 
         string email = SelectedContact.Email;
 
-        if (NotificationServer == null)
+        if (ContactActions == null)
             return;
 
-        await NotificationServer.RemoveContact(email);
+        await ContactActions.RemoveContact(email);
         foreach (ContactGroup group in ListData.ContactGroups)
         {
             group.Contacts.Remove(SelectedContact);
@@ -251,19 +258,19 @@ public class ContactListViewModel : ViewModelBase
 
     private async Task BlockContact()
     {
-        if (SelectedContact == null || NotificationServer == null)
+        if (SelectedContact == null || ContactActions == null)
             return;
 
-        await NotificationServer.BlockContact(SelectedContact.Email);
+        await ContactActions.BlockContact(SelectedContact.Email);
         SelectedContact.Blocked = true;
     }
 
     private async Task UnblockContact()
     {
-        if (SelectedContact == null || NotificationServer == null)
+        if (SelectedContact == null || ContactActions == null)
             return;
 
-        await NotificationServer.UnblockContact(SelectedContact.Email);
+        await ContactActions.UnblockContact(SelectedContact.Email);
         SelectedContact.Blocked = false;
     }
 
@@ -271,44 +278,45 @@ public class ContactListViewModel : ViewModelBase
     /// Creates a new conversation object with the selected contact and opens a new conversation window.
     /// If a conversation with the selected contact already exists however, simply opens its window.
     /// </summary>
-    public async Task Chat()
+    private async Task Chat()
     {
-        if (SelectedContact == null || NotificationServer == null)
+        if (SelectedContact == null || ContactActions?.Server?.Incoming == null)
             return;
 
         // Unbold contact name
         SelectedContact.NewMessages = false;
 
         Conversation? conversation = Conversations.LastOrDefault(conv => conv.Contact == SelectedContact);
-        MSNP.Utils.Contact contact = NotificationServer.ContactService.Contacts.FirstOrDefault(c => c.Email == SelectedContact.Email) ??
-                                     throw new ContactException("Could not find the selected contact");
-
+        MSNP.Models.Contact contact = ContactActions.ContactList.FirstOrDefault(c => c.Email == SelectedContact.Email) ??
+                                      throw new ContactException("Could not find the selected contact");
+        
         if (conversation == null)
         {
-            conversation = new Conversation(SelectedContact, Profile, Database)
+            conversation = new Conversation(SelectedContact, User, Database)
             {
-                NotificationServer = NotificationServer
+                ContactActions = ContactActions
             };
 
             conversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
-            NotificationServer.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
             Conversations.Add(conversation);
         }
         
         conversation.OpenWindow();
-        if (conversation.Switchboard == null || !conversation.Switchboard.Connected)
+        if (conversation.Messaging.Server == null || !conversation.Messaging.Server.Connected)
         {
-            if (SelectedContact.Presence != PresenceStatus.GetFullName(PresenceStatus.Offline))
-            {
-                conversation.Switchboard = await NotificationServer.SendXFR(contact);
-                conversation.SubscribeToEvents();
-            }
+            conversation.Messaging.Server = await ContactActions.Server.SendXFR(contact);
+            conversation.Messaging.StartIncoming();
+            conversation.DisplayPictureReceiving.Server = conversation.Messaging.Server;
+            if (ContactActions?.Server?.Incoming != null)
+                ContactActions.Server.Incoming.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
+            
+            conversation.SubscribeToEvents();
         }
         
         try
         {
-            if (contact.DisplayPictureHash != SelectedContact.DisplayPictureHash && conversation.Switchboard != null)
-                await conversation.Switchboard.GetDisplayPicture();
+            if (contact.DisplayPictureHash != SelectedContact.DisplayPictureHash)
+                await conversation.DisplayPictureReceiving.GetDisplayPicture();
         }
         catch (OperationCanceledException) { return; }
     }
@@ -322,7 +330,7 @@ public class ContactListViewModel : ViewModelBase
             SettingsWindow.Activate();
         else
         {
-            SettingsWindow = new SettingsWindow()
+            SettingsWindow = new SettingsWindow
             {
                 DataContext = new SettingsWindowViewModel()
             };
@@ -339,11 +347,11 @@ public class ContactListViewModel : ViewModelBase
 
     private async Task SignOut()
     {
-        if (NotificationServer == null)
+        if (ContactActions == null || ContactActions.Server == null)
             return;
 
         // Will also invoke the disconnection event
-        await NotificationServer.DisconnectAsync();
+        await ContactActions.Server.DisconnectAsync();
     }
 
     /// <summary>
@@ -351,8 +359,8 @@ public class ContactListViewModel : ViewModelBase
     /// </summary>
     public void SubscribeToEvents()
     {
-        NotificationServer!.Disconnected += NotificationServer_Disconnected;
-        NotificationServer.SwitchboardChanged += NotificationServer_SwitchboardChanged;
+        ContactActions!.Server.Disconnected += NotificationServer_Disconnected;
+        ContactActions.Server.Incoming!.SwitchboardChanged += NotificationServer_SwitchboardChanged;
     }
 
     /// <summary>
@@ -360,8 +368,8 @@ public class ContactListViewModel : ViewModelBase
     /// </summary>
     public void UnsubscribeFromEvents()
     {
-        NotificationServer!.Disconnected -= NotificationServer_Disconnected;
-        NotificationServer.SwitchboardChanged -= NotificationServer_SwitchboardChanged;
+        ContactActions!.Server.Disconnected -= NotificationServer_Disconnected;
+        ContactActions.Server.Incoming!.SwitchboardChanged -= NotificationServer_SwitchboardChanged;
     }
 
     private async void NotificationHandler_ApplicationExit(object? sender, EventArgs e)
@@ -378,34 +386,41 @@ public class ContactListViewModel : ViewModelBase
     /// <summary>
     /// If a new switchboard session is taking place and it's not with the current contact, creates a new conversation instance.
     /// </summary>
-    public void NotificationServer_SwitchboardChanged(object? sender, SwitchboardEventArgs e)
+    private void NotificationServer_SwitchboardChanged(object? sender, SwitchboardEventArgs e)
     {
         if (ContactGroups == null || e.Switchboard == null)
             return;
 
-        Conversation? conversation = Conversations.LastOrDefault(conv => conv.Contact.Email == e.Switchboard.Contact.Email);
-
+        Conversation? conversation = Conversations.LastOrDefault(conv => conv.Contact.Email == e.Switchboard?.Contact?.Email);
         if (conversation == null)
         {
-            Contact? contact = new Contact()
+            Contact contact = new Contact
             {
-                Email = e.Switchboard.Contact.Email,
+                Email = e.Switchboard.Contact!.Email,
                 DisplayName = e.Switchboard.Contact.DisplayName,
                 Presence = PresenceStatus.GetFullName(e.Switchboard.Contact.Presence)
             };
 
             foreach (ContactGroup group in ContactGroups)
             {
-                contact = group.Contacts.FirstOrDefault(contact => contact.Email == e.Switchboard.Contact.Email) ?? contact;
+                contact = group.Contacts.FirstOrDefault(c => c?.Email == e.Switchboard.Contact.Email) ?? contact;
             }
 
-            conversation = new Conversation(contact, Profile, Database!)
+            conversation = new Conversation(contact, User, Database!)
             {
-                Switchboard = e.Switchboard
+                Messaging =
+                {
+                    Server = e.Switchboard
+                },
+                ContactActions = ContactActions
             };
 
+            conversation.Messaging.StartIncoming();
+            conversation.DisplayPictureReceiving.Server = conversation.Messaging.Server;
+            if (ContactActions?.Server?.Incoming != null)
+                ContactActions.Server.Incoming.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
+            
             conversation.SubscribeToEvents();
-            NotificationServer!.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
             Conversations.Add(conversation);
         }
     }
@@ -414,21 +429,24 @@ public class ContactListViewModel : ViewModelBase
     /// Resets data, closes chat windows and returns to login page when disconnected from the server.
     /// </summary>
     /// <exception cref="ConnectionException">Thrown if the disconnection wasn't requested.</exception>
-    public async void NotificationServer_Disconnected(object? sender, DisconnectedEventArgs e)
+    private async void NotificationServer_Disconnected(object? sender, DisconnectedEventArgs e)
     {
         // Close every conversation
         foreach (Conversation conversation in Conversations)
         {
             await conversation.Disconnect();
-            NotificationServer!.SwitchboardChanged -= conversation.NotificationServer_SwitchboardChanged;
+            if (conversation.ContactActions?.Server?.Incoming != null)
+                conversation.ContactActions.Server.Incoming.SwitchboardChanged -= conversation.NotificationServer_SwitchboardChanged;
+            
             conversation.DisplayPictureUpdated -= Conversation_DisplayPictureUpdated;
             conversation.CloseWindow();
         }
 
         Conversations = [];
-        NotificationServer = null;
+        ContactActions = null;
+        UserProfile = null;
         SelectedContact = null;
-        ListData = new();
+        ListData = new ContactListData();
         Disconnected?.Invoke(this, EventArgs.Empty);
 
         if (!e.Requested)
@@ -447,9 +465,9 @@ public class ContactListViewModel : ViewModelBase
         {
             foreach (ContactGroup group in ContactGroups)
             {
-                Contact? contact = group.Contacts.FirstOrDefault(contact => contact.Email == conversation?.Contact.Email);
+                Contact? contact = group.Contacts.FirstOrDefault(contact => contact?.Email == conversation.Contact.Email);
                 if (contact != null)
-                    contact.DisplayPicture = conversation.Contact.DisplayPicture!;
+                    contact.DisplayPicture = conversation.Contact.DisplayPicture;
             }
         }
     }

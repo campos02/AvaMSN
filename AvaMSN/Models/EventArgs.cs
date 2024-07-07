@@ -1,7 +1,15 @@
 ﻿using System;
 using System.Threading.Tasks;
+using AvaMSN.MSNP.NotificationServer.Contacts;
+using AvaMSN.MSNP.NotificationServer.UserProfile;
 
 namespace AvaMSN.Models;
+
+public class LoggedInEventArgs : EventArgs
+{
+    public ContactActions? ContactActions { get; set; }
+    public UserProfile? UserProfile { get; set; }
+}
 
 public class ContactEventArgs : EventArgs
 {

@@ -13,7 +13,7 @@ public class DesignConversationWindowViewModel : ConversationWindowViewModel
             DisplayName = "test",
             Presence = "Online"
         },
-        new Profile()
+        new User()
         {
             DisplayName = "test"
         })

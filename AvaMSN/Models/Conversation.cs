@@ -5,10 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
-using AvaMSN.MSNP;
-using AvaMSN.MSNP.Exceptions;
 using AvaMSN.MSNP.Messages;
-using AvaMSN.MSNP.Utils;
+using AvaMSN.MSNP.Models;
+using AvaMSN.MSNP.NotificationServer.Contacts;
+using AvaMSN.MSNP.Switchboard;
+using AvaMSN.MSNP.Switchboard.Messaging;
 using AvaMSN.Utils;
 using AvaMSN.Utils.Notifications;
 using AvaMSN.ViewModels;
@@ -26,7 +27,7 @@ public class Conversation : ReactiveObject
     private ObservableCollection<Message>? messageHistory;
     private ConversationWindow? conversationWindow;
 
-    public Profile Profile { get; }
+    public User User { get; }
     public Contact Contact { get; }
     private Database? Database { get; }
 
@@ -46,16 +47,17 @@ public class Conversation : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref typingUser, value);
     }
 
-    public Switchboard? Switchboard { get; set; }
-    public NotificationServer? NotificationServer { get; set; }
+    public Messaging Messaging { get; set; } = new Messaging();
+    public DisplayPictureReceiving DisplayPictureReceiving { get; set; } = new DisplayPictureReceiving();
+    public ContactActions? ContactActions { get; init; }
     public static NotificationHandler? NotificationHandler { get; set; }
 
     public event EventHandler? DisplayPictureUpdated;
 
-    public Conversation(Contact contact, Profile profile, Database? database = null)
+    public Conversation(Contact contact, User user, Database? database = null)
     {
         Contact = contact;
-        Profile = profile;
+        User = user;
         Database = database;
 
         DisplayPicture? displayPicture = Database?.GetContactDisplayPicture(Contact.Email);
@@ -65,6 +67,7 @@ public class Conversation : ReactiveObject
             Contact.DisplayPicture = new Bitmap(pictureStream);
             Contact.DisplayPictureHash = displayPicture.PictureHash;
         }
+        DisplayPictureReceiving.DisplayPictureUpdated += DisplayPictureReceiving_DisplayPictureUpdated;
 
         // Load only last four messages, the user needs to click on the menu item to show more
         GetHistory(4);
@@ -79,9 +82,9 @@ public class Conversation : ReactiveObject
             conversationWindow.Activate();
         else
         {
-            conversationWindow = new ConversationWindow()
+            conversationWindow = new ConversationWindow
             {
-                DataContext = new ConversationWindowViewModel()
+                DataContext = new ConversationWindowViewModel
                 {
                     Conversation = this
                 }
@@ -123,22 +126,19 @@ public class Conversation : ReactiveObject
 
         try
         {
-            if (Contact.Presence == PresenceStatus.GetFullName(PresenceStatus.Offline))
-                throw new ContactException("Contact is offline");
-
-            if (Switchboard == null || !Switchboard.Connected)
+            if (Messaging.Server == null || !Messaging.Server.Connected)
             {
-                Switchboard = await NotificationServer!.SendXFR(Contact.Email);
+                Messaging.Server = await ContactActions!.Server.SendXFR(Contact.Email, ContactActions!.ContactList);
                 SubscribeToEvents();
             }
 
-            await Switchboard.SendTextMessage(textMessage);
+            await Messaging.SendTextMessage(textMessage);
             TypingUser = false;
 
             Message message = new Message
             {
-                Sender = Profile.Email,
-                SenderDisplayName = Profile.DisplayName,
+                Sender = User.Email,
+                SenderDisplayName = User.DisplayName,
                 Recipient = Contact.Email,
                 RecipientDisplayName = Contact.DisplayName,
 
@@ -172,10 +172,10 @@ public class Conversation : ReactiveObject
     /// <returns></returns>
     public async Task SendTypingUser()
     {
-        if (Switchboard == null || !Switchboard.Connected)
+        if (Messaging.Server == null || !Messaging.Server.Connected)
             return;
 
-        await Switchboard.SendTypingUser();
+        await Messaging.SendTypingUser();
     }
 
     /// <summary>
@@ -186,21 +186,18 @@ public class Conversation : ReactiveObject
     {
         try
         {
-            if (Contact.Presence == PresenceStatus.GetFullName(PresenceStatus.Offline))
-                throw new ContactException("Contact is offline");
-
-            if (Switchboard == null || !Switchboard.Connected)
+            if (Messaging.Server == null || !Messaging.Server.Connected)
             {
-                Switchboard = await NotificationServer!.SendXFR(Contact.Email);
+                Messaging.Server = await ContactActions!.Server.SendXFR(Contact.Email, ContactActions!.ContactList);
                 SubscribeToEvents();
             }
 
-            await Switchboard.SendNudge();
+            await Messaging.SendNudge();
             TypingUser = false;
 
             Message message = new Message
             {
-                Sender = Profile.Email,
+                Sender = User.Email,
                 Recipient = Contact.Email,
                 Text = $"You sent {Contact.DisplayName} a nudge.",
                 DateTime = DateTime.Now
@@ -230,7 +227,7 @@ public class Conversation : ReactiveObject
         if (Database == null)
             return;
 
-        List<Message> history = Database.GetMessages(Contact.Email, Profile.Email);
+        List<Message> history = Database.GetMessages(Contact.Email, User.Email);
         foreach (Message message in history)
         {
             message.IsHistory = true;
@@ -247,7 +244,7 @@ public class Conversation : ReactiveObject
     /// </summary>
     public void DeleteHistory()
     {
-        Database?.DeleteMessages(Profile.Email, Contact.Email);
+        Database?.DeleteMessages(User.Email, Contact.Email);
         MessageHistory = null;
     }
 
@@ -257,36 +254,35 @@ public class Conversation : ReactiveObject
     /// <returns></returns>
     public async Task Disconnect()
     {
-        if (Switchboard == null)
+        if (Messaging.Server == null)
             return;
 
-        await Switchboard.DisconnectAsync();
+        await Messaging.Server.DisconnectAsync();
+        UnsubscribeFromEvents();
     }
 
     /// <summary>
-    /// Subscribes to the switchboard events.
+    /// Subscribes to switchboard events.
     /// </summary>
     public void SubscribeToEvents()
     {
-        if (Switchboard == null)
-            return;
+        if (Messaging.Server != null)
+            Messaging.Server.Disconnected += Switchboard_Disconnected;
 
-        Switchboard.Disconnected += Switchboard_Disconnected;
-        Switchboard.MessageReceived += Switchboard_MessageReceived;
-        Switchboard.DisplayPictureUpdated += Switchboard_DisplayPictureUpdated;
+        if (Messaging.IncomingMessaging != null)
+            Messaging.IncomingMessaging.MessageReceived += IncomingMessaging_MessageReceived;
     }
 
     /// <summary>
-    /// Unsubscribes from the switchboard events.
+    /// Unsubscribes from switchboard events.
     /// </summary>
-    public void UnsubscribeFromEvents()
+    private void UnsubscribeFromEvents()
     {
-        if (Switchboard == null)
-            return;
+        if (Messaging.Server != null)
+            Messaging.Server.Disconnected -= Switchboard_Disconnected;
 
-        Switchboard.MessageReceived -= Switchboard_MessageReceived;
-        Switchboard.DisplayPictureUpdated -= Switchboard_DisplayPictureUpdated;
-        Switchboard.Disconnected -= Switchboard_Disconnected;
+        if (Messaging.IncomingMessaging != null)
+            Messaging.IncomingMessaging.MessageReceived -= IncomingMessaging_MessageReceived;
     }
 
     private void Switchboard_Disconnected(object? sender, DisconnectedEventArgs e)
@@ -299,18 +295,19 @@ public class Conversation : ReactiveObject
     /// </summary>
     public async void NotificationServer_SwitchboardChanged(object? sender, SwitchboardEventArgs e)
     {
-        if (Contact.Email != e.Switchboard?.Contact.Email)
+        if (Contact.Email != e.Switchboard?.Contact?.Email)
             return;
 
         await Disconnect();
-        Switchboard = e.Switchboard;
+        Messaging.Server = e.Switchboard;
+        Messaging.StartIncoming();
         SubscribeToEvents();
     }
 
     /// <summary>
     /// If the new message is a typing notification, shows the "is writing..." text for 6 seconds. Otherwise, adds it to message list and database.
     /// </summary>
-    private async void Switchboard_MessageReceived(object? sender, MessageEventArgs e)
+    private async void IncomingMessaging_MessageReceived(object? sender, MessageEventArgs e)
     {
         if (e.TypingUser)
         {
@@ -329,7 +326,7 @@ public class Conversation : ReactiveObject
         Message message = new Message
         {
             Sender = Contact.Email,
-            Recipient = Profile.Email,
+            Recipient = User.Email,
             Bold = e.Message.Bold,
             Italic = e.Message.Italic,
             Color = e.Message.Color,
@@ -348,7 +345,7 @@ public class Conversation : ReactiveObject
         if (!message.IsNudge)
         {
             message.SenderDisplayName = Contact.DisplayName;
-            message.RecipientDisplayName = Profile.DisplayName;
+            message.RecipientDisplayName = User.DisplayName;
         }
 
         Messages.Add(message);
@@ -359,7 +356,7 @@ public class Conversation : ReactiveObject
         if (conversationWindow == null || !conversationWindow.IsActive)
             Contact.NewMessages = true;
 
-        if (Profile.Presence != PresenceStatus.GetFullName(PresenceStatus.Busy))
+        if (User.Presence != PresenceStatus.GetFullName(PresenceStatus.Busy))
         {
             if (conversationWindow == null || !conversationWindow.IsActive)
             {
@@ -375,7 +372,7 @@ public class Conversation : ReactiveObject
     /// <summary>
     /// When a display picture is received, sets it in the UI and saves it to the database.
     /// </summary>
-    private void Switchboard_DisplayPictureUpdated(object? sender, DisplayPictureEventArgs e)
+    private void DisplayPictureReceiving_DisplayPictureUpdated(object? sender, DisplayPictureEventArgs e)
     {
         if (e.DisplayPicture == null)
             return;
@@ -384,7 +381,7 @@ public class Conversation : ReactiveObject
         Contact.DisplayPicture = new Bitmap(pictureStream);
         Contact.DisplayPictureHash = e.DisplayPictureHash;
 
-        Database?.SaveDisplayPicture(new DisplayPicture()
+        Database?.SaveDisplayPicture(new DisplayPicture
         {
             ContactEmail = Contact.Email,
             PictureData = pictureStream.ToArray(),

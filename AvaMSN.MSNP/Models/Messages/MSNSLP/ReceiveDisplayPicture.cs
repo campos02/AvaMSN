@@ -1,12 +1,12 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace AvaMSN.MSNP.Messages.MSNSLP;
+namespace AvaMSN.MSNP.Models.Messages.MSNSLP;
 
 /// <summary>
 /// Stores session parameters and contains functions that return message payloads for receiving a display picture.
 /// </summary>
-public class ReceiveDisplayPicture : DisplayPictureSession
+internal class ReceiveDisplayPicture : DisplayPictureSession
 {
     /// <summary>
     /// Returns an INVITE payload, used to start a session.
@@ -39,7 +39,7 @@ public class ReceiveDisplayPicture : DisplayPictureSession
         byte[] headers = Encoding.UTF8.GetBytes(headersText);
         byte[] message = headers.Concat(body).ToArray();
 
-        BinaryHeader binaryHeader = new BinaryHeader()
+        BinaryHeader binaryHeader = new BinaryHeader
         {
             Identifier = Identifier - 3,
             DataSize = (ulong)message.Length + 1,
@@ -47,7 +47,7 @@ public class ReceiveDisplayPicture : DisplayPictureSession
             AckID = BitConverter.ToUInt32(RandomNumberGenerator.GetBytes(sizeof(uint)))
         };
 
-        byte[] footer = { 00, 00, 00, 00, 00 };
+        byte[] footer = [00, 00, 00, 00, 00];
 
         // Combine to produce full MSNSLP content
         byte[] content = binaryHeader.GetBytes().Concat(message).Concat(footer).ToArray();
@@ -73,7 +73,7 @@ public class ReceiveDisplayPicture : DisplayPictureSession
                              "Content-Length: 3\r\n\r\n";
 
         byte[] headers = Encoding.UTF8.GetBytes(headersText);
-        BinaryHeader binaryHeader = new BinaryHeader()
+        BinaryHeader binaryHeader = new BinaryHeader
         {
             Identifier = Identifier - 2,
             DataSize = (ulong)headers.Length + 1,
@@ -81,7 +81,7 @@ public class ReceiveDisplayPicture : DisplayPictureSession
             AckID = BitConverter.ToUInt32(RandomNumberGenerator.GetBytes(sizeof(uint)))
         };
 
-        byte[] footer = { 00, 00, 00, 00, 00 };
+        byte[] footer = [00, 00, 00, 00, 00];
 
         // Combine to produce full MSNSLP content
         byte[] content = binaryHeader.GetBytes().Concat(headers).Concat(footer).ToArray();

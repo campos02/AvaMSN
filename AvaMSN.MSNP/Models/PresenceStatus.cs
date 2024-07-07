@@ -1,7 +1,7 @@
-﻿namespace AvaMSN.MSNP.Utils;
+﻿namespace AvaMSN.MSNP.Models;
 
 /// <summary>
-/// Contains all presence statuses used in MSNP.
+/// Contains presence statuses used in MSNP.
 /// </summary>
 public struct PresenceStatus
 {

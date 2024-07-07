@@ -1,28 +1,10 @@
-﻿using ReactiveUI;
-using SQLite;
-
-namespace AvaMSN.Models;
+﻿namespace AvaMSN.Models;
 
 /// <summary>
-/// Represents a user account for storage purposes.
+/// Represents user account data, which extends contact data.
 /// </summary>
-public class User : ReactiveObject
+public class User : Contact
 {
-    private string email = string.Empty;
-
-    [PrimaryKey, AutoIncrement]
-    public int ID { get; set; }
-
-    public string UserEmail
-    {
-        get => email;
-        set => this.RaiseAndSetIfChanged(ref email, value);
-    }
-
-    public string PersonalMessage { get; set; } = string.Empty;
-
-    public byte[] Password { get; set; } = [];
-    public byte[] BinarySecret { get; set; } = [];
-    public byte[] Ticket { get; set; } = [];
-    public byte[] TicketToken { get; set; } = [];
+    public int UserID { get; set; }
+    public byte[]? DisplayPictureData { get; set; }
 }

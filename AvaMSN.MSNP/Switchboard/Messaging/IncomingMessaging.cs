@@ -1,31 +1,23 @@
-﻿using AvaMSN.MSNP.Messages;
-using AvaMSN.MSNP.Messages.MSNSLP;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using AvaMSN.MSNP.Utils;
+using AvaMSN.MSNP.Messages;
+using AvaMSN.MSNP.Models;
+using AvaMSN.MSNP.Models.Messages.MSNSLP;
 
-namespace AvaMSN.MSNP;
+namespace AvaMSN.MSNP.Switchboard.Messaging;
 
-public partial class Switchboard : Connection
+public class IncomingMessaging
 {
-    public event EventHandler<MessageEventArgs>? MessageReceived;
-    public event EventHandler<DisplayPictureEventArgs>? DisplayPictureUpdated;
-
-    /// <summary>
-    /// Overload that takes a string response and converts to a byte array.
-    /// </summary>
-    /// <param name="response">Incoming response.</param>
-    private async Task HandleIncoming(string response)
-    {
-        await HandleIncoming(Encoding.UTF8.GetBytes(response));
-    }
+    public Switchboard? Server { get; init; }
     
+    public event EventHandler<MessageEventArgs>? MessageReceived;
+
     /// <summary>
     /// Handles responses that aren't the result of a command.
     /// </summary>
     /// <param name="response">Incoming response.</param>
     /// <returns></returns>
-    protected override async Task HandleIncoming(byte[] response)
+    internal async Task HandleIncoming(byte[] response)
     {
         string responseString = Encoding.UTF8.GetString(response);
         string command = responseString.Split(" ")[0];
@@ -33,7 +25,6 @@ public partial class Switchboard : Connection
         await (command switch
         {
             "MSG" => HandleMSG(response),
-            "BYE" => DisconnectAsync(),
             _ => Task.CompletedTask
         });
     }
@@ -45,7 +36,10 @@ public partial class Switchboard : Connection
     /// <returns></returns>
     private async Task HandleMSG(byte[] response)
     {
-        ResetTimeout();
+        if (Server == null)
+            throw new NullReferenceException("Server is null");
+        
+        Server.ResetTimeout();
         string responseString = Encoding.UTF8.GetString(response);
         string[] responses = responseString.Split("\r\n");
         string[] parameters = responses[0].Split(" ");
@@ -63,7 +57,7 @@ public partial class Switchboard : Connection
             if (payloadParameters[2].Contains("TypingUser"))
             {
                 string user = payloadParameters[2].Split(" ")[1];
-                MessageReceived?.Invoke(this, new MessageEventArgs()
+                MessageReceived?.Invoke(this, new MessageEventArgs
                 {
                     Email = user,
                     TypingUser = true
@@ -79,10 +73,10 @@ public partial class Switchboard : Connection
                 string ID = payloadParameters[3].Split(" ")[1];
                 if (ID == "1")
                 {
-                    MessageReceived?.Invoke(this, new MessageEventArgs()
+                    MessageReceived?.Invoke(this, new MessageEventArgs
                     {
                         Email = parameters[1],
-                        Message = new TextPlain()
+                        Message = new TextPlain
                         {
                             Text = $"{Uri.UnescapeDataString(parameters[2])} just sent you a nudge!"
                         },
@@ -95,7 +89,7 @@ public partial class Switchboard : Connection
         // Handle plain text
         if (payloadParameters[1].Contains("Content-Type: text/plain"))
         {
-            TextPlain message = new TextPlain()
+            TextPlain message = new TextPlain
             {
                 Text = payloadString[payloadString.IndexOf(payloadParameters[2])..]
                     .Replace(payloadParameters[2] + "\r\n\r\n", "")
@@ -103,7 +97,7 @@ public partial class Switchboard : Connection
             };
 
             message.SetFormatting(payloadParameters[2]);
-            MessageReceived?.Invoke(this, new MessageEventArgs()
+            MessageReceived?.Invoke(this, new MessageEventArgs
             {
                 Email = parameters[1],
                 Message = message
@@ -129,6 +123,9 @@ public partial class Switchboard : Connection
     /// <returns></returns>
     private async Task HandleP2PInvite(byte[] payload)
     {
+        if (Server == null)
+            throw new NullReferenceException("Server is null");
+        
         string payloadString = Encoding.UTF8.GetString(payload);
         string messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
 
@@ -138,17 +135,17 @@ public partial class Switchboard : Connection
         string[] payloadHeaderParameters = payloadString.Split("\r\n\r\n")[1].Split("\r\n");
         string[] payloadBodyParameters = payloadString.Split("\r\n\r\n")[2].Split("\r\n");
 
-        SendDisplayPicture displayPicture = new SendDisplayPicture()
+        SendDisplayPicture displayPicture = new SendDisplayPicture
         {
             Identifier = BitConverter.ToUInt32(RandomNumberGenerator.GetBytes(sizeof(uint))),
-            From = Profile.Email,
-            Data = Profile.DisplayPicture,
+            From = Server.User!.Email,
+            Data = Server.User.DisplayPicture,
             Branch = payloadHeaderParameters[3].Replace("Via: MSNSLP/1.0/TLP ;branch=", ""),
             CSeq = Convert.ToInt32(payloadHeaderParameters[4].Replace("CSeq: ", "")),
             CallID = payloadHeaderParameters[5].Replace("Call-ID: ", "")
         };
 
-        if (!messageHeaders.Split("\r\n")[2].Contains(Profile.Email))
+        if (!messageHeaders.Split("\r\n")[2].Contains(Server.User.Email))
             return;
 
         displayPicture.To = payloadHeaderParameters[2].Split(":")[2].Replace(">", "");
@@ -160,27 +157,27 @@ public partial class Switchboard : Connection
         displayPicture.SessionID = Convert.ToUInt32(payloadBodyParameters[1].Split(" ")[1]);
 
         string msnObject = Encoding.UTF8.GetString(Convert.FromBase64String(payloadBodyParameters[4].Replace("Context: ", "")));
-        if (!msnObject.Contains(Profile.DisplayPictureObject!))
+        if (!msnObject.Contains(Server.User.DisplayPictureObject!))
             return;
 
-        TransactionID++;
+        Server.TransactionID++;
         byte[] messagePayload = displayPicture.AcknowledgePayload(binaryHeader);
 
         // Send MSG with acknowledgement
-        byte[] message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
-        await SendAsync(message.Concat(messagePayload).ToArray());
+        byte[] message = Encoding.UTF8.GetBytes($"MSG {Server.TransactionID} D {messagePayload.Length}\r\n");
+        await Server.SendAsync(message.Concat(messagePayload).ToArray());
 
-        TransactionID++;
+        Server.TransactionID++;
         messagePayload = displayPicture.OkPayload();
 
         // Send MSG with 200 OK
-        message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
-        await SendAsync(message.Concat(messagePayload).ToArray());
+        message = Encoding.UTF8.GetBytes($"MSG {Server.TransactionID} D {messagePayload.Length}\r\n");
+        await Server.SendAsync(message.Concat(messagePayload).ToArray());
 
         while (true)
         {
             // Receive MSG with acknowledgement
-            byte[] response = await ReceiveAsync();
+            byte[] response = await Server.ReceiveAsync();
             string responseString = Encoding.UTF8.GetString(response);
 
             if (responseString.Contains("MSG"))
@@ -200,33 +197,27 @@ public partial class Switchboard : Connection
                 if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                 {
                     messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
-                    if (messageHeaders.Split("\r\n")[2].Contains(Profile.Email))
-                    {
+                    if (messageHeaders.Split("\r\n")[2].Contains(Server.User.Email))
                         break;
-                    }
                 }
                 else
-                {
                     await HandleIncoming(response);
-                }
             }
             else
-            {
                 await HandleIncoming(response);
-            }
         }
 
-        TransactionID++;
+        Server.TransactionID++;
         messagePayload = displayPicture.DataPreparationPayload();
 
         // Send MSG with data preparation
-        message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
-        await SendAsync(message.Concat(messagePayload).ToArray());
+        message = Encoding.UTF8.GetBytes($"MSG {Server.TransactionID} D {messagePayload.Length}\r\n");
+        await Server.SendAsync(message.Concat(messagePayload).ToArray());
 
         while (true)
         {
             // Receive MSG with acknowledgement
-            byte[] response = await ReceiveAsync();
+            byte[] response = await Server.ReceiveAsync();
             string responseString = Encoding.UTF8.GetString(response);
 
             if (responseString.Contains("MSG"))
@@ -246,34 +237,28 @@ public partial class Switchboard : Connection
                 if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                 {
                     messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
-                    if (messageHeaders.Split("\r\n")[2].Contains(Profile.Email))
-                    {
+                    if (messageHeaders.Split("\r\n")[2].Contains(Server.User.Email))
                         break;
-                    }
                 }
                 else
-                {
                     await HandleIncoming(response);
-                }
             }
             else
-            {
                 await HandleIncoming(response);
-            }
         }
 
         // Send display picture data in chunks
         while (displayPicture.Data!.Length - displayPicture.DataOffset > 0)
         {
-            TransactionID++;
+            Server.TransactionID++;
             messagePayload = displayPicture.DataPayload();
 
             // Send MSG with data chunk
-            message = Encoding.UTF8.GetBytes($"MSG {TransactionID} D {messagePayload.Length}\r\n");
-            await SendAsync(message.Concat(messagePayload).ToArray());
+            message = Encoding.UTF8.GetBytes($"MSG {Server.TransactionID} D {messagePayload.Length}\r\n");
+            await Server.SendAsync(message.Concat(messagePayload).ToArray());
         }
 
         // Start receiving incoming commands again
-        _ = ReceiveIncomingAsync();
+        _ = Server.ReceiveIncomingAsync();
     }
 }

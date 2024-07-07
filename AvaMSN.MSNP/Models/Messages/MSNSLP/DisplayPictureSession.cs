@@ -1,11 +1,11 @@
 ﻿using System.Text;
 
-namespace AvaMSN.MSNP.Messages.MSNSLP;
+namespace AvaMSN.MSNP.Models.Messages.MSNSLP;
 
 /// <summary>
 /// Base class containing session parameters and other common payload functions for a display picture session.
 /// </summary>
-public abstract class DisplayPictureSession
+internal abstract class DisplayPictureSession
 {
     // Session parameters
     public string MimeVersion { get; set; } = "1.0";
@@ -30,7 +30,7 @@ public abstract class DisplayPictureSession
     /// <returns>Binary payload.</returns>
     public byte[] AcknowledgePayload(BinaryHeader binaryHeader)
     {
-        LastHeader = new BinaryHeader()
+        LastHeader = new BinaryHeader
         {
             Identifier = Identifier,
             DataSize = binaryHeader.DataSize,

@@ -1,9 +1,9 @@
-﻿namespace AvaMSN.MSNP.Utils;
+﻿namespace AvaMSN.MSNP.Models;
 
 /// <summary>
 /// Represents a user profile, which extends contact data.
 /// </summary>
-public class Profile : Contact
+public class User : Contact
 {
     public int MBEA { get; set; }
     public int GTC { get; set; }

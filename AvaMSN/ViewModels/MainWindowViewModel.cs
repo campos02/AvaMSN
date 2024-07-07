@@ -89,12 +89,13 @@ public class MainWindowViewModel : ViewModelBase
         NotificationPage = null;
     }
 
-    private void LoginPage_LoggedIn(object? sender, EventArgs e)
+    private void LoginPage_LoggedIn(object? sender, LoggedInEventArgs e)
     {
-        contactListPage.NotificationServer = loginPage.NotificationServer;
+        contactListPage.UserProfile = e.UserProfile;
+        contactListPage.ContactActions = e.ContactActions;
         contactListPage.Database = loginPage.Database;
-        contactListPage.PersonalMessage = contactListPage.NotificationServer!.Profile.PersonalMessage;
-        contactListPage.Profile.DisplayPicture = loginPage.Profile.DisplayPicture;
+        contactListPage.PersonalMessage = contactListPage.UserProfile?.User?.PersonalMessage ?? string.Empty;
+        contactListPage.User.DisplayPicture = loginPage.User.DisplayPicture;
 
         contactListPage.ListData.GetData();
         contactListPage.SubscribeToEvents();

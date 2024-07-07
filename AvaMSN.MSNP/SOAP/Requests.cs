@@ -5,9 +5,9 @@ namespace AvaMSN.MSNP.SOAP;
 /// <summary>
 /// Static class to make SOAP requests.
 /// </summary>
-public static class Requests
+internal static class Requests
 {
-    private static readonly HttpClient HttpClient = new();
+    private static readonly HttpClient HttpClient = new HttpClient();
 
     /// <summary>
     /// Makes a SOAP request.

@@ -28,9 +28,9 @@ public class Database
         // Drop old versions User table
         List<TableInfo> tableInfo = connection.Query<TableInfo>("SELECT type FROM pragma_table_info('User') WHERE name == 'Ticket'");
         if (tableInfo.Count > 0 && tableInfo[0].Type == "varchar")
-            connection.DropTable<User>();
+            connection.DropTable<StoredUser>();
 
-        connection.CreateTable<User>();
+        connection.CreateTable<StoredUser>();
         connection.CreateTable<Message>();
         connection.CreateTable<DisplayPicture>();
         connection.CreateTable<Keys>();
@@ -41,7 +41,7 @@ public class Database
     /// </summary>
     /// <param name="user">User whose keys to get.</param>
     /// <returns></returns>
-    public Keys? GetUserKeys(User user)
+    public Keys? GetUserKeys(StoredUser user)
     {
         return connection.Table<Keys>().LastOrDefault(keys => keys.UserEmail == user.UserEmail);
     }
@@ -71,9 +71,9 @@ public class Database
     /// Gets a list of all user accounts saved.
     /// </summary>
     /// <returns></returns>
-    public List<User> GetUsers()
+    public List<StoredUser> GetUsers()
     {
-        return connection.Table<User>().ToList();
+        return connection.Table<StoredUser>().ToList();
     }
 
     /// <summary>
@@ -81,11 +81,11 @@ public class Database
     /// </summary>
     /// <param name="user">User account to be saved.</param>
     /// <returns></returns>
-    public int SaveUser(User user)
+    public int SaveUser(StoredUser user)
     {
-        List<User> users = connection.Table<User>().Where(usr => usr.UserEmail == user.UserEmail).ToList();
+        List<StoredUser> users = connection.Table<StoredUser>().Where(usr => usr.UserEmail == user.UserEmail).ToList();
         if (users.Count > 0)
-            connection.Table<User>().Where(usr => usr.UserEmail == user.UserEmail).Delete();
+            connection.Table<StoredUser>().Where(usr => usr.UserEmail == user.UserEmail).Delete();
 
         return connection.Insert(user);
     }
@@ -95,10 +95,10 @@ public class Database
     /// </summary>
     /// <param name="user">User account to be deleted.</param>
     /// <returns></returns>
-    public int DeleteUser(User user)
+    public int DeleteUser(StoredUser user)
     {
         connection.Table<Keys>().Where(keys => keys.UserEmail == user.UserEmail).Delete();
-        return connection.Table<User>().Where(usr => usr.UserEmail == user.UserEmail).Delete();
+        return connection.Table<StoredUser>().Where(usr => usr.UserEmail == user.UserEmail).Delete();
     }
 
     /// <summary>
@@ -163,7 +163,7 @@ public class Database
     /// <param name="personalMessage"></param>
     public void SavePersonalMessage(string userEmail, string personalMessage)
     {
-        User? user = connection.Table<User>().LastOrDefault(user => user.UserEmail == userEmail);
+        StoredUser? user = connection.Table<StoredUser>().LastOrDefault(user => user.UserEmail == userEmail);
         if (user != null)
         {
             user.PersonalMessage = personalMessage;

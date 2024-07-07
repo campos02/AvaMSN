@@ -1,5 +1,4 @@
-﻿using AvaMSN.MSNP;
-using ReactiveUI;
+﻿using ReactiveUI;
 using System.Reactive;
 using AvaMSN.Models;
 using System.Collections.ObjectModel;
@@ -14,19 +13,22 @@ using AvaMSN.MSNP.Exceptions;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using AvaMSN.MSNP.NotificationServer;
+using AvaMSN.MSNP.NotificationServer.Contacts;
+using AvaMSN.MSNP.NotificationServer.UserProfile;
 using AvaMSN.Utils;
 
 namespace AvaMSN.ViewModels;
 
 public class LoginViewModel : ViewModelBase
 {
-    private string email = string.Empty;
-    private string password = string.Empty;
-
     private bool rememberMe;
     private bool rememberPassword;
-
-    public NotificationServer? NotificationServer { get; set; }
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string binarySecret = string.Empty;
+    private string ticketToken = string.Empty;
+    private string ticket = string.Empty;
 
     public bool RememberMe
     {
@@ -58,19 +60,16 @@ public class LoginViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref password, value);
     }
 
-    public Models.Profile Profile { get; set; } = new Models.Profile();
-
+    public User User { get; set; } = new User();
     public Presence[] Statuses => ContactListData.Statuses;
     public Presence SelectedStatus { get; set; }
-
     public ReactiveCommand<Unit, Unit> LoginCommand { get; }
     public ReactiveCommand<Unit, Unit> ForgetMeCommand { get; }
     public ReactiveCommand<string, Unit> ChangeUserCommand { get; }
+    public Database Database => new Database();
+    public ObservableCollection<StoredUser>? Users { get; set; }
 
-    public Database Database { get; set; } = new Database();
-    public ObservableCollection<User>? Users { get; set; }
-
-    public event EventHandler? LoggedIn;
+    public event EventHandler<LoggedInEventArgs>? LoggedIn;
 
     public LoginViewModel()
     {
@@ -79,7 +78,7 @@ public class LoginViewModel : ViewModelBase
         ChangeUserCommand = ReactiveCommand.Create<string>(ChangeUser);
 
         SelectedStatus = Statuses[0];
-        Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
+        User.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
         GetUsers();
     }
 
@@ -88,13 +87,13 @@ public class LoginViewModel : ViewModelBase
     /// </summary>
     public void GetUsers()
     {
-        Users = new ObservableCollection<User>(Database.GetUsers())
+        Users = new ObservableCollection<StoredUser>(Database.GetUsers())
         {
-            new User
+            new StoredUser
             {
                 UserEmail = "New user"
             },
-            new User
+            new StoredUser
             {
                 UserEmail = "Options"
             }
@@ -102,7 +101,7 @@ public class LoginViewModel : ViewModelBase
 
         if (Users.Count > 1)
         {
-            User user = Users[0];
+            StoredUser user = Users[0];
             ChangeUser(user.UserEmail);
         }
     }
@@ -111,7 +110,7 @@ public class LoginViewModel : ViewModelBase
     /// Displays selected user or runs selected option.
     /// </summary>
     /// <param name="option">Account email or option.</param>
-    public void ChangeUser(string option)
+    private void ChangeUser(string option)
     {
         switch (option)
         {
@@ -122,7 +121,7 @@ public class LoginViewModel : ViewModelBase
                 RememberMe = false;
                 RememberPassword = false;
 
-                Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
+                User.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
                 return;
 
             case "Options":
@@ -130,7 +129,7 @@ public class LoginViewModel : ViewModelBase
                 return;
         }
 
-        User? user = Users?.FirstOrDefault(user => user.UserEmail == option);
+        StoredUser? user = Users?.FirstOrDefault(user => user.UserEmail == option);
         if (user == null)
             return;
 
@@ -143,30 +142,26 @@ public class LoginViewModel : ViewModelBase
         if (Password != "")
             RememberPassword = true;
 
-        Profile.PersonalMessage = user.PersonalMessage;
+        User.PersonalMessage = user.PersonalMessage;
         LoadDisplayPicture(user.UserEmail);
     }
 
     /// <summary>
     /// Retrieves and sets a user display picture from the database. If none are found the default picture is set.
     /// </summary>
-    /// <param name="email">User email.</param>
-    public void LoadDisplayPicture(string email)
+    /// <param name="userEmail">User userEmail.</param>
+    private void LoadDisplayPicture(string userEmail)
     {
-        DisplayPicture? picture = Database?.GetUserDisplayPicture(email);
-        if (picture != null)
+        DisplayPicture? picture = Database.GetUserDisplayPicture(userEmail);
+        if (picture is { PictureData.Length: > 0 })
         {
-            if (picture.PictureData.Length > 0)
-            {
-                using MemoryStream pictureStream = new MemoryStream(picture.PictureData);
-                Profile.DisplayPicture = new Bitmap(pictureStream);
-                pictureStream.Position = 0;
-                Profile.DisplayPictureData = pictureStream.ToArray();
-            }
+            using MemoryStream pictureStream = new MemoryStream(picture.PictureData);
+            User.DisplayPicture = new Bitmap(pictureStream);
+            User.DisplayPictureData = picture.PictureData;
         }
         else
         {
-            Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
+            User.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
         }
     }
 
@@ -174,23 +169,29 @@ public class LoginViewModel : ViewModelBase
     /// Initiates a new notification server connection, does every login step and saves user if the remember options are enabled.
     /// </summary>
     /// <returns></returns>
-    public async Task Login()
+    private async Task Login()
     {
         LoadDisplayPicture(Email);
-
-        NotificationServer = new NotificationServer(SettingsManager.Settings.Server)
+        NotificationServer notificationServer = new NotificationServer
         {
-            Port = 1863
+            Host = SettingsManager.Settings.Server,
+            User =
+            {
+                Presence = SelectedStatus.ShortName,
+                Email = Email,
+                PersonalMessage = User.PersonalMessage
+            }
         };
 
-        NotificationServer.Profile.Presence = SelectedStatus.ShortName;
-        NotificationServer.Profile.Email = Email;
-        NotificationServer.Profile.PersonalMessage = Profile.PersonalMessage;
-        NotificationServer.Profile.DisplayPicture = Profile.DisplayPictureData ?? NotificationServer.Profile.DisplayPicture;
-        await NotificationServer.SendVersion();
+        notificationServer.User.DisplayPicture = User.DisplayPictureData ?? notificationServer.User.DisplayPicture;
+        await notificationServer.Connect();
+        
+        Authentication authentication = new Authentication(notificationServer);
+        await authentication.SendVER();
+        await authentication.SendCVR();
 
         // Use token and binary secret if available
-        User user = Users?.LastOrDefault(user => user.UserEmail == Email) ?? new User();
+        StoredUser user = Users?.LastOrDefault(user => user.UserEmail == Email) ?? new StoredUser();
         if (user.BinarySecret.Length > 0 & user.TicketToken.Length > 0 & user.Ticket.Length > 0)
         {
             Keys? keys = Database.GetUserKeys(user);
@@ -202,10 +203,10 @@ public class LoginViewModel : ViewModelBase
                 {
                     using (Aes aes = Aes.Create())
                     {
-                        using CryptoStream cryptoStream = new CryptoStream(ticketStream, aes.CreateDecryptor(keys.Key1, keys.IV1), CryptoStreamMode.Read);
+                        await using CryptoStream cryptoStream = new CryptoStream(ticketStream, aes.CreateDecryptor(keys.Key1, keys.IV1), CryptoStreamMode.Read);
                         using StreamReader encryptReader = new StreamReader(cryptoStream);
-                        NotificationServer.SSO.Ticket = await encryptReader.ReadToEndAsync();
-                        NotificationServer.SSO.Ticket = Regex.Replace(NotificationServer.SSO.Ticket, @"\t|\r|\n", "");
+                        authentication.SSO.Ticket = await encryptReader.ReadToEndAsync();
+                        authentication.SSO.Ticket = Regex.Replace(authentication.SSO.Ticket, @"\t|\r|\n", "");
                     }
                 }
 
@@ -213,10 +214,10 @@ public class LoginViewModel : ViewModelBase
                 {
                     using (Aes aes = Aes.Create())
                     {
-                        using CryptoStream cryptoStream = new CryptoStream(ticketTokenStream, aes.CreateDecryptor(keys.Key3, keys.IV3), CryptoStreamMode.Read);
+                        await using CryptoStream cryptoStream = new CryptoStream(ticketTokenStream, aes.CreateDecryptor(keys.Key3, keys.IV3), CryptoStreamMode.Read);
                         using StreamReader encryptReader = new StreamReader(cryptoStream);
-                        NotificationServer.SSO.TicketToken = await encryptReader.ReadToEndAsync();
-                        NotificationServer.SSO.TicketToken = Regex.Replace(NotificationServer.SSO.TicketToken, @"\t|\r|\n", "");
+                        authentication.SSO.TicketToken = await encryptReader.ReadToEndAsync();
+                        authentication.SSO.TicketToken = Regex.Replace(authentication.SSO.TicketToken, @"\t|\r|\n", "");
                     }
                 }
 
@@ -224,71 +225,96 @@ public class LoginViewModel : ViewModelBase
                 {
                     using (Aes aes = Aes.Create())
                     {
-                        using CryptoStream cryptoStream = new CryptoStream(binarySecretStream, aes.CreateDecryptor(keys.Key4, keys.IV4), CryptoStreamMode.Read);
+                        await using CryptoStream cryptoStream = new CryptoStream(binarySecretStream, aes.CreateDecryptor(keys.Key4, keys.IV4), CryptoStreamMode.Read);
                         using StreamReader encryptReader = new StreamReader(cryptoStream);
-                        NotificationServer.SSO.BinarySecret = await encryptReader.ReadToEndAsync();
-                        NotificationServer.SSO.BinarySecret = Regex.Replace(NotificationServer.SSO.BinarySecret, @"\t|\r|\n", "");
+                        authentication.SSO.BinarySecret = await encryptReader.ReadToEndAsync();
+                        authentication.SSO.BinarySecret = Regex.Replace(authentication.SSO.BinarySecret, @"\t|\r|\n", "");
                     }
                 }
             }
 
             try
             {
-                await NotificationServer.AuthenticateWithToken();
+                await authentication.AuthenticateWithTicket();
             }
             catch (AuthException)
             {
-                // Create new connection and try to login again with the password
-                await NotificationServer.DisconnectAsync();
-                NotificationServer = new NotificationServer(SettingsManager.Settings.Server)
+                // Create new connection and use password
+                notificationServer = new NotificationServer
                 {
-                    Port = 1863
+                    Host = SettingsManager.Settings.Server,
+                    User =
+                    {
+                        Presence = SelectedStatus.ShortName,
+                        Email = Email,
+                        PersonalMessage = User.PersonalMessage
+                    }
                 };
 
-                NotificationServer.Profile.Presence = SelectedStatus.ShortName;
-                NotificationServer.Profile.Email = Email;
-                NotificationServer.Profile.PersonalMessage = Profile.PersonalMessage;
-                NotificationServer.Profile.DisplayPicture = Profile.DisplayPictureData ?? NotificationServer.Profile.DisplayPicture;
-                await NotificationServer.SendVersion();
-
-                string password = string.Empty;
+                notificationServer.User.DisplayPicture = User.DisplayPictureData ?? notificationServer.User.DisplayPicture;
+                await notificationServer.Connect();
+        
+                authentication = new Authentication(notificationServer);
+                await authentication.SendVER();
+                await authentication.SendCVR();
+                
+                string userPassword = string.Empty;
                 using (MemoryStream passwordStream = new MemoryStream(user.Password))
                 {
                     using (Aes aes = Aes.Create())
                     {
                         if (keys != null)
                         {
-                            using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateDecryptor(keys.Key2, keys.IV2), CryptoStreamMode.Read);
+                            await using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateDecryptor(keys.Key2, keys.IV2), CryptoStreamMode.Read);
                             using StreamReader encryptReader = new StreamReader(cryptoStream);
-                            password = await encryptReader.ReadToEndAsync();
-                            password = Regex.Replace(password, @"\t|\r|\n", "");
+                            userPassword = await encryptReader.ReadToEndAsync();
+                            userPassword = Regex.Replace(userPassword, @"\t|\r|\n", "");
                         }
                     }
                 }
 
-                await NotificationServer.Authenticate(password);
-                SaveUserData(user, password);
+                await authentication.Authenticate(userPassword);
+                ticket = authentication.SSO.Ticket;
+                ticketToken = authentication.SSO.TicketToken;
+                binarySecret = authentication.SSO.BinarySecret;
+                SaveUserData(user, userPassword);
             }
         }
-
         else
         {
-            await NotificationServer.Authenticate(Password);
+            await authentication.Authenticate(Password);
+            ticket = authentication.SSO.Ticket;
+            ticketToken = authentication.SSO.TicketToken;
+            binarySecret = authentication.SSO.BinarySecret;
             SaveUserData(user, Password);
         }
 
-        await NotificationServer.GetContactList();
+        ContactActions contactActions = new ContactActions
+        {
+            Server = notificationServer
+        };
+        
+        UserProfile userProfile = new UserProfile
+        {
+            Server = notificationServer
+        };
+        
+        await contactActions.SendContactList();
 
         // Presence and personal message
-        await NotificationServer.SendUUX();
-        NotificationServer.CreateMSNObject();
-        await NotificationServer.SendCHG();
+        await userProfile.SendUUX();
+        userProfile.CreateMSNObject();
+        await userProfile.SendCHG();
 
         // Start regularly pinging after presence is set
-        _ = NotificationServer.Ping();
+        _ = notificationServer.StartPinging();
 
         // Navigate to contact list
-        LoggedIn?.Invoke(this, EventArgs.Empty);
+        LoggedIn?.Invoke(this, new LoggedInEventArgs
+        {
+            ContactActions = contactActions,
+            UserProfile = userProfile
+        });
 
         Email = string.Empty;
         Password = string.Empty;
@@ -298,8 +324,8 @@ public class LoginViewModel : ViewModelBase
     /// Saves user data to the database.
     /// </summary>
     /// <param name="user">User to save.</param>
-    /// <param name="password">User password to save.</param>
-    private void SaveUserData(User user, string password)
+    /// <param name="userPassword">User userPassword to save.</param>
+    private void SaveUserData(StoredUser user, string userPassword)
     {
         user.UserEmail = Email;
 
@@ -312,7 +338,7 @@ public class LoginViewModel : ViewModelBase
                 {
                     using CryptoStream cryptoStream = new CryptoStream(ticketStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
                     using StreamWriter encryptWriter = new StreamWriter(cryptoStream);
-                    encryptWriter.WriteLine(NotificationServer?.SSO.Ticket);
+                    encryptWriter.WriteLine(ticket);
 
                     keys.Key1 = aes.Key;
                     keys.IV1 = aes.IV;
@@ -327,7 +353,7 @@ public class LoginViewModel : ViewModelBase
                 {
                     using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
                     using StreamWriter encryptWriter = new StreamWriter(cryptoStream);
-                    encryptWriter.WriteLine(password);
+                    encryptWriter.WriteLine(userPassword);
 
                     keys.Key2 = aes.Key;
                     keys.IV2 = aes.IV;
@@ -342,7 +368,7 @@ public class LoginViewModel : ViewModelBase
                 {
                     using CryptoStream cryptoStream = new CryptoStream(ticketTokenStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
                     using StreamWriter encryptWriter = new StreamWriter(cryptoStream);
-                    encryptWriter.WriteLine(NotificationServer?.ContactService.TicketToken);
+                    encryptWriter.WriteLine(ticketToken);
 
                     keys.Key3 = aes.Key;
                     keys.IV3 = aes.IV;
@@ -357,7 +383,7 @@ public class LoginViewModel : ViewModelBase
                 {
                     using CryptoStream cryptoStream = new CryptoStream(binarySecretStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
                     using StreamWriter encryptWriter = new StreamWriter(cryptoStream);
-                    encryptWriter.WriteLine(NotificationServer?.SSO.BinarySecret);
+                    encryptWriter.WriteLine(binarySecret);
 
                     keys.Key4 = aes.Key;
                     keys.IV4 = aes.IV;
@@ -367,19 +393,19 @@ public class LoginViewModel : ViewModelBase
             }
 
             keys.UserEmail = user.UserEmail;
-            Database?.SaveKeys(keys);
+            Database.SaveKeys(keys);
         }
 
         if (RememberMe)
-            Database?.SaveUser(user);
+            Database.SaveUser(user);
     }
 
     /// <summary>
     /// Empties fields and removes a user account from user list and database.
     /// </summary>
-    public void ForgetMe()
+    private void ForgetMe()
     {
-        User? user = Users?.LastOrDefault(user => user.UserEmail == Email);
+        StoredUser? user = Users?.LastOrDefault(user => user.UserEmail == Email);
 
         if (user == null)
             return;
@@ -388,8 +414,8 @@ public class LoginViewModel : ViewModelBase
         Password = string.Empty;
 
         Users?.Remove(user);
-        Database?.DeleteUser(user);
-        Profile.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
+        Database.DeleteUser(user);
+        User.DisplayPicture = new Bitmap(AssetLoader.Open(new Uri("avares://AvaMSN.Shared/Assets/default-display-picture.png")));
     }
 
     /// <summary>
@@ -401,7 +427,7 @@ public class LoginViewModel : ViewModelBase
             SettingsWindow.Activate();
         else
         {
-            SettingsWindow = new SettingsWindow()
+            SettingsWindow = new SettingsWindow
             {
                 DataContext = new SettingsWindowViewModel()
             };

@@ -42,7 +42,7 @@
                 Orientation="Horizontal">
       <Border CornerRadius="5"
               ClipToBounds="True">
-        <Image Source="{Binding Profile.DisplayPicture}"
+        <Image Source="{Binding User.DisplayPicture}"
              MaxHeight="90"
              MaxWidth="90"/>
       </Border>
@@ -60,10 +60,10 @@
                         Height="0">
             <StackPanel Spacing="3"
                         Orientation="Horizontal">
-              <TextBlock Text="{Binding Profile.DisplayName}"
+              <TextBlock Text="{Binding User.DisplayName}"
                          FontSize="20"
                          FontWeight="ExtraBold"/>
-              <TextBlock Text="{Binding Profile.Presence, StringFormat='({0})'}"
+              <TextBlock Text="{Binding User.Presence, StringFormat='({0})'}"
                          VerticalAlignment="Bottom"/>
             </StackPanel>
           </ComboBoxItem>

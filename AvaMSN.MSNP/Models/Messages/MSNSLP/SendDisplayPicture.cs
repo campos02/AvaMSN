@@ -1,12 +1,12 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace AvaMSN.MSNP.Messages.MSNSLP;
+namespace AvaMSN.MSNP.Models.Messages.MSNSLP;
 
 /// <summary>
 /// Stores session parameters and contains functions that return message payloads for sending a display picture.
 /// </summary>
-public class SendDisplayPicture : DisplayPictureSession
+internal class SendDisplayPicture : DisplayPictureSession
 {
     public byte[]? Data { get; set; }
     public int DataOffset { get; set; }
@@ -35,7 +35,7 @@ public class SendDisplayPicture : DisplayPictureSession
         byte[] message = headers.Concat(body).ToArray();
 
         Identifier++;
-        LastHeader = new BinaryHeader()
+        LastHeader = new BinaryHeader
         {
             Identifier = Identifier,
             DataSize = (ulong)message.Length + 1,
@@ -43,7 +43,7 @@ public class SendDisplayPicture : DisplayPictureSession
             AckID = BitConverter.ToUInt32(RandomNumberGenerator.GetBytes(sizeof(uint)))
         };
 
-        byte[] footer = { 00, 00, 00, 00, 00 };
+        byte[] footer = [00, 00, 00, 00, 00];
 
         // Combine to produce full MSNSLP content
         byte[] content = LastHeader.GetBytes().Concat(message).Concat(footer).ToArray();
@@ -58,10 +58,10 @@ public class SendDisplayPicture : DisplayPictureSession
     /// <returns>Binary payload.</returns>
     public byte[] DataPreparationPayload()
     {
-        byte[] message = { 00, 00, 00, 00 };
+        byte[] message = [00, 00, 00, 00];
 
         Identifier++;
-        LastHeader = new BinaryHeader()
+        LastHeader = new BinaryHeader
         {
             SessionID = SessionID,
             Identifier = Identifier,
@@ -70,7 +70,7 @@ public class SendDisplayPicture : DisplayPictureSession
             AckID = BitConverter.ToUInt32(RandomNumberGenerator.GetBytes(sizeof(uint)))
         };
 
-        byte[] footer = { 00, 00, 00, 01 };
+        byte[] footer = [00, 00, 00, 01];
 
         // Combine to produce full MSNSLP content
         byte[] content = LastHeader.GetBytes().Concat(message).Concat(footer).ToArray();
@@ -100,7 +100,7 @@ public class SendDisplayPicture : DisplayPictureSession
         // Copy chunk to buffer
         Buffer.BlockCopy(Data!, DataOffset, message, 0, message.Length);
 
-        LastHeader = new BinaryHeader()
+        LastHeader = new BinaryHeader
         {
             SessionID = SessionID,
             Identifier = Identifier + 1,
@@ -111,7 +111,7 @@ public class SendDisplayPicture : DisplayPictureSession
             AckID = BitConverter.ToUInt32(RandomNumberGenerator.GetBytes(sizeof(uint)))
         };
 
-        byte[] footer = { 00, 00, 00, 01 };
+        byte[] footer = [00, 00, 00, 01];
 
         // Combine to produce full MSNSLP content
         byte[] content = LastHeader.GetBytes().Concat(message).Concat(footer).ToArray();
