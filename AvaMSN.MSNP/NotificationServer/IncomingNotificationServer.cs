@@ -3,6 +3,9 @@ using AvaMSN.MSNP.NotificationServer.Contacts;
 
 namespace AvaMSN.MSNP.NotificationServer;
 
+/// <summary>
+/// Handles other Notification Server incoming responses, in this case new Switchboard requests.
+/// </summary>
 public class IncomingNotificationServer
 {
     public IncomingContacts? IncomingContacts { get; set; }

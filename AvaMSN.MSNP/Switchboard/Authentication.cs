@@ -2,6 +2,9 @@
 
 namespace AvaMSN.MSNP.Switchboard;
 
+/// <summary>
+/// Handles authentication in the Switchboard.
+/// </summary>
 internal class Authentication : ISwitchboardWrapper
 {
     public Switchboard? Server { get; set; }

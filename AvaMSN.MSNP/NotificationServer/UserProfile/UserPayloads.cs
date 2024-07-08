@@ -4,6 +4,9 @@ using AvaMSN.MSNP.XML.SerializableClasses;
 
 namespace AvaMSN.MSNP.NotificationServer.UserProfile;
 
+/// <summary>
+/// Contains methods for building payloads to user-related commands.
+/// </summary>
 internal static class UserPayloads
 {
     /// <summary>

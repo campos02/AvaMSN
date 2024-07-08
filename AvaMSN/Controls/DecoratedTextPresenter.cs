@@ -10,6 +10,9 @@ using AvaMSN.Utils;
 
 namespace AvaMSN.Controls;
 
+/// <summary>
+/// TextPresenter control that adds text decorations.
+/// </summary>
 public class DecoratedTextPresenter : TextPresenter
 {
     private Size _constraint;

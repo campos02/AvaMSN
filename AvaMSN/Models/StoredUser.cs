@@ -20,7 +20,6 @@ public class StoredUser : ReactiveObject
     }
 
     public string PersonalMessage { get; set; } = string.Empty;
-
     public byte[] Password { get; set; } = [];
     public byte[] BinarySecret { get; set; } = [];
     public byte[] Ticket { get; set; } = [];

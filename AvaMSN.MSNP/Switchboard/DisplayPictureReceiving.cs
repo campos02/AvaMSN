@@ -4,6 +4,9 @@ using AvaMSN.MSNP.Models.Messages.MSNSLP;
 
 namespace AvaMSN.MSNP.Switchboard;
 
+/// <summary>
+/// Contains methods for receiving a display picture from a contact via a P2P transfer.
+/// </summary>
 public class DisplayPictureReceiving : ISwitchboardWrapper
 {
     public Switchboard? Server { get; set; }
@@ -36,13 +39,13 @@ public class DisplayPictureReceiving : ISwitchboardWrapper
         if (Server == null)
             throw new NullReferenceException("Server is null");
         
-        if (Server.Contact.DisplayPictureObject == null)
+        if (Server.Contact?.DisplayPictureObject == null)
             return;
 
         ReceiveDisplayPicture displayPicture = new ReceiveDisplayPicture
         {
             To = Server.Contact.Email,
-            From = Server.User.Email
+            From = Server.User?.Email ?? string.Empty
         };
 
         Server.TransactionID++;

@@ -6,6 +6,9 @@ using AvaMSN.MSNP.XML.SerializableClasses;
 
 namespace AvaMSN.MSNP.NotificationServer.Contacts;
 
+/// <summary>
+/// Handles incoming contact list responses.
+/// </summary>
 public class IncomingContacts
 {
     public NotificationServer? Server { get; init; }
@@ -44,10 +47,11 @@ public class IncomingContacts
             throw new NullReferenceException("Server is null");
         
         string[] parameters = response.Split(" ");
-
         int firstIndex = 0;
+        
+        // NLN response has one parameter less
         if (parameters[0] == "NLN")
-            firstIndex--;
+            firstIndex = -1;
         
         Contact contact = ContactList.FirstOrDefault(c => c.Email == parameters[firstIndex + 3]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = parameters[firstIndex + 2];

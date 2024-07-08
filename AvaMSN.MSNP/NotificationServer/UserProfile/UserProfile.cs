@@ -8,6 +8,9 @@ using AvaMSN.MSNP.XML.SerializableClasses;
 
 namespace AvaMSN.MSNP.NotificationServer.UserProfile;
 
+/// <summary>
+/// Handles operations related to the user.
+/// </summary>
 public class UserProfile
 {
     public NotificationServer? Server { get; init; }

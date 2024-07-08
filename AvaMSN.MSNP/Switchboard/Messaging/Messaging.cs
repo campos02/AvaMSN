@@ -4,6 +4,9 @@ using AvaMSN.MSNP.Messages;
 
 namespace AvaMSN.MSNP.Switchboard.Messaging;
 
+/// <summary>
+/// Handles sending and receiving messages.
+/// </summary>
 public class Messaging : ISwitchboardWrapper
 {
     public Switchboard? Server { get; set; }

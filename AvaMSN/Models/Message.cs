@@ -13,7 +13,6 @@ public class Message
 
     public string Sender { get; set; } = string.Empty;
     public string Recipient { get; set; } = string.Empty;
-
     public string SenderDisplayName { get; set; } = string.Empty;
     public string RecipientDisplayName { get; set; } = string.Empty;
 
@@ -21,10 +20,9 @@ public class Message
     public bool Italic { get; set; }
     public string Decorations { get; set; } = string.Empty;
     public string Color { get; set; } = string.Empty;
+    
     public string Text { get; set; } = string.Empty;
-
     public DateTime DateTime { get; set; }
-
     public bool IsHistory { get; set; }
     public bool IsNudge { get; set; }
 }

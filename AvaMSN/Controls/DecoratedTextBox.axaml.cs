@@ -6,6 +6,9 @@ using Avalonia.Media;
 
 namespace AvaMSN.Controls;
 
+/// <summary>
+/// TextBox control that adds text decorations.
+/// </summary>
 public class DecoratedTextBox : TextBox
 {
     protected override Type StyleKeyOverride => typeof(TextBox);

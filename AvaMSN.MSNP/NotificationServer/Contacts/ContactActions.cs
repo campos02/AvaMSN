@@ -4,6 +4,9 @@ using AvaMSN.MSNP.Models;
 
 namespace AvaMSN.MSNP.NotificationServer.Contacts;
 
+/// <summary>
+/// Provides contact actions such as adding, removing, blocking, unblocking and receiving them from the ABCH.
+/// </summary>
 public class ContactActions
 {
     public NotificationServer? Server { get; init; }

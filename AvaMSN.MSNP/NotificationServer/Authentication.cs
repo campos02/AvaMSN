@@ -2,6 +2,9 @@
 
 namespace AvaMSN.MSNP.NotificationServer;
 
+/// <summary>
+/// Handles authentication in the Notification Server.
+/// </summary>
 public class Authentication
 {
     private NotificationServer Server { get; }

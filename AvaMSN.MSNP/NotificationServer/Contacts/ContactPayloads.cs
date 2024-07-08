@@ -5,6 +5,9 @@ using AvaMSN.MSNP.XML.SerializableClasses.InitialListPayload;
 
 namespace AvaMSN.MSNP.NotificationServer.Contacts;
 
+/// <summary>
+/// Contains methods for building payloads to contact-related commands.
+/// </summary>
 internal static class ContactPayloads
 {
     /// <summary>

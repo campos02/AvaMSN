@@ -6,6 +6,9 @@ using AvaMSN.MSNP.Models.Messages.MSNSLP;
 
 namespace AvaMSN.MSNP.Switchboard.Messaging;
 
+/// <summary>
+/// Handles receiving messages.
+/// </summary>
 public class IncomingMessaging
 {
     public Switchboard? Server { get; init; }
