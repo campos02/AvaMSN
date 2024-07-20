@@ -32,15 +32,10 @@ public class TextPlain
         string[] parameters = formatParameter.Split(";");
         string effect = parameters[1];
 
-        if (effect.Contains("B"))
-            Bold = true;
-        if (effect.Contains("I"))
-            Italic = true;
-        if (effect.Contains("S"))
-            Strikethrough = true;
-        if (effect.Contains("U"))
-            Underline = true;
-
+        Bold = effect.Contains("B");
+        Italic = effect.Contains("I");
+        Strikethrough = effect.Contains("S");
+        Underline = effect.Contains("U");
         string color = parameters[2].Replace(" CO=", "");
         
         // Add trailing zeroes back

@@ -40,7 +40,7 @@ internal class Authentication : ISwitchboardWrapper
                 break;
             }
 
-            if (response.Contains("911"))
+            if (response.StartsWith("911"))
                 throw new AuthException("Authentication failed");
         }
 
@@ -91,7 +91,7 @@ internal class Authentication : ISwitchboardWrapper
                     break;
             }
 
-            else if (response.Contains("911"))
+            else if (response.StartsWith("911"))
                 throw new AuthException("Authentication failed");
         }
 
@@ -112,5 +112,10 @@ internal class Authentication : ISwitchboardWrapper
         Server.TransactionID++;
         string message = $"CAL {Server.TransactionID} {Server.Contact?.Email}\r\n";
         await Server.SendAsync(message);
+        
+        // Throw exception if contact is offline
+        string response = await Server.ReceiveStringAsync();
+        if (response.StartsWith("217"))
+            throw new ContactException("Contact is offline");
     }
 }

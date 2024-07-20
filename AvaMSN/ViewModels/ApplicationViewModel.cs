@@ -2,27 +2,32 @@
 using Avalonia.Controls.ApplicationLifetimes;
 using ReactiveUI;
 using System.Reactive;
+using System.Threading.Tasks;
+using Avalonia.Threading;
 
 namespace AvaMSN.ViewModels;
 
 public class ApplicationViewModel : ViewModelBase
 {
-    public ReactiveCommand<Unit, Unit> OpenCommand { get; } = ReactiveCommand.Create(OpenWindows);
+    public ReactiveCommand<Unit, Unit> OpenCommand { get; } = ReactiveCommand.CreateFromTask(OpenWindows);
     public ReactiveCommand<Unit, Unit> MinimizeCommand { get; } = ReactiveCommand.Create(MinimizeToTray);
     public ReactiveCommand<Unit, Unit> ExitCommand { get; } = ReactiveCommand.Create(Exit);
 
     /// <summary>
     /// Opens all windows and brings them to focus.
     /// </summary>
-    public static void OpenWindows()
+    public static async Task OpenWindows()
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            for (int i = 0; i < desktop.Windows.Count; i++)
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                desktop.Windows[i].Show();
-                desktop.Windows[i].Activate();
-            }
+                for (int i = 0; i < desktop.Windows.Count; i++)
+                {
+                    desktop.Windows[i].Show();
+                    desktop.Windows[i].Activate();
+                }
+            });
         }
     }
 

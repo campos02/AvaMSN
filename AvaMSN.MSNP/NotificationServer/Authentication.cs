@@ -58,7 +58,7 @@ public class Authentication
         while (true)
         {
             // Send CVR
-            var message = $"CVR {Server.TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.11 msmsgs\r\n";
+            var message = $"CVR {Server.TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.11.1 msmsgs\r\n";
             await Server.SendAsync(message);
 
             // Receive CVR
@@ -149,7 +149,7 @@ public class Authentication
                 break;
             }
 
-            if (response.Contains("911"))
+            if (response.StartsWith("911"))
                 throw new AuthException("Authentication failed. Make sure email and password are correct.");
         }
     }

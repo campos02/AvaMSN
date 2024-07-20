@@ -96,9 +96,9 @@ public class App : Application
             NotificationManager.NotificationActivated += NotificationManager_NotificationActivated;
     }
 
-    private static void NotificationManager_NotificationActivated(object? sender, NotificationActivatedEventArgs e)
+    private static async void NotificationManager_NotificationActivated(object? sender, NotificationActivatedEventArgs e)
     {
-        ApplicationViewModel.OpenWindows();
+        await ApplicationViewModel.OpenWindows();
     }
 
     private void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
