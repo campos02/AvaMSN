@@ -42,7 +42,7 @@ public class SingleSignOn
     /// <param name="username">Username.</param>
     /// <param name="password">User password.</param>
     /// <returns></returns>
-    public async Task RstRequest(string username, string password)
+    internal async Task RstRequest(string username, string password)
     {
         XmlSerializer requestSerializer = new(typeof(SOAP.SerializableClasses.RST.Envelope));
 
@@ -74,9 +74,9 @@ public class SingleSignOn
     /// <returns>Hashed key bytes.</returns>
     private static byte[] WsKey(byte[] key, string wsSecure)
     {
-        HMACSHA1 hMACSHA1 = new HMACSHA1(key);
         byte[] wsSecureBytes = Encoding.UTF8.GetBytes(wsSecure);
 
+        HMACSHA1 hMACSHA1 = new HMACSHA1(key);
         byte[] hash1 = hMACSHA1.ComputeHash(wsSecureBytes);
         byte[] hash2 = hMACSHA1.ComputeHash(hash1.Concat(wsSecureBytes).ToArray());
         byte[] hash3 = hMACSHA1.ComputeHash(hash1);
@@ -94,17 +94,16 @@ public class SingleSignOn
     /// </summary>
     /// <param name="nonce">Nonce obtained from server response.</param>
     /// <returns>SSO return value.</returns>
-    public string GetReturnValue(string nonce)
+    internal string GetReturnValue(string nonce)
     {
         byte[] nonceBytes = Encoding.UTF8.GetBytes(nonce);
-
         byte[] key1 = Convert.FromBase64String(BinarySecret);
         byte[] key2 = WsKey(key1, "WS-SecureConversationSESSION KEY HASH");
         byte[] key3 = WsKey(key1, "WS-SecureConversationSESSION KEY ENCRYPTION");
 
         HMACSHA1 hMACSHA1 = new HMACSHA1(key2);
         byte[] key2Hash = hMACSHA1.ComputeHash(nonceBytes);
-        byte[] eight8Bytes = { 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08 };
+        byte[] eight8Bytes = [0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08];
         byte[] paddedNonce = nonceBytes.Concat(eight8Bytes).ToArray();
         byte[] randomBytes = RandomNumberGenerator.GetBytes(8);
 
@@ -114,7 +113,7 @@ public class SingleSignOn
         tripleDES.CreateEncryptor(key3, randomBytes).TransformBlock(paddedNonce, 0, paddedNonce.Length, encryptedData, 0);
 
         uint[] headerValues =
-        {
+        [
             28,//uStructHeaderSize
             1,//uCryptMode
             0x6603,//uCipherMode
@@ -122,7 +121,7 @@ public class SingleSignOn
             8,//uIVLen
             20,//uHashLen
             72//uCipherLen
-        };
+        ];
 
         byte[] returnStruct = UIntBytes(headerValues);
         returnStruct = returnStruct.Concat(randomBytes).ToArray();//aIVBytes
