@@ -30,8 +30,8 @@ public class TextPlain
     {
         formatParameter = formatParameter.Replace("X-MMS-IM-Format: ", "");
         string[] parameters = formatParameter.Split(";");
-        string effect = parameters[1];
 
+        string effect = parameters[1];
         Bold = effect.Contains("B");
         Italic = effect.Contains("I");
         Strikethrough = effect.Contains("S");
@@ -67,7 +67,7 @@ public class TextPlain
         if (color.Length == 6)
         {
             // Reverse from RGB to BGR
-            color = $"{color.Substring(4,2)}{color.Substring(2,2)}{color.Substring(0,2)}";
+            color = $"{color.Substring(4, 2)}{color.Substring(2, 2)}{color.Substring(0, 2)}";
         }
 
         return $"MIME-Version: {MimeVersion}\r\n" +

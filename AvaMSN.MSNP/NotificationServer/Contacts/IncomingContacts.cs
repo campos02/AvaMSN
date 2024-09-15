@@ -29,7 +29,7 @@ public class IncomingContacts
         {
             "ILN" => HandlePresence(response),
             "NLN" => HandlePresence(response),
-            "FLN" => Task.Run(() => HandleFLN(response)),
+            "FLN" => HandleFLN(response),
             "UBX" => HandleUBX(response),
             _ => Task.CompletedTask
         });
@@ -105,11 +105,16 @@ public class IncomingContacts
     /// </summary>
     /// <param name="response"></param>
     /// <exception cref="ContactException">Thrown if response is of a non-existent contact.</exception>
-    private void HandleFLN(string response)
+    private async Task HandleFLN(string response)
     {
         string[] parameters = response.Split(" ");
         Contact contact = ContactList.FirstOrDefault(c => c.Email == parameters[1]) ?? throw new ContactException("Contact does not exist");
         contact.Presence = PresenceStatus.Offline;
+
+        List<Switchboard.Switchboard>? contactSwitchboards = Server?.Switchboards.Where(sb => sb.Contact?.Email == contact.Email).ToList();
+        if (contactSwitchboards != null)
+            foreach (Switchboard.Switchboard? switchboard in contactSwitchboards)
+                await switchboard.DisconnectAsync();
 
         PresenceChanged?.Invoke(this, new PresenceEventArgs
         {

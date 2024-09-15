@@ -184,7 +184,7 @@ public class ContactListData
             }
         }
 
-        // Set new presence
+        // Set new presence and display picture
         foreach (ContactGroup group in ContactGroups)
         {
             contact = group.Contacts.FirstOrDefault(c => c?.Email == e.Email);
@@ -192,9 +192,12 @@ public class ContactListData
             {
                 contact.Presence = PresenceStatus.GetFullName(e.Presence);
                 contact.PresenceColor = GetStatusColor(e.Presence);
-                
+
                 if (e.HasDisplayPicture)
-                    contact.DisplayPictureHash = e.DisplayPictureHash;
+                {
+                    if (e.DisplayPictureHash != null)
+                        contact.DisplayPictureHash = e.DisplayPictureHash;
+                }
                 else
                 {
                     // Remove display picture if the contact doesn't have it anymore

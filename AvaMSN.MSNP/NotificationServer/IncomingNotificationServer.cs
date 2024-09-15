@@ -10,6 +10,7 @@ public class IncomingNotificationServer
 {
     public IncomingContacts? IncomingContacts { get; set; }
     public User? User { get; internal init; }
+    public NotificationServer? Server { get; set; }
     
     public event EventHandler<SwitchboardEventArgs>? SwitchboardChanged;
 
@@ -50,7 +51,7 @@ public class IncomingNotificationServer
             Contact = contact
         };
 
-        AvaMSN.MSNP.Switchboard.Authentication authentication = new AvaMSN.MSNP.Switchboard.Authentication
+        Switchboard.Authentication authentication = new Switchboard.Authentication
         {
             Server = switchboard
         };
@@ -61,6 +62,7 @@ public class IncomingNotificationServer
             Switchboard = switchboard
         });
 
+        Server?.Switchboards.Add(switchboard);
         return switchboard;
     }
 }

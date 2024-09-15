@@ -31,7 +31,6 @@ internal class BinaryHeader
     {
         using MemoryStream headerStream = new MemoryStream(binaryHeader);
         using BinaryReader reader = new BinaryReader(headerStream);
-        
         SessionID = reader.ReadUInt32();
         Identifier = reader.ReadUInt32();
         DataOffset = reader.ReadUInt64();

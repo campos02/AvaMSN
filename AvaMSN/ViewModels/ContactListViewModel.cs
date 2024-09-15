@@ -298,18 +298,18 @@ public class ContactListViewModel : ViewModelBase
             };
 
             conversation.DisplayPictureUpdated += Conversation_DisplayPictureUpdated;
+            if (ContactActions?.Server?.Incoming != null)
+                ContactActions.Server.Incoming.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
+
             Conversations.Add(conversation);
         }
-        
+
         conversation.OpenWindow();
         if (conversation.Messaging.Server == null || !conversation.Messaging.Server.Connected)
         {
-            conversation.Messaging.Server = await ContactActions.Server.SendXFR(contact);
+            conversation.Messaging.Server = await ContactActions!.Server.SendXFR(contact);
             conversation.Messaging.StartIncoming();
             conversation.DisplayPictureReceiving.Server = conversation.Messaging.Server;
-            if (ContactActions?.Server?.Incoming != null)
-                ContactActions.Server.Incoming.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
-            
             conversation.SubscribeToEvents();
         }
         
@@ -359,7 +359,7 @@ public class ContactListViewModel : ViewModelBase
     /// </summary>
     public void SubscribeToEvents()
     {
-        ContactActions!.Server.Disconnected += NotificationServer_Disconnected;
+        ContactActions!.Server!.Disconnected += NotificationServer_Disconnected;
         ContactActions.Server.Incoming!.SwitchboardChanged += NotificationServer_SwitchboardChanged;
     }
 
@@ -368,7 +368,7 @@ public class ContactListViewModel : ViewModelBase
     /// </summary>
     public void UnsubscribeFromEvents()
     {
-        ContactActions!.Server.Disconnected -= NotificationServer_Disconnected;
+        ContactActions!.Server!.Disconnected -= NotificationServer_Disconnected;
         ContactActions.Server.Incoming!.SwitchboardChanged -= NotificationServer_SwitchboardChanged;
     }
 
@@ -415,11 +415,11 @@ public class ContactListViewModel : ViewModelBase
                 ContactActions = ContactActions
             };
 
-            conversation.Messaging.StartIncoming();
-            conversation.DisplayPictureReceiving.Server = conversation.Messaging.Server;
             if (ContactActions?.Server?.Incoming != null)
                 ContactActions.Server.Incoming.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
-            
+
+            conversation.DisplayPictureReceiving.Server = conversation.Messaging.Server;
+            conversation.Messaging.StartIncoming();
             conversation.SubscribeToEvents();
             Conversations.Add(conversation);
         }

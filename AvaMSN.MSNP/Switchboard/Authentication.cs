@@ -117,5 +117,8 @@ internal class Authentication : ISwitchboardWrapper
         string response = await Server.ReceiveStringAsync();
         if (response.StartsWith("217"))
             throw new ContactException("Contact is offline");
+
+        // Start receiving incoming commands again
+        _ = Server.ReceiveIncomingAsync();
     }
 }

@@ -12,15 +12,16 @@ public class NotificationServer : Connection
 {
     public User User { get; init; } = new User();
     public static string Protocol => "MSNP15";
-    private List<Switchboard.Switchboard> Switchboards => [];
     public IncomingNotificationServer? Incoming { get; private set; }
+    internal List<Switchboard.Switchboard> Switchboards { get; set; } = [];
 
     public override async Task Connect()
     {
         await base.Connect();
         Incoming = new IncomingNotificationServer
         {
-            User = User
+            User = User,
+            Server = this
         };
         
         ContactService.SharingServiceUrl = $"https://{Host}/abservice/SharingService.asmx";
@@ -69,7 +70,7 @@ public class NotificationServer : Connection
             Contact = contact
         };
 
-        AvaMSN.MSNP.Switchboard.Authentication authentication = new AvaMSN.MSNP.Switchboard.Authentication
+        Switchboard.Authentication authentication = new Switchboard.Authentication
         {
             Server = switchboard
         };
@@ -115,7 +116,7 @@ public class NotificationServer : Connection
     /// <returns></returns>
     internal async Task HandleIncoming(string response)
     {
-        await Incoming!.IncomingContacts.HandleIncoming(response);
+        await Incoming!.IncomingContacts!.HandleIncoming(response);
         string command = response.Split(" ")[0];
         
         await (command switch
@@ -135,8 +136,6 @@ public class NotificationServer : Connection
     {
         await base.DisconnectAsync(requested);
         foreach (Switchboard.Switchboard switchboard in Switchboards)
-        {
             await switchboard.DisconnectAsync();
-        }
     }
 }

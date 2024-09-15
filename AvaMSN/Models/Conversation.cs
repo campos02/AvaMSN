@@ -128,7 +128,7 @@ public class Conversation : ReactiveObject
         {
             if (Messaging.Server == null || !Messaging.Server.Connected)
             {
-                Messaging.Server = await ContactActions!.Server.SendXFR(Contact.Email, ContactActions!.ContactList);
+                Messaging.Server = await ContactActions!.Server!.SendXFR(Contact.Email, ContactActions!.ContactList);
                 SubscribeToEvents();
             }
 
@@ -188,7 +188,7 @@ public class Conversation : ReactiveObject
         {
             if (Messaging.Server == null || !Messaging.Server.Connected)
             {
-                Messaging.Server = await ContactActions!.Server.SendXFR(Contact.Email, ContactActions!.ContactList);
+                Messaging.Server = await ContactActions!.Server!.SendXFR(Contact.Email, ContactActions!.ContactList);
                 SubscribeToEvents();
             }
 
