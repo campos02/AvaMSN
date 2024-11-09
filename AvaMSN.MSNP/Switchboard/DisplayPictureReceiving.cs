@@ -48,24 +48,28 @@ public class DisplayPictureReceiving : ISwitchboardWrapper
             From = Server.User?.Email ?? string.Empty
         };
 
+        // Send MSG with invitation
         Server.TransactionID++;
         byte[] messagePayload = displayPicture.InvitePayload(Server.Contact.DisplayPictureObject);
-        BinaryHeader binaryHeader;
-
-        // Send MSG with invitation
         byte[] message = Encoding.UTF8.GetBytes($"MSG {Server.TransactionID} D {messagePayload.Length}\r\n");
         await Server.SendAsync(message.Concat(messagePayload).ToArray());
 
+        BinaryHeader binaryHeader;
         byte[] response;
         while (true)
         {
             // Receive MSG with acknowledgement
             response = await Server.ReceiveAsync();
             string responseString = Encoding.UTF8.GetString(response);
-
             string[] responses = responseString.Split("\r\n");
-            if (responses[0].Contains("ACK"))
-                responses = responses.Skip(1).ToArray();
+
+            // Skip ACKs
+            while (responses[0].Contains("ACK"))
+            {
+                response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                responseString = Encoding.UTF8.GetString(response);
+                responses = responseString.Split("\r\n");
+            }
 
             if (responseString.Contains("MSG"))
             {
@@ -82,7 +86,8 @@ public class DisplayPictureReceiving : ISwitchboardWrapper
                 {
                     string messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
                     string[] payloadHeaderParameters = payloadString.Split("\r\n\r\n")[1].Split("\r\n");
-                    if (messageHeaders.Split("\r\n")[2].Contains(Server.User.Email) && payloadHeaderParameters[0].Contains("200 OK"))
+
+                    if (messageHeaders.Split("\r\n")[2].Contains(Server.User!.Email) && payloadHeaderParameters[0].Contains("200 OK"))
                     {
                         byte[] header = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).Take(BinaryHeader.HeaderSize).ToArray();
                         binaryHeader = new BinaryHeader(header);
@@ -96,10 +101,9 @@ public class DisplayPictureReceiving : ISwitchboardWrapper
                 await Server.HandleIncoming(response);
         }
 
+        // Send MSG with acknowledgement
         Server.TransactionID++;
         messagePayload = displayPicture.AcknowledgePayload(binaryHeader);
-
-        // Send MSG with acknowledgement
         message = Encoding.UTF8.GetBytes($"MSG {Server.TransactionID} D {messagePayload.Length}\r\n");
         await Server.SendAsync(message.Concat(messagePayload).ToArray());
 
@@ -154,6 +158,7 @@ public class DisplayPictureReceiving : ISwitchboardWrapper
                     {
                         byte[] binaryPayload = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).ToArray();
                         byte[] header = binaryPayload.Take(BinaryHeader.HeaderSize).ToArray();
+
                         binaryPayload = binaryPayload.Skip(BinaryHeader.HeaderSize).ToArray();
                         binaryHeader = new BinaryHeader(header);
                         binaryPayload = binaryPayload[..^4];
@@ -161,12 +166,12 @@ public class DisplayPictureReceiving : ISwitchboardWrapper
                         // Handle data preparation
                         if (binaryPayload.Length == 4)
                         {
+                            // Send MSG with acknowledgement
                             Server.TransactionID++;
                             messagePayload = displayPicture.AcknowledgePayload(binaryHeader);
-
-                            // Send MSG with acknowledgement
                             message = Encoding.UTF8.GetBytes($"MSG {Server.TransactionID} D {messagePayload.Length}\r\n");
                             await Server.SendAsync(message.Concat(messagePayload).ToArray());
+
                             continue;
                         }
 
@@ -188,10 +193,9 @@ public class DisplayPictureReceiving : ISwitchboardWrapper
             }
         }
 
+        // Send MSG and BYE
         Server.TransactionID++;
         messagePayload = displayPicture.ByePayload();
-
-        // Send MSG and BYE
         message = Encoding.UTF8.GetBytes($"MSG {Server.TransactionID} D {messagePayload.Length}\r\n");
         await Server.SendAsync(message.Concat(messagePayload).ToArray());
 

@@ -158,22 +158,19 @@ public class IncomingMessaging
             return;
 
         displayPicture.SessionID = Convert.ToUInt32(payloadBodyParameters[1].Split(" ")[1]);
-
-        string msnObject = Encoding.UTF8.GetString(Convert.FromBase64String(payloadBodyParameters[4].Replace("Context: ", "")));
+        string msnObject = Encoding.UTF8.GetString(Convert.FromBase64String(payloadBodyParameters.Last().Replace("Context: ", "")));
         if (!msnObject.Contains(Server.User.DisplayPictureObject!))
             return;
 
+        // Send MSG with acknowledgement
         Server.TransactionID++;
         byte[] messagePayload = displayPicture.AcknowledgePayload(binaryHeader);
-
-        // Send MSG with acknowledgement
         byte[] message = Encoding.UTF8.GetBytes($"MSG {Server.TransactionID} D {messagePayload.Length}\r\n");
         await Server.SendAsync(message.Concat(messagePayload).ToArray());
 
+        // Send MSG with 200 OK
         Server.TransactionID++;
         messagePayload = displayPicture.OkPayload();
-
-        // Send MSG with 200 OK
         message = Encoding.UTF8.GetBytes($"MSG {Server.TransactionID} D {messagePayload.Length}\r\n");
         await Server.SendAsync(message.Concat(messagePayload).ToArray());
 
@@ -186,17 +183,22 @@ public class IncomingMessaging
             if (responseString.Contains("MSG"))
             {
                 string[] responses = responseString.Split("\r\n");
-                if (responses[0].Contains("ACK"))
-                    responses = responses.Skip(1).ToArray();
+
+                // Skip ACKs
+                while (responses[0].Contains("ACK"))
+                {
+                    response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                    responseString = Encoding.UTF8.GetString(response);
+                    responses = responseString.Split("\r\n");
+                }
 
                 string[] parameters = responses[0].Split(" ");
                 int length = Convert.ToInt32(parameters[3]);
-
                 byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
                 payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                 payloadString = Encoding.UTF8.GetString(payload);
-                string[] payloadParameters = payloadString.Split("\r\n");
 
+                string[] payloadParameters = payloadString.Split("\r\n");
                 if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                 {
                     messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
@@ -210,10 +212,9 @@ public class IncomingMessaging
                 await HandleIncoming(response);
         }
 
+        // Send MSG with data preparation
         Server.TransactionID++;
         messagePayload = displayPicture.DataPreparationPayload();
-
-        // Send MSG with data preparation
         message = Encoding.UTF8.GetBytes($"MSG {Server.TransactionID} D {messagePayload.Length}\r\n");
         await Server.SendAsync(message.Concat(messagePayload).ToArray());
 
@@ -226,17 +227,22 @@ public class IncomingMessaging
             if (responseString.Contains("MSG"))
             {
                 string[] responses = responseString.Split("\r\n");
-                if (responses[0].Contains("ACK"))
-                    responses = responses.Skip(1).ToArray();
+
+                // Skip ACKs
+                while (responses[0].Contains("ACK"))
+                {
+                    response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                    responseString = Encoding.UTF8.GetString(response);
+                    responses = responseString.Split("\r\n");
+                }
 
                 string[] parameters = responses[0].Split(" ");
                 int length = Convert.ToInt32(parameters[3]);
-
                 byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
                 payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                 payloadString = Encoding.UTF8.GetString(payload);
-                string[] payloadParameters = payloadString.Split("\r\n");
 
+                string[] payloadParameters = payloadString.Split("\r\n");
                 if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                 {
                     messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
