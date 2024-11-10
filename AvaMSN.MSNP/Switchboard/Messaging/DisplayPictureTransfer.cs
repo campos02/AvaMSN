@@ -63,7 +63,7 @@ namespace AvaMSN.MSNP.Switchboard.Messaging
                 // Skip ACKs
                 while (responses[0].Contains("ACK"))
                 {
-                    response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                    response = response.Skip(Encoding.UTF8.GetByteCount(responses[0] + "\r\n")).ToArray();
                     responseString = Encoding.UTF8.GetString(response);
                     responses = responseString.Split("\r\n");
                 }
@@ -73,20 +73,20 @@ namespace AvaMSN.MSNP.Switchboard.Messaging
                     string[] parameters = responses[0].Split(" ");
                     int length = Convert.ToInt32(parameters[3]);
 
-                    response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
-                    byte[] payload = new Span<byte>(response, 0, length).ToArray();
+                    byte[] payloadResponse = response.Skip(Encoding.UTF8.GetByteCount(responses[0] + "\r\n")).ToArray();
+                    byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                     string payloadString = Encoding.UTF8.GetString(payload);
                     string[] payloadParameters = payloadString.Split("\r\n");
 
-                    response = response.Skip(length).ToArray();
                     if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                     {
+                        response = response.Skip(Encoding.UTF8.GetByteCount(responses[0] + "\r\n") + length).ToArray();
                         string messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
                         string[] payloadHeaderParameters = payloadString.Split("\r\n\r\n")[1].Split("\r\n");
 
                         if (messageHeaders.Split("\r\n")[2].Contains(Server.User!.Email) && payloadHeaderParameters[0].Contains("200 OK"))
                         {
-                            byte[] header = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).Take(BinaryHeader.HeaderSize).ToArray();
+                            byte[] header = payload.Skip(Encoding.UTF8.GetByteCount(messageHeaders)).Take(BinaryHeader.HeaderSize).ToArray();
                             binaryHeader = new BinaryHeader(header);
                             break;
                         }
@@ -132,28 +132,29 @@ namespace AvaMSN.MSNP.Switchboard.Messaging
                     }
 
                     int length = Convert.ToInt32(parameters[3]);
-                    if (length > response.Length - Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length)
+                    if (length > response.Length - Encoding.UTF8.GetByteCount(responses[0] + "\r\n"))
                     {
                         response = response.Concat(await Server.ReceiveAsync()).ToArray();
                         continue;
                     }
 
-                    response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
-                    byte[] payload = new Span<byte>(response, 0, length).ToArray();
+                    byte[] payloadResponse = response.Skip(Encoding.UTF8.GetByteCount(responses[0] + "\r\n")).ToArray();
+                    byte[] payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                     string payloadString = Encoding.UTF8.GetString(payload);
                     string[] payloadParameters = payloadString.Split("\r\n");
-                    response = response.Skip(length).ToArray();
-
-                    // Ignore invites other than the current one
-                    if (payloadString.Contains("INVITE"))
-                        continue;
 
                     if (payloadParameters[1] == "Content-Type: application/x-msnmsgrp2p")
                     {
+                        response = response.Skip(Encoding.UTF8.GetByteCount(responses[0] + "\r\n") + length).ToArray();
                         string messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
+
+                        // Ignore invites other than the current one
+                        if (payloadString.Contains("INVITE"))
+                            continue;
+
                         if (messageHeaders.Split("\r\n")[2].Contains(Server.User.Email))
                         {
-                            byte[] binaryPayload = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).ToArray();
+                            byte[] binaryPayload = payload.Skip(Encoding.UTF8.GetByteCount(messageHeaders)).ToArray();
                             byte[] header = binaryPayload.Take(BinaryHeader.HeaderSize).ToArray();
 
                             binaryPayload = binaryPayload.Skip(BinaryHeader.HeaderSize).ToArray();
@@ -176,11 +177,11 @@ namespace AvaMSN.MSNP.Switchboard.Messaging
                             if (binaryHeader.DataOffset + binaryHeader.Length == binaryHeader.DataSize)
                                 break;
                         }
-                        else
-                        {
-                            await Server.HandleIncoming(response);
-                            response = [];
-                        }
+                    }
+                    else
+                    {
+                        await Server.HandleIncoming(response);
+                        response = response.Skip(Encoding.UTF8.GetByteCount(responses[0] + "\r\n") + length).ToArray();
                     }
                 }
                 else
@@ -222,7 +223,7 @@ namespace AvaMSN.MSNP.Switchboard.Messaging
             string payloadString = Encoding.UTF8.GetString(payload);
             string messageHeaders = payloadString.Split("\r\n\r\n")[0] + "\r\n\r\n";
 
-            byte[] header = payload.Skip(Encoding.UTF8.GetBytes(messageHeaders).Length).Take(BinaryHeader.HeaderSize).ToArray();
+            byte[] header = payload.Skip(Encoding.UTF8.GetByteCount(messageHeaders)).Take(BinaryHeader.HeaderSize).ToArray();
             BinaryHeader binaryHeader = new BinaryHeader(header);
 
             string[] payloadHeaderParameters = payloadString.Split("\r\n\r\n")[1].Split("\r\n");
@@ -277,14 +278,14 @@ namespace AvaMSN.MSNP.Switchboard.Messaging
                     // Skip ACKs
                     while (responses[0].Contains("ACK"))
                     {
-                        response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                        response = response.Skip(Encoding.UTF8.GetByteCount(responses[0] + "\r\n")).ToArray();
                         responseString = Encoding.UTF8.GetString(response);
                         responses = responseString.Split("\r\n");
                     }
 
                     string[] parameters = responses[0].Split(" ");
                     int length = Convert.ToInt32(parameters[3]);
-                    byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                    byte[] payloadResponse = response.Skip(Encoding.UTF8.GetByteCount(responses[0] + "\r\n")).ToArray();
                     payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                     payloadString = Encoding.UTF8.GetString(payload);
 
@@ -321,14 +322,14 @@ namespace AvaMSN.MSNP.Switchboard.Messaging
                     // Skip ACKs
                     while (responses[0].Contains("ACK"))
                     {
-                        response = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                        response = response.Skip(Encoding.UTF8.GetByteCount(responses[0] + "\r\n")).ToArray();
                         responseString = Encoding.UTF8.GetString(response);
                         responses = responseString.Split("\r\n");
                     }
 
                     string[] parameters = responses[0].Split(" ");
                     int length = Convert.ToInt32(parameters[3]);
-                    byte[] payloadResponse = response.Skip(Encoding.UTF8.GetBytes(responses[0] + "\r\n").Length).ToArray();
+                    byte[] payloadResponse = response.Skip(Encoding.UTF8.GetByteCount(responses[0] + "\r\n")).ToArray();
                     payload = new Span<byte>(payloadResponse, 0, length).ToArray();
                     payloadString = Encoding.UTF8.GetString(payload);
 

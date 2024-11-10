@@ -315,7 +315,7 @@ public class ContactListViewModel : ViewModelBase
         try
         {
             if (contact.DisplayPictureHash != SelectedContact.DisplayPictureHash)
-                await conversation.Messaging.IncomingMessaging!.DisplayPictureTransfer!.GetDisplayPicture();
+                _ = conversation.Messaging.IncomingMessaging!.DisplayPictureTransfer!.GetDisplayPicture();
         }
         catch (OperationCanceledException)
         {
