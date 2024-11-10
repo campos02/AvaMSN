@@ -248,7 +248,7 @@
             <TextBlock Text="{Binding DisplayName}"
                        FontWeight="{Binding NewMessages, Converter={StaticResource boldConverter}}"/>
             <TextBlock Text="{Binding PersonalMessage, StringFormat='- {0}'}"
-                       Foreground="LightGray"
+                       Foreground="Gray"
                        IsVisible="{Binding PersonalMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
           </StackPanel>
         </DataTemplate>

@@ -4,9 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:models="clr-namespace:AvaMSN.Models;assembly=AvaMSN.Shared"
              xmlns:vm="clr-namespace:AvaMSN.ViewModels"
+             xmlns:dvm="clr-namespace:AvaMSN.ViewModels.Design"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
              x:Class="AvaMSN.Views.ErrorView"
              x:DataType="vm:ErrorViewModel">
+
+  <Design.DataContext>
+    <dvm:DesignErrorViewModel/>
+  </Design.DataContext>
 
   <UserControl.Resources>
     <ResourceDictionary>
@@ -29,7 +34,7 @@
           Background="{DynamicResource BackgroundBrush}"
           Padding="10">
     
-    <Grid RowDefinitions="Auto, 10, Auto">
+    <Grid RowDefinitions="90, 10, Auto">
 
       <ScrollViewer>
         <TextBlock Text="{Binding Error}"

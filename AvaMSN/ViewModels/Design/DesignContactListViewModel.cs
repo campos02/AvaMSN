@@ -25,7 +25,8 @@ public class DesignContactListViewModel : ContactListViewModel
                     {
                         DisplayName = "Online Contact",
                         Presence = PresenceStatus.GetFullName(PresenceStatus.Online),
-                        NewMessages = true
+                        NewMessages = true,
+                        PersonalMessage = "Online Contact personal message"
                     }
                 }),
 

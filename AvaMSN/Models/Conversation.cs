@@ -51,7 +51,6 @@ public class Conversation : ReactiveObject
     public DisplayPictureReceiving DisplayPictureReceiving { get; set; } = new DisplayPictureReceiving();
     public ContactActions? ContactActions { get; init; }
     public static NotificationHandler? NotificationHandler { get; set; }
-
     public event EventHandler? DisplayPictureUpdated;
 
     public Conversation(Contact contact, User user, Database? database = null)
@@ -124,6 +123,20 @@ public class Conversation : ReactiveObject
         if (string.IsNullOrEmpty(textMessage.Text))
             return;
 
+        Message message = new Message
+        {
+            Sender = User.Email,
+            SenderDisplayName = User.DisplayName,
+            Recipient = Contact.Email,
+            RecipientDisplayName = Contact.DisplayName,
+            Bold = textMessage.Bold,
+            Italic = textMessage.Italic,
+            Decorations = textMessage.Decorations,
+            Color = textMessage.Color,
+            Text = textMessage.Text,
+            DateTime = DateTime.Now
+        };
+
         try
         {
             if (Messaging.Server == null || !Messaging.Server.Connected)
@@ -132,28 +145,15 @@ public class Conversation : ReactiveObject
                 SubscribeToEvents();
             }
 
-            await Messaging.SendTextMessage(textMessage);
             TypingUser = false;
-
-            Message message = new Message
-            {
-                Sender = User.Email,
-                SenderDisplayName = User.DisplayName,
-                Recipient = Contact.Email,
-                RecipientDisplayName = Contact.DisplayName,
-
-                Bold = textMessage.Bold,
-                Italic = textMessage.Italic,
-                Decorations = textMessage.Decorations,
-                Color = textMessage.Color,
-
-                Text = textMessage.Text,
-                DateTime = DateTime.Now
-            };
-
+            await Messaging.SendTextMessage(textMessage);
             Messages.Add(message);
-            if (SettingsManager.Settings.SaveMessagingHistory)
-                Database?.SaveMessage(message);
+        }
+
+        catch (OperationCanceledException)
+        {
+            Messages.Add(message);
+            return;
         }
 
         catch (Exception)
@@ -164,6 +164,9 @@ public class Conversation : ReactiveObject
                 DateTime = DateTime.Now
             });
         }
+
+        if (SettingsManager.Settings.SaveMessagingHistory)
+            Database?.SaveMessage(message);
     }
 
     /// <summary>
@@ -184,6 +187,14 @@ public class Conversation : ReactiveObject
     /// <returns></returns>
     public async Task SendNudge()
     {
+        Message message = new Message
+        {
+            Sender = User.Email,
+            Recipient = Contact.Email,
+            Text = $"You sent {Contact.DisplayName} a nudge.",
+            DateTime = DateTime.Now
+        };
+
         try
         {
             if (Messaging.Server == null || !Messaging.Server.Connected)
@@ -192,20 +203,15 @@ public class Conversation : ReactiveObject
                 SubscribeToEvents();
             }
 
-            await Messaging.SendNudge();
             TypingUser = false;
-
-            Message message = new Message
-            {
-                Sender = User.Email,
-                Recipient = Contact.Email,
-                Text = $"You sent {Contact.DisplayName} a nudge.",
-                DateTime = DateTime.Now
-            };
-
+            await Messaging.SendNudge();
             Messages.Add(message);
-            if (SettingsManager.Settings.SaveMessagingHistory)
-                Database?.SaveMessage(message);
+        }
+
+        catch (OperationCanceledException)
+        {
+            Messages.Add(message);
+            return;
         }
 
         catch (Exception)
@@ -216,6 +222,9 @@ public class Conversation : ReactiveObject
                 DateTime = DateTime.Now
             });
         }
+
+        if (SettingsManager.Settings.SaveMessagingHistory)
+            Database?.SaveMessage(message);
     }
 
     /// <summary>
