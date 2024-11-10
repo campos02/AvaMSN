@@ -309,14 +309,13 @@ public class ContactListViewModel : ViewModelBase
         {
             conversation.Messaging.Server = await ContactActions!.Server.SendXFR(contact);
             conversation.Messaging.StartIncoming();
-            conversation.DisplayPictureReceiving.Server = conversation.Messaging.Server;
             conversation.SubscribeToEvents();
         }
         
         try
         {
             if (contact.DisplayPictureHash != SelectedContact.DisplayPictureHash)
-                await conversation.DisplayPictureReceiving.GetDisplayPicture();
+                await conversation.Messaging.IncomingMessaging!.DisplayPictureTransfer!.GetDisplayPicture();
         }
         catch (OperationCanceledException)
         {
@@ -423,7 +422,6 @@ public class ContactListViewModel : ViewModelBase
             if (ContactActions?.Server?.Incoming != null)
                 ContactActions.Server.Incoming.SwitchboardChanged += conversation.NotificationServer_SwitchboardChanged;
 
-            conversation.DisplayPictureReceiving.Server = conversation.Messaging.Server;
             conversation.Messaging.StartIncoming();
             conversation.SubscribeToEvents();
             Conversations.Add(conversation);

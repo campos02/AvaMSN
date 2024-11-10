@@ -5,7 +5,6 @@ using System;
 using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia.Media;
-using AvaMSN.Utils;
 
 namespace AvaMSN.ViewModels;
 

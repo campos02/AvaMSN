@@ -23,7 +23,11 @@ public class Messaging : ISwitchboardWrapper
 
         IncomingMessaging = new IncomingMessaging
         {
-            Server = Server
+            Server = Server,
+            DisplayPictureTransfer = new DisplayPictureTransfer()
+            {
+                Server = Server
+            }
         };
         Server.IncomingMessaging = IncomingMessaging;
     }

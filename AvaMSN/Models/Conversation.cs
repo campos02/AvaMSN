@@ -8,7 +8,6 @@ using Avalonia.Media.Imaging;
 using AvaMSN.MSNP.Messages;
 using AvaMSN.MSNP.Models;
 using AvaMSN.MSNP.NotificationServer.Contacts;
-using AvaMSN.MSNP.Switchboard;
 using AvaMSN.MSNP.Switchboard.Messaging;
 using AvaMSN.Utils;
 using AvaMSN.Utils.Notifications;
@@ -48,7 +47,6 @@ public class Conversation : ReactiveObject
     }
 
     public Messaging Messaging { get; set; } = new Messaging();
-    public DisplayPictureReceiving DisplayPictureReceiving { get; set; } = new DisplayPictureReceiving();
     public ContactActions? ContactActions { get; init; }
     public static NotificationHandler? NotificationHandler { get; set; }
     public event EventHandler? DisplayPictureUpdated;
@@ -66,7 +64,6 @@ public class Conversation : ReactiveObject
             Contact.DisplayPicture = new Bitmap(pictureStream);
             Contact.DisplayPictureHash = displayPicture.PictureHash;
         }
-        DisplayPictureReceiving.DisplayPictureUpdated += DisplayPictureReceiving_DisplayPictureUpdated;
 
         // Load only last four messages, the user needs to click on the menu item to show more
         GetHistory(4);
@@ -279,7 +276,11 @@ public class Conversation : ReactiveObject
             Messaging.Server.Disconnected += Switchboard_Disconnected;
 
         if (Messaging.IncomingMessaging != null)
+        {
             Messaging.IncomingMessaging.MessageReceived += IncomingMessaging_MessageReceived;
+            if (Messaging.IncomingMessaging.DisplayPictureTransfer != null)
+                Messaging.IncomingMessaging.DisplayPictureTransfer.DisplayPictureUpdated += DisplayPictureReceiving_DisplayPictureUpdated;
+        }
     }
 
     /// <summary>
@@ -291,7 +292,11 @@ public class Conversation : ReactiveObject
             Messaging.Server.Disconnected -= Switchboard_Disconnected;
 
         if (Messaging.IncomingMessaging != null)
+        {
             Messaging.IncomingMessaging.MessageReceived -= IncomingMessaging_MessageReceived;
+            if (Messaging.IncomingMessaging.DisplayPictureTransfer != null)
+                Messaging.IncomingMessaging.DisplayPictureTransfer.DisplayPictureUpdated -= DisplayPictureReceiving_DisplayPictureUpdated;
+        }
     }
 
     private void Switchboard_Disconnected(object? sender, DisconnectedEventArgs e)
