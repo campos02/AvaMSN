@@ -318,7 +318,12 @@ public class ContactListViewModel : ViewModelBase
             if (contact.DisplayPictureHash != SelectedContact.DisplayPictureHash)
                 await conversation.DisplayPictureReceiving.GetDisplayPicture();
         }
-        catch (OperationCanceledException) { return; }
+        catch (OperationCanceledException)
+        {
+            // Start receiving incoming commands again
+            _ = conversation.Messaging.Server.ReceiveIncomingAsync();
+            return;
+        }
     }
 
     /// <summary>

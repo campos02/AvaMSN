@@ -10,7 +10,6 @@ namespace AvaMSN.MSNP.Switchboard;
 public class DisplayPictureReceiving : ISwitchboardWrapper
 {
     public Switchboard? Server { get; set; }
-    
     public event EventHandler<DisplayPictureEventArgs>? DisplayPictureUpdated;
     
     /// <summary>

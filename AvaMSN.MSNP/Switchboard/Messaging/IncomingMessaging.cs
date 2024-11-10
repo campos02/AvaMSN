@@ -12,7 +12,6 @@ namespace AvaMSN.MSNP.Switchboard.Messaging;
 public class IncomingMessaging
 {
     public Switchboard? Server { get; init; }
-    
     public event EventHandler<MessageEventArgs>? MessageReceived;
 
     /// <summary>

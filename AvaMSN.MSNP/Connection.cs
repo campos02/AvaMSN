@@ -115,7 +115,7 @@ public abstract class Connection
     /// Continuously receives and handles incoming responses.
     /// </summary>
     /// <returns></returns>
-    internal async Task ReceiveIncomingAsync()
+    public async Task ReceiveIncomingAsync()
     {
         if (Client == null)
             throw new NullReferenceException("Socket is null");
