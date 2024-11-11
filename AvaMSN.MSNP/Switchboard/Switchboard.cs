@@ -14,6 +14,7 @@ public class Switchboard : Connection
 {
     public User? User { get; init; }
     public Contact? Contact { get; init; }
+    public bool ContactInSession { get; internal set; }
     internal IncomingMessaging? IncomingMessaging { get; set; }
     private readonly Timer timeout;
 

@@ -55,7 +55,9 @@ public class IncomingNotificationServer
         {
             Server = switchboard
         };
+
         await authentication.SendANS(sessionID, authString);
+        switchboard.ContactInSession = true;
         
         SwitchboardChanged?.Invoke(this, new SwitchboardEventArgs
         {

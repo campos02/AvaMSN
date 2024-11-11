@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
+using AvaMSN.MSNP.Exceptions;
 using AvaMSN.MSNP.Messages;
 using AvaMSN.MSNP.Models;
 using AvaMSN.MSNP.NotificationServer.Contacts;
@@ -278,6 +279,7 @@ public class Conversation : ReactiveObject
         if (Messaging.IncomingMessaging != null)
         {
             Messaging.IncomingMessaging.MessageReceived += IncomingMessaging_MessageReceived;
+            Messaging.IncomingMessaging.ContactJoined += IncomingMessaging_ContactJoined;
             if (Messaging.IncomingMessaging.DisplayPictureTransfer != null)
                 Messaging.IncomingMessaging.DisplayPictureTransfer.DisplayPictureUpdated += DisplayPictureReceiving_DisplayPictureUpdated;
         }
@@ -294,6 +296,7 @@ public class Conversation : ReactiveObject
         if (Messaging.IncomingMessaging != null)
         {
             Messaging.IncomingMessaging.MessageReceived -= IncomingMessaging_MessageReceived;
+            Messaging.IncomingMessaging.ContactJoined -= IncomingMessaging_ContactJoined;
             if (Messaging.IncomingMessaging.DisplayPictureTransfer != null)
                 Messaging.IncomingMessaging.DisplayPictureTransfer.DisplayPictureUpdated -= DisplayPictureReceiving_DisplayPictureUpdated;
         }
@@ -316,6 +319,28 @@ public class Conversation : ReactiveObject
         Messaging.Server = e.Switchboard;
         Messaging.StartIncoming();
         SubscribeToEvents();
+    }
+
+    /// <summary>
+    /// Requests a contact's display picture if it has been updated.
+    /// </summary>
+    /// <exception cref="ContactException">Thrown if the contact is found in the contact list.</exception>
+    private void IncomingMessaging_ContactJoined(object? sender, EventArgs e)
+    {
+        MSNP.Models.Contact contact = ContactActions?.ContactList.FirstOrDefault(c => c.Email == Contact.Email) ??
+                                      throw new ContactException("Could not find the selected contact");
+
+        try
+        {
+            if (contact.DisplayPictureHash != Contact.DisplayPictureHash)
+                _ = Messaging.IncomingMessaging?.DisplayPictureTransfer?.GetDisplayPicture();
+        }
+        catch (OperationCanceledException)
+        {
+            // Start receiving incoming commands again
+            _ = Messaging?.Server?.ReceiveIncomingAsync();
+            return;
+        }
     }
 
     /// <summary>

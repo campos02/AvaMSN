@@ -278,6 +278,8 @@ public class ContactListViewModel : ViewModelBase
     /// Creates a new conversation object with the selected contact and opens a new conversation window.
     /// If a conversation with the selected contact already exists however, simply opens its window.
     /// </summary>
+    /// <returns></returns>
+    /// <exception cref="ContactException">Thrown if the contact is found in the contact list.</exception>
     private async Task Chat()
     {
         if (SelectedContact == null || ContactActions?.Server?.Incoming == null)
@@ -311,11 +313,11 @@ public class ContactListViewModel : ViewModelBase
             conversation.Messaging.StartIncoming();
             conversation.SubscribeToEvents();
         }
-        
+
         try
         {
-            if (contact.DisplayPictureHash != SelectedContact.DisplayPictureHash)
-                _ = conversation.Messaging.IncomingMessaging!.DisplayPictureTransfer!.GetDisplayPicture();
+            if (contact.DisplayPictureHash != SelectedContact.DisplayPictureHash && conversation.Messaging.Server.ContactInSession)
+                _ = conversation.Messaging.IncomingMessaging?.DisplayPictureTransfer?.GetDisplayPicture();
         }
         catch (OperationCanceledException)
         {

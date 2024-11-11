@@ -11,6 +11,7 @@ public class IncomingMessaging
 {
     public Switchboard? Server { get; init; }
     public DisplayPictureTransfer? DisplayPictureTransfer { get; set; }
+    public event EventHandler? ContactJoined;
     public event EventHandler<MessageEventArgs>? MessageReceived;
 
     /// <summary>
@@ -25,9 +26,19 @@ public class IncomingMessaging
 
         await (command switch
         {
+            "JOI" => Task.Run(HandleJOI),
             "MSG" => HandleMSG(response),
             _ => Task.CompletedTask
         });
+    }
+
+    /// <summary>
+    /// Handles a JOI command.
+    /// </summary>
+    private void HandleJOI()
+    {
+        Server!.ContactInSession = true;
+        ContactJoined?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
