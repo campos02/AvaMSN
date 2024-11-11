@@ -279,7 +279,7 @@ public class ContactListViewModel : ViewModelBase
     /// If a conversation with the selected contact already exists however, simply opens its window.
     /// </summary>
     /// <returns></returns>
-    /// <exception cref="ContactException">Thrown if the contact is found in the contact list.</exception>
+    /// <exception cref="ContactException">Thrown if the contact is not found in the contact list.</exception>
     private async Task Chat()
     {
         if (SelectedContact == null || ContactActions?.Server?.Incoming == null)

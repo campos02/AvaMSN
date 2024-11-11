@@ -324,7 +324,7 @@ public class Conversation : ReactiveObject
     /// <summary>
     /// Requests a contact's display picture if it has been updated.
     /// </summary>
-    /// <exception cref="ContactException">Thrown if the contact is found in the contact list.</exception>
+    /// <exception cref="ContactException">Thrown if the contact is not found in the contact list.</exception>
     private void IncomingMessaging_ContactJoined(object? sender, EventArgs e)
     {
         MSNP.Models.Contact contact = ContactActions?.ContactList.FirstOrDefault(c => c.Email == Contact.Email) ??
