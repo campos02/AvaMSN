@@ -1,6 +1,6 @@
 ﻿using AvaMSN.MSNP.Exceptions;
 
-namespace AvaMSN.MSNP.NotificationServer;
+namespace AvaMSN.MSNP.NotificationServer.Authentication;
 
 /// <summary>
 /// Handles authentication in the Notification Server.
@@ -9,7 +9,7 @@ public class Authentication
 {
     private NotificationServer Server { get; }
     public SingleSignOn SSO { get; }
-    
+
     public Authentication(NotificationServer server)
     {
         Server = server;
@@ -19,7 +19,7 @@ public class Authentication
             RstAddress = $"https://{Server.Host}/RST.srf"
         };
     }
-    
+
     /// <summary>
     /// Negotiates protocol version with the server.
     /// </summary>
@@ -47,7 +47,7 @@ public class Authentication
             }
         }
     }
-    
+
     /// <summary>
     /// Sends client info.
     /// </summary>
@@ -69,7 +69,7 @@ public class Authentication
                 break;
         }
     }
-    
+
     /// <summary>
     /// Does SSO authentication.
     /// </summary>

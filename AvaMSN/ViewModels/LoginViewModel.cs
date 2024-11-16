@@ -16,6 +16,7 @@ using System.Text.RegularExpressions;
 using AvaMSN.MSNP.NotificationServer;
 using AvaMSN.MSNP.NotificationServer.Contacts;
 using AvaMSN.MSNP.NotificationServer.UserProfile;
+using AvaMSN.MSNP.NotificationServer.Authentication;
 using AvaMSN.Utils;
 
 namespace AvaMSN.ViewModels;

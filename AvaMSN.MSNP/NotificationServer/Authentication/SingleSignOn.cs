@@ -5,7 +5,7 @@ using AvaMSN.MSNP.SOAP;
 using AvaMSN.MSNP.SOAP.RequestObjects;
 using Serilog;
 
-namespace AvaMSN.MSNP;
+namespace AvaMSN.MSNP.NotificationServer.Authentication;
 
 /// <summary>
 /// Contains functions used in SSO authentication and stores auth data.
@@ -60,7 +60,7 @@ public class SingleSignOn
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.RstResponse.Envelope));
         using StringReader reader = new StringReader(response);
         var responseEnvelope = (SOAP.SerializableClasses.RstResponse.Envelope?)responseSerializer.Deserialize(reader);
-        
+
         Ticket = responseEnvelope!.Body.RequestSecurityTokenResponseCollection[1].RequestedSecurityToken.BinarySecurityToken.Value;
         BinarySecret = responseEnvelope.Body.RequestSecurityTokenResponseCollection[1].RequestedProofToken.BinarySecret;
         TicketToken = responseEnvelope.Body.RequestSecurityTokenResponseCollection[2].RequestedSecurityToken.BinarySecurityToken.Value;
@@ -84,7 +84,7 @@ public class SingleSignOn
 
         byte[] hash4FourBytes = new byte[4];
         Buffer.BlockCopy(hash4, 0, hash4FourBytes, 0, hash4FourBytes.Length);
-        
+
         byte[] returnKey = hash2.Concat(hash4FourBytes).ToArray();
         return returnKey;
     }
