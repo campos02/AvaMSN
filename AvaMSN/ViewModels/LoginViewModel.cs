@@ -238,7 +238,7 @@ public class LoginViewModel : ViewModelBase
             {
                 await authentication.AuthenticateWithTicket();
             }
-            catch (AuthException)
+            catch (MsnpServerAuthException)
             {
                 // Create new connection and use password
                 notificationServer = new NotificationServer

@@ -14,7 +14,7 @@ internal class Authentication : ISwitchboardWrapper
     /// </summary>
     /// <param name="authString">Auth string sent by the NS.</param>
     /// <returns></returns>
-    /// <exception cref="AuthException">Thrown if authentication isn't successful.</exception>
+    /// <exception cref="MsnpServerAuthException">Thrown if authentication isn't successful.</exception>
     public async Task SendUSR(string authString)
     {
         if (Server == null)
@@ -41,7 +41,7 @@ internal class Authentication : ISwitchboardWrapper
             }
 
             if (response.StartsWith("911"))
-                throw new AuthException("Authentication failed");
+                throw new MsnpServerAuthException("Authentication failed");
         }
 
         // Start receiving incoming commands
@@ -54,7 +54,7 @@ internal class Authentication : ISwitchboardWrapper
     /// <param name="sessionID">Session ID sent by the NS.</param>
     /// <param name="authString">Auth string sent by the NS.</param>
     /// <returns></returns>
-    /// <exception cref="AuthException">Thrown if authentication isn't successful.</exception>
+    /// <exception cref="MsnpServerAuthException">Thrown if authentication isn't successful.</exception>
     public async Task SendANS(string sessionID, string authString)
     {
         if (Server == null)
@@ -92,7 +92,7 @@ internal class Authentication : ISwitchboardWrapper
             }
 
             else if (response.StartsWith("911"))
-                throw new AuthException("Authentication failed");
+                throw new MsnpServerAuthException("Authentication failed");
         }
 
         // Start receiving incoming commands

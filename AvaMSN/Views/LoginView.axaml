@@ -36,7 +36,7 @@
     <TextBlock Grid.Row="3"
                Grid.ColumnSpan="3"
                HorizontalAlignment="Center"
-               FontWeight="ExtraBold"
+               FontWeight="Bold"
                FontSize="20">Welcome!</TextBlock>
 
     <Grid Grid.Row="4"

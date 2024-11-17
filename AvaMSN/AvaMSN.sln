@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AvaMSN.Desktop", "..\AvaMSN
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AvaMSN.MSNP", "..\AvaMSN.MSNP\AvaMSN.MSNP.csproj", "{3A43F10D-597C-437D-A333-572C954CA9D2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaMSN.Tests", "..\AvaMSN.Tests\AvaMSN.Tests.csproj", "{0D38BB0B-B393-4B13-94CB-DD42306EAA68}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{3A43F10D-597C-437D-A333-572C954CA9D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A43F10D-597C-437D-A333-572C954CA9D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A43F10D-597C-437D-A333-572C954CA9D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D38BB0B-B393-4B13-94CB-DD42306EAA68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D38BB0B-B393-4B13-94CB-DD42306EAA68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D38BB0B-B393-4B13-94CB-DD42306EAA68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D38BB0B-B393-4B13-94CB-DD42306EAA68}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

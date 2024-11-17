@@ -20,7 +20,7 @@
     <TextBlock Grid.Row="1"
                HorizontalAlignment="Center"
                VerticalAlignment="Bottom"
-               FontWeight="ExtraBold"
+               FontWeight="Bold"
                FontSize="20">Settings</TextBlock>
 
     <Grid Grid.Row="2"

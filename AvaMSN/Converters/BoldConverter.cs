@@ -16,7 +16,7 @@ public class BoldConverter : IValueConverter
         if (value is bool bold)
         {
             if (bold)
-                return FontWeight.ExtraBold;
+                return FontWeight.Bold;
             else
                 return FontWeight.Regular;
         }
