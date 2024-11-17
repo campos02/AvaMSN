@@ -286,7 +286,16 @@ public class LoginViewModel : ViewModelBase
         }
         else
         {
-            await authentication.Authenticate(Password);
+            try
+            {
+                await authentication.Authenticate(Password);
+            }
+            catch (RedirectedByTheServerException e)
+            {
+                authentication = await CreateConnection(e.Server, e.Port);
+                await authentication.AuthenticateWithTicket();
+            }
+
             ticket = authentication.SSO.Ticket;
             ticketToken = authentication.SSO.TicketToken;
             binarySecret = authentication.SSO.BinarySecret;

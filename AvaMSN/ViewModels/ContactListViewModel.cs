@@ -447,6 +447,7 @@ public class ContactListViewModel : ViewModelBase
             conversation.CloseWindow();
         }
 
+        UnsubscribeFromEvents();
         Conversations = [];
         ContactActions = null;
         UserProfile = null;
