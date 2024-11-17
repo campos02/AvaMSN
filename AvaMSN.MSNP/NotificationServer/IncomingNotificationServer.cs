@@ -15,6 +15,29 @@ public class IncomingNotificationServer
     public event EventHandler<SwitchboardEventArgs>? SwitchboardChanged;
 
     /// <summary>
+    /// Disconnects in case a request to change servers is received through the XFR command.
+    /// </summary>
+    /// <param name="response"></param>
+    /// <returns></returns>
+    internal async Task HandleXFR(string response)
+    {
+        if (response.Split(" ")[2] == "NS")
+        {
+            string address = response.Split(" ")[3];
+            string server = address.Split(":")[0];
+            int port = Convert.ToInt32(address.Split(":")[1]);
+
+            await Server!.DisconnectAsync(new DisconnectedEventArgs
+            {
+                Requested = true,
+                RedirectedByTheServer = true,
+                NewServerHost = server,
+                NewServerPort = port
+            });
+        }
+    }
+
+    /// <summary>
     /// Handles an invitation to a switchboard session by connecting to it.
     /// </summary>
     /// <param name="response"></param>

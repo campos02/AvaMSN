@@ -5,6 +5,9 @@ namespace AvaMSN.MSNP.Models;
 public class DisconnectedEventArgs : EventArgs
 {
     public bool Requested { get; set; }
+    public bool RedirectedByTheServer { get; set; }
+    public string NewServerHost { get; set; } = string.Empty;
+    public int NewServerPort { get; set; } = 1863;
 }
 
 public class ContactEventArgs : EventArgs

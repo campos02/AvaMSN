@@ -134,9 +134,10 @@
     <Button Grid.Row="6"
             Grid.ColumnSpan="3"
             HorizontalAlignment="Center"
-            Command="{Binding LoginCommand}"
+            Command="{Binding SignInCommand}"
             ToolTip.Tip="Sign in to Messenger"
-            ToolTip.ShowDelay="1000">Sign in</Button>
+            ToolTip.ShowDelay="1000"
+            IsEnabled="{Binding SignInButtonEnabled}">Sign in</Button>
 
   </Grid>
 </UserControl>

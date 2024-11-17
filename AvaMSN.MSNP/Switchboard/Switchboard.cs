@@ -73,9 +73,14 @@ public class Switchboard : Connection
         });
     }
 
-    public override async Task DisconnectAsync(bool requested = true)
+    /// <summary>
+    /// Disconnects from the server and stops the timer.
+    /// </summary>
+    /// <param name="eventArgs">Disconnection event arguments.</param>
+    /// <returns></returns>
+    public override async Task DisconnectAsync(DisconnectedEventArgs? eventArgs = null)
     {
-        await base.DisconnectAsync(requested);
+        await base.DisconnectAsync(eventArgs);
         timeout.Stop();
     }
 

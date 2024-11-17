@@ -86,7 +86,7 @@ public class ContactListViewModel : ViewModelBase
     public string NewContactDisplayName { get; set; } = string.Empty;
     public Database? Database { get; set; }
     
-    public event EventHandler? Disconnected;
+    public event EventHandler<Models.DisconnectedEventArgs>? Disconnected;
 
     public ContactListViewModel()
     {
@@ -434,7 +434,7 @@ public class ContactListViewModel : ViewModelBase
     /// Resets data, closes chat windows and returns to login page when disconnected from the server.
     /// </summary>
     /// <exception cref="ConnectionException">Thrown if the disconnection wasn't requested.</exception>
-    private async void NotificationServer_Disconnected(object? sender, DisconnectedEventArgs e)
+    private async void NotificationServer_Disconnected(object? sender, MSNP.Models.DisconnectedEventArgs e)
     {
         // Close every conversation
         foreach (Conversation conversation in Conversations)
@@ -453,10 +453,18 @@ public class ContactListViewModel : ViewModelBase
         UserProfile = null;
         SelectedContact = null;
         ListData = new ContactListData();
-        Disconnected?.Invoke(this, EventArgs.Empty);
+        Disconnected?.Invoke(this, new Models.DisconnectedEventArgs
+        {
+            RedirectedByTheServer = e.RedirectedByTheServer,
+            NewServerHost = e.NewServerHost,
+            NewServerPort = e.NewServerPort
+        });
 
         if (!e.Requested)
             NotificationHandler?.ShowError("Lost connection to the server");
+
+        if (e.RedirectedByTheServer)
+            NotificationHandler?.ShowError("Logging in to a new server as requested by the old one...");
     }
 
     /// <summary>

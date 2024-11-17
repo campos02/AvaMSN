@@ -302,7 +302,7 @@ public class Conversation : ReactiveObject
         }
     }
 
-    private void Switchboard_Disconnected(object? sender, DisconnectedEventArgs e)
+    private void Switchboard_Disconnected(object? sender, MSNP.Models.DisconnectedEventArgs e)
     {
         UnsubscribeFromEvents();
     }

@@ -25,6 +25,7 @@ public class LoginViewModel : ViewModelBase
 {
     private bool rememberMe;
     private bool rememberPassword;
+    private bool signInButtonEnabled = true;
     private string email = string.Empty;
     private string password = string.Empty;
     private string binarySecret = string.Empty;
@@ -61,20 +62,31 @@ public class LoginViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref password, value);
     }
 
+    public bool SignInButtonEnabled
+    {
+        get => signInButtonEnabled;
+        set => this.RaiseAndSetIfChanged(ref signInButtonEnabled, value);
+    }
+
+    public bool ComingFromAPreviousRedirection { get; set; }
+    public string NewServer { get; set; } = SettingsManager.Settings.Server;
+    public int NewPort { get; set; } = 1863;
+
+    public Database Database => new Database();
     public User User { get; set; } = new User();
-    public Presence[] Statuses => ContactListData.Statuses;
     public Presence SelectedStatus { get; set; }
-    public ReactiveCommand<Unit, Unit> LoginCommand { get; }
+    public Presence[] Statuses => ContactListData.Statuses;
+    public ObservableCollection<StoredUser>? Users { get; set; }
+
+    public ReactiveCommand<Unit, Unit> SignInCommand { get; }
     public ReactiveCommand<Unit, Unit> ForgetMeCommand { get; }
     public ReactiveCommand<string, Unit> ChangeUserCommand { get; }
-    public Database Database => new Database();
-    public ObservableCollection<StoredUser>? Users { get; set; }
 
     public event EventHandler<LoggedInEventArgs>? LoggedIn;
 
     public LoginViewModel()
     {
-        LoginCommand = ReactiveCommand.CreateFromTask(Login);
+        SignInCommand = ReactiveCommand.CreateFromTask(SignIn);
         ForgetMeCommand = ReactiveCommand.Create(ForgetMe);
         ChangeUserCommand = ReactiveCommand.Create<string>(ChangeUser);
 
@@ -102,8 +114,10 @@ public class LoginViewModel : ViewModelBase
 
         if (Users.Count > 1)
         {
-            StoredUser user = Users[0];
-            ChangeUser(user.UserEmail);
+            if (Email != "")
+                ChangeUser(Email);
+            else
+                ChangeUser(Users[0].UserEmail);
         }
     }
 
@@ -130,7 +144,7 @@ public class LoginViewModel : ViewModelBase
                 return;
         }
 
-        StoredUser? user = Users?.FirstOrDefault(user => user.UserEmail == option);
+        StoredUser? user = (Users?.FirstOrDefault(user => user.UserEmail == option));
         if (user == null)
             return;
 
@@ -170,10 +184,10 @@ public class LoginViewModel : ViewModelBase
     /// Initiates a new notification server connection, does every login step and saves user if the remember options are enabled.
     /// </summary>
     /// <returns></returns>
-    private async Task Login()
+    public async Task SignIn()
     {
         LoadDisplayPicture(Email);
-        Authentication authentication = await CreateConnection(SettingsManager.Settings.Server);
+        Authentication authentication = await CreateConnection();
 
         // Use token and binary secret if available
         StoredUser user = Users?.LastOrDefault(user => user.UserEmail == Email) ?? new StoredUser();
@@ -186,35 +200,29 @@ public class LoginViewModel : ViewModelBase
             {
                 using (MemoryStream ticketStream = new MemoryStream(user.Ticket))
                 {
-                    using (Aes aes = Aes.Create())
-                    {
-                        await using CryptoStream cryptoStream = new CryptoStream(ticketStream, aes.CreateDecryptor(keys.Key1, keys.IV1), CryptoStreamMode.Read);
-                        using StreamReader encryptReader = new StreamReader(cryptoStream);
-                        authentication.SSO.Ticket = await encryptReader.ReadToEndAsync();
-                        authentication.SSO.Ticket = Regex.Replace(authentication.SSO.Ticket, @"\t|\r|\n", "");
-                    }
+                    using Aes aes = Aes.Create();
+                    await using CryptoStream cryptoStream = new CryptoStream(ticketStream, aes.CreateDecryptor(keys.Key1, keys.IV1), CryptoStreamMode.Read);
+                    using StreamReader encryptReader = new StreamReader(cryptoStream);
+                    authentication.SSO.Ticket = await encryptReader.ReadToEndAsync();
+                    authentication.SSO.Ticket = Regex.Replace(authentication.SSO.Ticket, @"\t|\r|\n", "");
                 }
 
                 using (MemoryStream ticketTokenStream = new MemoryStream(user.TicketToken))
                 {
-                    using (Aes aes = Aes.Create())
-                    {
-                        await using CryptoStream cryptoStream = new CryptoStream(ticketTokenStream, aes.CreateDecryptor(keys.Key3, keys.IV3), CryptoStreamMode.Read);
-                        using StreamReader encryptReader = new StreamReader(cryptoStream);
-                        authentication.SSO.TicketToken = await encryptReader.ReadToEndAsync();
-                        authentication.SSO.TicketToken = Regex.Replace(authentication.SSO.TicketToken, @"\t|\r|\n", "");
-                    }
+                    using Aes aes = Aes.Create();
+                    await using CryptoStream cryptoStream = new CryptoStream(ticketTokenStream, aes.CreateDecryptor(keys.Key3, keys.IV3), CryptoStreamMode.Read);
+                    using StreamReader encryptReader = new StreamReader(cryptoStream);
+                    authentication.SSO.TicketToken = await encryptReader.ReadToEndAsync();
+                    authentication.SSO.TicketToken = Regex.Replace(authentication.SSO.TicketToken, @"\t|\r|\n", "");
                 }
 
                 using (MemoryStream binarySecretStream = new MemoryStream(user.BinarySecret))
                 {
-                    using (Aes aes = Aes.Create())
-                    {
-                        await using CryptoStream cryptoStream = new CryptoStream(binarySecretStream, aes.CreateDecryptor(keys.Key4, keys.IV4), CryptoStreamMode.Read);
-                        using StreamReader encryptReader = new StreamReader(cryptoStream);
-                        authentication.SSO.BinarySecret = await encryptReader.ReadToEndAsync();
-                        authentication.SSO.BinarySecret = Regex.Replace(authentication.SSO.BinarySecret, @"\t|\r|\n", "");
-                    }
+                    using Aes aes = Aes.Create();
+                    await using CryptoStream cryptoStream = new CryptoStream(binarySecretStream, aes.CreateDecryptor(keys.Key4, keys.IV4), CryptoStreamMode.Read);
+                    using StreamReader encryptReader = new StreamReader(cryptoStream);
+                    authentication.SSO.BinarySecret = await encryptReader.ReadToEndAsync();
+                    authentication.SSO.BinarySecret = Regex.Replace(authentication.SSO.BinarySecret, @"\t|\r|\n", "");
                 }
             }
 
@@ -224,6 +232,7 @@ public class LoginViewModel : ViewModelBase
             }
             catch (RedirectedByTheServerException e)
             {
+                ComingFromAPreviousRedirection = false;
                 authentication = await CreateConnection(e.Server, e.Port);
 
                 try
@@ -238,15 +247,13 @@ public class LoginViewModel : ViewModelBase
                     string userPassword = string.Empty;
                     using (MemoryStream passwordStream = new MemoryStream(user.Password))
                     {
-                        using (Aes aes = Aes.Create())
+                        using Aes aes = Aes.Create();
+                        if (keys != null)
                         {
-                            if (keys != null)
-                            {
-                                await using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateDecryptor(keys.Key2, keys.IV2), CryptoStreamMode.Read);
-                                using StreamReader encryptReader = new StreamReader(cryptoStream);
-                                userPassword = await encryptReader.ReadToEndAsync();
-                                userPassword = Regex.Replace(userPassword, @"\t|\r|\n", "");
-                            }
+                            await using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateDecryptor(keys.Key2, keys.IV2), CryptoStreamMode.Read);
+                            using StreamReader encryptReader = new StreamReader(cryptoStream);
+                            userPassword = await encryptReader.ReadToEndAsync();
+                            userPassword = Regex.Replace(userPassword, @"\t|\r|\n", "");
                         }
                     }
 
@@ -260,20 +267,18 @@ public class LoginViewModel : ViewModelBase
             catch (MsnpServerAuthException)
             {
                 // Create new connection and use password
-                authentication = await CreateConnection(SettingsManager.Settings.Server);
+                authentication = await CreateConnection();
 
                 string userPassword = string.Empty;
                 using (MemoryStream passwordStream = new MemoryStream(user.Password))
                 {
-                    using (Aes aes = Aes.Create())
+                    using Aes aes = Aes.Create();
+                    if (keys != null)
                     {
-                        if (keys != null)
-                        {
-                            await using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateDecryptor(keys.Key2, keys.IV2), CryptoStreamMode.Read);
-                            using StreamReader encryptReader = new StreamReader(cryptoStream);
-                            userPassword = await encryptReader.ReadToEndAsync();
-                            userPassword = Regex.Replace(userPassword, @"\t|\r|\n", "");
-                        }
+                        await using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateDecryptor(keys.Key2, keys.IV2), CryptoStreamMode.Read);
+                        using StreamReader encryptReader = new StreamReader(cryptoStream);
+                        userPassword = await encryptReader.ReadToEndAsync();
+                        userPassword = Regex.Replace(userPassword, @"\t|\r|\n", "");
                     }
                 }
 
@@ -292,8 +297,9 @@ public class LoginViewModel : ViewModelBase
             }
             catch (RedirectedByTheServerException e)
             {
+                ComingFromAPreviousRedirection = false;
                 authentication = await CreateConnection(e.Server, e.Port);
-                await authentication.AuthenticateWithTicket();
+                await authentication.Authenticate(Password);
             }
 
             ticket = authentication.SSO.Ticket;
@@ -329,8 +335,10 @@ public class LoginViewModel : ViewModelBase
             UserProfile = userProfile
         });
 
-        Email = string.Empty;
         Password = string.Empty;
+        ComingFromAPreviousRedirection = false;
+        NewServer = SettingsManager.Settings.Server;
+        NewPort = 1863;
     }
 
     /// <summary>
@@ -339,8 +347,15 @@ public class LoginViewModel : ViewModelBase
     /// <param name="host">Server URL or IP.</param>
     /// <param name="port">Server port.</param>
     /// <returns></returns>
-    private async Task<Authentication> CreateConnection(string host, int port = 1863)
+    private async Task<Authentication> CreateConnection(string? host = null, int port = 1863)
     {
+        if (ComingFromAPreviousRedirection)
+        {
+            host = NewServer;
+            port = NewPort;
+        }
+
+        host ??= SettingsManager.Settings.Server;
         NotificationServer notificationServer = new NotificationServer
         {
             Host = host,

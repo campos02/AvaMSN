@@ -103,9 +103,19 @@ public class MainWindowViewModel : ViewModelBase
         CurrentPage = contactListPage;
     }
 
-    private void ContactListPage_Disconnected(object? sender, EventArgs e)
+    private async void ContactListPage_Disconnected(object? sender, DisconnectedEventArgs e)
     {
         loginPage.GetUsers();
         CurrentPage = loginPage;
+        if (e.RedirectedByTheServer)
+        {
+            loginPage.ComingFromAPreviousRedirection = true;
+            loginPage.NewServer = e.NewServerHost;
+            loginPage.NewPort = e.NewServerPort;
+
+            loginPage.SignInButtonEnabled = false;
+            await loginPage.SignIn();
+            loginPage.SignInButtonEnabled = true;
+        }
     }
 }

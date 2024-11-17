@@ -122,7 +122,8 @@ public class NotificationServer : Connection
         await (command switch
         {
             "RNG" => Incoming!.HandleRNG(response),
-            "OUT" => DisconnectAsync(requested: false),
+            "XFR" => Incoming!.HandleXFR(response),
+            "OUT" => DisconnectAsync(new DisconnectedEventArgs { Requested = false }),
             _ => Task.CompletedTask
         });
     }
@@ -130,11 +131,11 @@ public class NotificationServer : Connection
     /// <summary>
     /// Sends a disconnection command and invokes the Disconnected event for the NS and every connected SB.
     /// </summary>
-    /// <param name="requested">Whether the disconnection was requested by the user.</param>
+    /// <param name="eventArgs">Disconnection event arguments.</param>
     /// <returns></returns>
-    public override async Task DisconnectAsync(bool requested = true)
+    public override async Task DisconnectAsync(DisconnectedEventArgs? eventArgs = null)
     {
-        await base.DisconnectAsync(requested);
+        await base.DisconnectAsync(eventArgs);
         foreach (Switchboard.Switchboard switchboard in Switchboards)
             await switchboard.DisconnectAsync();
     }

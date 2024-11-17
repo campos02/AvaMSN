@@ -28,3 +28,10 @@ public class NotificationEventArgs : NewMessageEventArgs
     /// </summary>
     public Task? DelayTask { get; set; }
 }
+
+public class DisconnectedEventArgs : EventArgs
+{
+    public bool RedirectedByTheServer { get; set; }
+    public string NewServerHost { get; set; } = string.Empty;
+    public int NewServerPort { get; set; } = 1863;
+}

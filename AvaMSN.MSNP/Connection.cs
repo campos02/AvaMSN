@@ -3,6 +3,7 @@ using System.Net;
 using System.Text;
 using AvaMSN.MSNP.Models;
 using Serilog;
+using AvaMSN.MSNP.SOAP;
 
 namespace AvaMSN.MSNP;
 
@@ -166,7 +167,7 @@ public abstract class Connection
             catch (SocketException)
             {
                 // Shutdown socket and invoke event if connection has been lost
-                DisconnectSocket(requested: false);
+                DisconnectSocket(new DisconnectedEventArgs { Requested = false });
                 break;
             }
             catch (ObjectDisposedException)
@@ -182,22 +183,28 @@ public abstract class Connection
     /// <summary>
     /// Sends a disconnection command and disconnects the socket.
     /// </summary>
-    /// <param name="requested">Whether the disconnection was requested by the user.</param>
+    /// <param name="eventArgs">Disconnection event arguments.</param>
     /// <returns></returns>
-    public virtual async Task DisconnectAsync(bool requested = true)
+    public virtual async Task DisconnectAsync(DisconnectedEventArgs? eventArgs = null)
     {
+        eventArgs ??= new DisconnectedEventArgs
+        {
+            Requested = true
+        };
+
         if (Connected)
         {
             await SendAsync("OUT\r\n");
-            DisconnectSocket(requested);
+            DisconnectSocket(eventArgs);
         }
     }
 
     /// <summary>
     /// Disconnects the socket and invokes the Disconnected event.
     /// </summary>
-    /// <param name="requested">Whether the disconnection was requested by the user.</param>
-    private void DisconnectSocket(bool requested = true)
+    /// <param name="eventArgs">Disconnection event arguments.</param>
+    /// <exception cref="NullReferenceException">Thrown if the socket is null.</exception>
+    private void DisconnectSocket(DisconnectedEventArgs eventArgs)
     {
         if (Client == null)
             throw new NullReferenceException("Socket is null");
@@ -209,12 +216,9 @@ public abstract class Connection
         Client.Dispose();
         Connected = false;
 
-        Disconnected?.Invoke(this, new DisconnectedEventArgs
-        {
-            Requested = requested
-        });
+        Disconnected?.Invoke(this, eventArgs);
         
-        if (!requested)
+        if (!eventArgs.Requested)
             Log.Error("Connection to {Server} on port {Port} has been lost", Host, Port);
         else
             Log.Information("Disconnected from {Server} on port {Port}", Host, Port);
