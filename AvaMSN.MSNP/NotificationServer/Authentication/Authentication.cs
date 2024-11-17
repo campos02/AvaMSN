@@ -7,7 +7,7 @@ namespace AvaMSN.MSNP.NotificationServer.Authentication;
 /// </summary>
 public class Authentication
 {
-    private NotificationServer Server { get; }
+    public NotificationServer Server { get; }
     public SingleSignOn SSO { get; }
 
     public Authentication(NotificationServer server)
@@ -91,9 +91,10 @@ public class Authentication
     }
 
     /// <summary>
-    /// Authenticates using an existing ticket and binary secret.
+    /// Authenticates using an existing ticket and binary secret
     /// </summary>
     /// <returns></returns>
+    /// <exception cref="RedirectedByTheServerException">Thrown if the server redirects the client to another server.</exception>
     /// <exception cref="MsnpServerAuthException">Thrown if authentication isn't successful.</exception>
     public async Task AuthenticateWithTicket()
     {
@@ -110,7 +111,16 @@ public class Authentication
             // Receive GCF and USR S
             response = await Server.ReceiveStringAsync();
 
-            // Remove GCF response and Break if USR reply is present
+            // Throw exception in case the user is redirected
+            if (response.StartsWith("XFR") && response.Split(" ")[2] == "NS")
+            {
+                string address = response.Split(" ")[3];
+                string server = address.Split(":")[0];
+                int port = Convert.ToInt32(address.Split(":")[1]);
+                throw new RedirectedByTheServerException("Redirected to a different server, connecting...", server, port);
+            }
+
+            // Remove GCF response and break if USR reply is present
             if (response.Contains("USR") && response.StartsWith("GCF"))
             {
                 response = HandleGCF(response);

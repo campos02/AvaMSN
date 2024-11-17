@@ -173,23 +173,7 @@ public class LoginViewModel : ViewModelBase
     private async Task Login()
     {
         LoadDisplayPicture(Email);
-        NotificationServer notificationServer = new NotificationServer
-        {
-            Host = SettingsManager.Settings.Server,
-            User =
-            {
-                Presence = SelectedStatus.ShortName,
-                Email = Email,
-                PersonalMessage = User.PersonalMessage
-            }
-        };
-
-        notificationServer.User.DisplayPicture = User.DisplayPictureData ?? notificationServer.User.DisplayPicture;
-        await notificationServer.Connect();
-        
-        Authentication authentication = new Authentication(notificationServer);
-        await authentication.SendVER();
-        await authentication.SendCVR();
+        Authentication authentication = await CreateConnection(SettingsManager.Settings.Server);
 
         // Use token and binary secret if available
         StoredUser user = Users?.LastOrDefault(user => user.UserEmail == Email) ?? new StoredUser();
@@ -238,27 +222,46 @@ public class LoginViewModel : ViewModelBase
             {
                 await authentication.AuthenticateWithTicket();
             }
+            catch (RedirectedByTheServerException e)
+            {
+                authentication = await CreateConnection(e.Server, e.Port);
+
+                try
+                {
+                    await authentication.AuthenticateWithTicket();
+                }
+                catch (MsnpServerAuthException)
+                {
+                    // Create new connection and use password
+                    authentication = await CreateConnection(e.Server, e.Port);
+
+                    string userPassword = string.Empty;
+                    using (MemoryStream passwordStream = new MemoryStream(user.Password))
+                    {
+                        using (Aes aes = Aes.Create())
+                        {
+                            if (keys != null)
+                            {
+                                await using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateDecryptor(keys.Key2, keys.IV2), CryptoStreamMode.Read);
+                                using StreamReader encryptReader = new StreamReader(cryptoStream);
+                                userPassword = await encryptReader.ReadToEndAsync();
+                                userPassword = Regex.Replace(userPassword, @"\t|\r|\n", "");
+                            }
+                        }
+                    }
+
+                    await authentication.Authenticate(userPassword);
+                    ticket = authentication.SSO.Ticket;
+                    ticketToken = authentication.SSO.TicketToken;
+                    binarySecret = authentication.SSO.BinarySecret;
+                    SaveUserData(user, userPassword);
+                }
+            }
             catch (MsnpServerAuthException)
             {
                 // Create new connection and use password
-                notificationServer = new NotificationServer
-                {
-                    Host = SettingsManager.Settings.Server,
-                    User =
-                    {
-                        Presence = SelectedStatus.ShortName,
-                        Email = Email,
-                        PersonalMessage = User.PersonalMessage
-                    }
-                };
+                authentication = await CreateConnection(SettingsManager.Settings.Server);
 
-                notificationServer.User.DisplayPicture = User.DisplayPictureData ?? notificationServer.User.DisplayPicture;
-                await notificationServer.Connect();
-        
-                authentication = new Authentication(notificationServer);
-                await authentication.SendVER();
-                await authentication.SendCVR();
-                
                 string userPassword = string.Empty;
                 using (MemoryStream passwordStream = new MemoryStream(user.Password))
                 {
@@ -292,12 +295,12 @@ public class LoginViewModel : ViewModelBase
 
         ContactActions contactActions = new ContactActions
         {
-            Server = notificationServer
+            Server = authentication.Server
         };
         
         UserProfile userProfile = new UserProfile
         {
-            Server = notificationServer
+            Server = authentication.Server
         };
         
         await contactActions.SendContactList();
@@ -308,7 +311,7 @@ public class LoginViewModel : ViewModelBase
         await userProfile.SendCHG();
 
         // Start regularly pinging after presence is set
-        _ = notificationServer.StartPinging();
+        _ = authentication.Server.StartPinging();
 
         // Navigate to contact list
         LoggedIn?.Invoke(this, new LoggedInEventArgs
@@ -319,6 +322,36 @@ public class LoginViewModel : ViewModelBase
 
         Email = string.Empty;
         Password = string.Empty;
+    }
+
+    /// <summary>
+    /// Connects to the server and returns an authentication object.
+    /// </summary>
+    /// <param name="host">Server URL or IP.</param>
+    /// <param name="port">Server port.</param>
+    /// <returns></returns>
+    private async Task<Authentication> CreateConnection(string host, int port = 1863)
+    {
+        NotificationServer notificationServer = new NotificationServer
+        {
+            Host = host,
+            Port = port,
+            User =
+            {
+                Presence = SelectedStatus.ShortName,
+                Email = Email,
+                PersonalMessage = User.PersonalMessage
+            }
+        };
+
+        notificationServer.User.DisplayPicture = User.DisplayPictureData ?? notificationServer.User.DisplayPicture;
+        await notificationServer.Connect();
+
+        Authentication authentication = new Authentication(notificationServer);
+        await authentication.SendVER();
+        await authentication.SendCVR();
+
+        return authentication;
     }
 
     /// <summary>
