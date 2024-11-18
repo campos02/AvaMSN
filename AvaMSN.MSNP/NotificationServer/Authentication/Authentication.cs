@@ -56,7 +56,7 @@ public class Authentication
     {
         // Send CVR
         Server.TransactionID++;
-        var message = $"CVR {Server.TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.11.2 msmsgs\r\n";
+        var message = $"CVR {Server.TransactionID} 0x0409 winnt 10 i386 AvaMSN 0.12 msmsgs\r\n";
         await Server.SendAsync(message);
 
         while (true)
