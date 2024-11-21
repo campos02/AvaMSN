@@ -64,7 +64,8 @@
                          FontSize="20"
                          FontWeight="Bold"/>
               <TextBlock Text="{Binding User.Presence, StringFormat='({0})'}"
-                         VerticalAlignment="Bottom"/>
+                         VerticalAlignment="Center"
+                         Margin="5 2 0 0"/>
             </StackPanel>
           </ComboBoxItem>
 
@@ -139,7 +140,7 @@
             <Button Classes="presence-button"
                     ToolTip.Tip="Change your display name"
                     ToolTip.ShowDelay="1000">
-              <TextBlock>Change display name</TextBlock>
+              Change display name
               <Button.Flyout>
                 <Flyout Placement="BottomEdgeAlignedLeft">
                   <StackPanel Spacing="5">
@@ -159,7 +160,7 @@
                     Command="{Binding OptionsCommand}"
                     ToolTip.Tip="Open options window"
                     ToolTip.ShowDelay="1000">
-              <TextBlock>Options</TextBlock>
+              Options
             </Button>
           </ComboBoxItem>
 
@@ -171,7 +172,7 @@
                     Command="{Binding SignOutCommand}"
                     ToolTip.Tip="Sign out and return to login screen"
                     ToolTip.ShowDelay="1000">
-              <TextBlock>Sign out</TextBlock>
+              Sign out
             </Button>
           </ComboBoxItem>
 

@@ -10,7 +10,7 @@
         xmlns:conv="clr-namespace:AvaMSN.Converters"
         xmlns:controls="using:AvaMSN.Controls"
         x:Class="AvaMSN.Views.ConversationWindow"
-        Title="Conversation"
+        Title="{Binding Conversation.Contact.DisplayName, StringFormat='{}{0} - Conversation'}"
         Icon="/Assets/avalonia-logo.ico"
         MinWidth="400"
         MinHeight="550"
@@ -72,7 +72,8 @@
                  FontSize="20"
                  FontWeight="Bold"/>
       <SelectableTextBlock Text="{Binding Conversation.Contact.Presence, StringFormat='({0})'}"
-                 VerticalAlignment="Bottom"/>
+                           VerticalAlignment="Center"
+                           Margin="5 0 0 1"/>
     </StackPanel>
 
     <ScrollViewer Grid.Row="2"

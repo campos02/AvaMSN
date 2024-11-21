@@ -3,7 +3,6 @@ using System.Net;
 using System.Text;
 using AvaMSN.MSNP.Models;
 using Serilog;
-using AvaMSN.MSNP.SOAP;
 
 namespace AvaMSN.MSNP;
 

@@ -63,9 +63,8 @@
               <Button Command="{Binding $parent[ComboBox].((vm:LoginViewModel)DataContext).ChangeUserCommand}"
                       CommandParameter="{Binding UserEmail}"
                       Classes="user-button"
-                      Tapped="Button_Tapped">
-                <TextBlock Text="{Binding UserEmail}"/>
-              </Button>
+                      Tapped="Button_Tapped"
+                      Content="{Binding UserEmail}"/>
             </DataTemplate>
           </ComboBox.DataTemplates>
 
