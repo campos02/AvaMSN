@@ -11,7 +11,7 @@
         xmlns:controls="using:AvaMSN.Controls"
         x:Class="AvaMSN.Views.ConversationWindow"
         Title="{Binding Conversation.Contact.DisplayName, StringFormat='{}{0} - Conversation'}"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/avamsn-logo.ico"
         MinWidth="400"
         MinHeight="550"
         Width="900"

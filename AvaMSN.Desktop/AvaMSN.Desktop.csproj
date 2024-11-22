@@ -8,14 +8,14 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>avalonia-logo.ico</ApplicationIcon>
+    <ApplicationIcon>avamsn-logo.ico</ApplicationIcon>
     <Company>campos</Company>
     <Product>AvaMSN</Product>
     <AssemblyName>AvaMSN</AssemblyName>
   </PropertyGroup>
   
   <ItemGroup>
-    <Content Include="avalonia-logo.ico" />
+    <Content Include="avamsn-logo.ico" />
   </ItemGroup>
 
   <ItemGroup>

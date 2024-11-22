@@ -6,7 +6,7 @@
         mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="450"
         x:Class="AvaMSN.Views.SettingsWindow"
         Title="Settings"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/avamsn-logo.ico"
         MinWidth="300"
         MinHeight="450"
         Width="450"

@@ -33,7 +33,7 @@
 
     <TrayIcon.Icons>
       <TrayIcons>
-        <TrayIcon Icon="/Assets/avalonia-logo.ico"
+        <TrayIcon Icon="/Assets/avamsn-logo.ico"
                   ToolTipText="AvaMSN"
                   Command="{Binding OpenCommand}">
           <TrayIcon.Menu>
