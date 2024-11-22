@@ -12,6 +12,7 @@ public class NotificationServer : Connection
 {
     public User User { get; init; } = new User();
     public static string Protocol => "MSNP15";
+    public string ContactServiceAddress { get; init; } = string.Empty;
     public IncomingNotificationServer? Incoming { get; private set; }
     internal List<Switchboard.Switchboard> Switchboards { get; set; } = [];
 
@@ -24,8 +25,8 @@ public class NotificationServer : Connection
             Server = this
         };
         
-        ContactService.SharingServiceUrl = $"https://{Host}/abservice/SharingService.asmx";
-        ContactService.ABServiceUrl = $"https://{Host}/abservice/abservice.asmx";
+        ContactService.SharingServiceUrl = $"https://{ContactServiceAddress}/abservice/SharingService.asmx";
+        ContactService.ABServiceUrl = $"https://{ContactServiceAddress}/abservice/abservice.asmx";
         Log.Information("Connected to NS {Server} on port {Port}", Host, Port);
     }
 

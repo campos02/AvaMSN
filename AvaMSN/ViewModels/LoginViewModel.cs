@@ -193,38 +193,7 @@ public class LoginViewModel : ViewModelBase
         StoredUser user = Users?.LastOrDefault(user => user.UserEmail == Email) ?? new StoredUser();
         if (user.BinarySecret.Length > 0 & user.TicketToken.Length > 0 & user.Ticket.Length > 0)
         {
-            Keys? keys = Database.GetUserKeys(user);
-
-            // Decrypt and read user data
-            if (keys != null)
-            {
-                using (MemoryStream ticketStream = new MemoryStream(user.Ticket))
-                {
-                    using Aes aes = Aes.Create();
-                    await using CryptoStream cryptoStream = new CryptoStream(ticketStream, aes.CreateDecryptor(keys.Key1, keys.IV1), CryptoStreamMode.Read);
-                    using StreamReader encryptReader = new StreamReader(cryptoStream);
-                    authentication.SSO.Ticket = await encryptReader.ReadToEndAsync();
-                    authentication.SSO.Ticket = Regex.Replace(authentication.SSO.Ticket, @"\t|\r|\n", "");
-                }
-
-                using (MemoryStream ticketTokenStream = new MemoryStream(user.TicketToken))
-                {
-                    using Aes aes = Aes.Create();
-                    await using CryptoStream cryptoStream = new CryptoStream(ticketTokenStream, aes.CreateDecryptor(keys.Key3, keys.IV3), CryptoStreamMode.Read);
-                    using StreamReader encryptReader = new StreamReader(cryptoStream);
-                    authentication.SSO.TicketToken = await encryptReader.ReadToEndAsync();
-                    authentication.SSO.TicketToken = Regex.Replace(authentication.SSO.TicketToken, @"\t|\r|\n", "");
-                }
-
-                using (MemoryStream binarySecretStream = new MemoryStream(user.BinarySecret))
-                {
-                    using Aes aes = Aes.Create();
-                    await using CryptoStream cryptoStream = new CryptoStream(binarySecretStream, aes.CreateDecryptor(keys.Key4, keys.IV4), CryptoStreamMode.Read);
-                    using StreamReader encryptReader = new StreamReader(cryptoStream);
-                    authentication.SSO.BinarySecret = await encryptReader.ReadToEndAsync();
-                    authentication.SSO.BinarySecret = Regex.Replace(authentication.SSO.BinarySecret, @"\t|\r|\n", "");
-                }
-            }
+            await GetUserData(user, authentication);
 
             try
             {
@@ -234,6 +203,7 @@ public class LoginViewModel : ViewModelBase
             {
                 ComingFromAPreviousRedirection = false;
                 authentication = await CreateConnection(e.Server, e.Port);
+                await GetUserData(user, authentication);
 
                 try
                 {
@@ -248,6 +218,7 @@ public class LoginViewModel : ViewModelBase
                     using (MemoryStream passwordStream = new MemoryStream(user.Password))
                     {
                         using Aes aes = Aes.Create();
+                        Keys? keys = Database.GetUserKeys(user);
                         if (keys != null)
                         {
                             await using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateDecryptor(keys.Key2, keys.IV2), CryptoStreamMode.Read);
@@ -273,6 +244,7 @@ public class LoginViewModel : ViewModelBase
                 using (MemoryStream passwordStream = new MemoryStream(user.Password))
                 {
                     using Aes aes = Aes.Create();
+                    Keys? keys = Database.GetUserKeys(user);
                     if (keys != null)
                     {
                         await using CryptoStream cryptoStream = new CryptoStream(passwordStream, aes.CreateDecryptor(keys.Key2, keys.IV2), CryptoStreamMode.Read);
@@ -360,6 +332,7 @@ public class LoginViewModel : ViewModelBase
         {
             Host = host,
             Port = port,
+            ContactServiceAddress = SettingsManager.Settings.Server,
             User =
             {
                 Presence = SelectedStatus.ShortName,
@@ -376,6 +349,51 @@ public class LoginViewModel : ViewModelBase
         await authentication.SendCVR();
 
         return authentication;
+    }
+
+    /// <summary>
+    /// Gets user data from the database and sets it in an authentication object.
+    /// </summary>
+    /// <param name="user">User to get data from.</param>
+    /// <param name="authentication">Authentication object that will get the data.</param>
+    /// <returns></returns>
+    private async Task GetUserData(StoredUser user, Authentication authentication)
+    {
+        if (user.BinarySecret.Length > 0 & user.TicketToken.Length > 0 & user.Ticket.Length > 0)
+        {
+            Keys? keys = Database.GetUserKeys(user);
+
+            // Decrypt and read user data
+            if (keys != null)
+            {
+                using (MemoryStream ticketStream = new MemoryStream(user.Ticket))
+                {
+                    using Aes aes = Aes.Create();
+                    await using CryptoStream cryptoStream = new CryptoStream(ticketStream, aes.CreateDecryptor(keys.Key1, keys.IV1), CryptoStreamMode.Read);
+                    using StreamReader encryptReader = new StreamReader(cryptoStream);
+                    authentication.SSO.Ticket = await encryptReader.ReadToEndAsync();
+                    authentication.SSO.Ticket = Regex.Replace(authentication.SSO.Ticket, @"\t|\r|\n", "");
+                }
+
+                using (MemoryStream ticketTokenStream = new MemoryStream(user.TicketToken))
+                {
+                    using Aes aes = Aes.Create();
+                    await using CryptoStream cryptoStream = new CryptoStream(ticketTokenStream, aes.CreateDecryptor(keys.Key3, keys.IV3), CryptoStreamMode.Read);
+                    using StreamReader encryptReader = new StreamReader(cryptoStream);
+                    authentication.SSO.TicketToken = await encryptReader.ReadToEndAsync();
+                    authentication.SSO.TicketToken = Regex.Replace(authentication.SSO.TicketToken, @"\t|\r|\n", "");
+                }
+
+                using (MemoryStream binarySecretStream = new MemoryStream(user.BinarySecret))
+                {
+                    using Aes aes = Aes.Create();
+                    await using CryptoStream cryptoStream = new CryptoStream(binarySecretStream, aes.CreateDecryptor(keys.Key4, keys.IV4), CryptoStreamMode.Read);
+                    using StreamReader encryptReader = new StreamReader(cryptoStream);
+                    authentication.SSO.BinarySecret = await encryptReader.ReadToEndAsync();
+                    authentication.SSO.BinarySecret = Regex.Replace(authentication.SSO.BinarySecret, @"\t|\r|\n", "");
+                }
+            }
+        }
     }
 
     /// <summary>

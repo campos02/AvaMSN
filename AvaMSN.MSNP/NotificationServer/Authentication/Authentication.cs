@@ -16,7 +16,7 @@ public class Authentication
         SSO = new SingleSignOn
         {
             Email = Server.User.Email,
-            RstAddress = $"https://{Server.Host}/RST.srf"
+            RstAddress = $"https://{Server.ContactServiceAddress}/RST.srf"
         };
     }
 
