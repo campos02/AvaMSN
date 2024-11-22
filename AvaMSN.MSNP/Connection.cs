@@ -26,8 +26,18 @@ public abstract class Connection
     /// <returns></returns>
     public virtual async Task Connect()
     {
-        IPHostEntry ipHostInfo = await Dns.GetHostEntryAsync(Host);
-        IPAddress ipAddress = ipHostInfo.AddressList[0];
+        IPAddress ipAddress;
+        try
+        {
+            IPHostEntry ipHostInfo = await Dns.GetHostEntryAsync(Host);
+            ipAddress = ipHostInfo.AddressList[0];
+        }
+        catch (SocketException)
+        {
+            // GetHostEntry won't resolve resolve IP addresses in macOS for some reason
+            ipAddress = IPAddress.Parse(Host);
+        }
+        
         IPEndPoint ipEndPoint = new(ipAddress, Port);
 
         Client = new Socket(
