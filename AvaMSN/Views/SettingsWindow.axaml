@@ -3,43 +3,79 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:AvaMSN.ViewModels"
+        xmlns:dvm="clr-namespace:AvaMSN.ViewModels.Design"
         mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="450"
         x:Class="AvaMSN.Views.SettingsWindow"
         Title="Settings"
         Icon="/Assets/avamsn-logo.ico"
         MinWidth="300"
-        MinHeight="450"
+        MinHeight="650"
         Width="450"
-        Height="450"
+        Height="600"
         WindowStartupLocation="CenterScreen"
         x:DataType="vm:SettingsWindowViewModel">
 
-  <Grid RowDefinitions="10, Auto, 30, *, Auto, 7, Auto"
+  <Design.DataContext>
+    <dvm:DesignSettingsWindowViewModel/>
+  </Design.DataContext>
+
+  <Grid RowDefinitions="Auto, *, Auto, 7, Auto"
         Margin="30">
 
-    <TextBlock Grid.Row="1"
-               HorizontalAlignment="Center"
+    <TextBlock HorizontalAlignment="Center"
                VerticalAlignment="Bottom"
                FontWeight="Bold"
                FontSize="20">Settings</TextBlock>
 
-    <Grid Grid.Row="3"
-          RowDefinitions="Auto, 3, Auto, 15, Auto"
-          VerticalAlignment="Center">
+    <StackPanel Grid.Row="1"
+                Spacing="15"
+                Margin="0 40 0 0">
 
-      <TextBlock HorizontalAlignment="Center"
-                 FontSize="15">
-        Server:
-      </TextBlock>
+      <StackPanel Spacing="3">
+        <TextBlock HorizontalAlignment="Center"
+                   FontSize="15">
+          Main server:
+        </TextBlock>
+        <TextBox Text="{Binding Settings.MainServer}"
+                 Watermark="Messenger server address"
+                 ToolTip.Tip="Enter the main Messenger server address"
+                 ToolTip.ShowDelay="1000"/>
+      </StackPanel>
 
-      <TextBox Grid.Row="2"
-               Text="{Binding Server}"
-               Watermark="Messenger server address"
-               ToolTip.Tip="Enter the Messenger server address"
-               ToolTip.ShowDelay="1000"/>
+      <StackPanel Spacing="3">
+        <TextBlock HorizontalAlignment="Center"
+                   FontSize="15">
+          Login(RST):
+        </TextBlock>
+        <TextBox Text="{Binding Settings.RstUrl}"
+                 Watermark="RST URL"
+                 ToolTip.Tip="Enter the RST URL"
+                 ToolTip.ShowDelay="1000"/>
+      </StackPanel>
 
-      <StackPanel Grid.Row="4"
-                  HorizontalAlignment="Center">
+      <StackPanel Spacing="3">
+        <TextBlock HorizontalAlignment="Center"
+                   FontSize="15">
+          Sharing service:
+        </TextBlock>
+        <TextBox Text="{Binding Settings.SharingServiceUrl}"
+                 Watermark="Sharing service URL"
+                 ToolTip.Tip="Enter the sharing service URL"
+                 ToolTip.ShowDelay="1000"/>
+      </StackPanel>
+
+      <StackPanel Spacing="3">
+        <TextBlock HorizontalAlignment="Center"
+                   FontSize="15">
+          Address book service:
+        </TextBlock>
+        <TextBox Text="{Binding Settings.AddressBookUrl}"
+                 Watermark="Address book service URL"
+                 ToolTip.Tip="Enter the address book service URL"
+                 ToolTip.ShowDelay="1000"/>
+      </StackPanel>
+
+      <StackPanel HorizontalAlignment="Center">
         <CheckBox IsChecked="{Binding SaveMessages}"
                   ToolTip.Tip="Choose whether or not to save your message on this computer"
                   ToolTip.ShowDelay="1000">
@@ -58,14 +94,14 @@
           Save a connection log (contains personal information)
         </CheckBox>
         
-        <TextBlock Text="{Binding LogPath}"
-                   TextWrapping="Wrap"
-                   Foreground="Gray"/>
+        <SelectableTextBlock Text="{Binding LogPath}"
+                             TextWrapping="Wrap"
+                             Foreground="Gray"/>
       </StackPanel>
       
-    </Grid>
+    </StackPanel>
 
-    <StackPanel Grid.Row="4"
+    <StackPanel Grid.Row="2"
                 HorizontalAlignment="Center"
                 Spacing="5">
 
@@ -78,10 +114,10 @@
 
     </StackPanel>
 
-    <TextBlock Grid.Row="6"
-     Foreground="Gray"
-     TextAlignment="Center">
-      AvaMSN v0.12
+    <TextBlock Grid.Row="4"
+               Foreground="Gray"
+               TextAlignment="Center">
+      AvaMSN v0.12.1
     </TextBlock>
     
   </Grid>

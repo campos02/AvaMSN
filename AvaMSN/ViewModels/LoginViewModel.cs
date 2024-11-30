@@ -69,7 +69,7 @@ public class LoginViewModel : ViewModelBase
     }
 
     public bool ComingFromAPreviousRedirection { get; set; }
-    public string NewServer { get; set; } = SettingsManager.Settings.Server;
+    public string NewServer { get; set; } = SettingsManager.Settings.MainServer;
     public int NewPort { get; set; } = 1863;
 
     public Database Database => new Database();
@@ -309,7 +309,7 @@ public class LoginViewModel : ViewModelBase
 
         Password = string.Empty;
         ComingFromAPreviousRedirection = false;
-        NewServer = SettingsManager.Settings.Server;
+        NewServer = SettingsManager.Settings.MainServer;
         NewPort = 1863;
     }
 
@@ -327,12 +327,13 @@ public class LoginViewModel : ViewModelBase
             port = NewPort;
         }
 
-        host ??= SettingsManager.Settings.Server;
         NotificationServer notificationServer = new NotificationServer
         {
-            Host = host,
+            Host = host ?? SettingsManager.Settings.MainServer,
             Port = port,
-            ContactServiceAddress = SettingsManager.Settings.Server,
+            RstUrl = SettingsManager.Settings.RstUrl,
+            SharingServiceUrl = SettingsManager.Settings.SharingServiceUrl,
+            AddressBookUrl = SettingsManager.Settings.AddressBookUrl,
             User =
             {
                 Presence = SelectedStatus.ShortName,

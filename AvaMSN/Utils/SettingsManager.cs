@@ -13,17 +13,7 @@ public static class SettingsManager
     public static string FileName => "settings.json";
     public static string FileDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AvaMSN");
     public static string FilePath => Path.Combine(FileDirectory, FileName);
-
-    /// <summary>
-    /// Client settings. When modified, they change across all manager objects.
-    /// </summary>
-    public static Settings Settings { get; set; } = new Settings()
-    {
-        // Default settings
-        Server = "crosstalksrv.hiden.cc",
-        SaveMessagingHistory = true,
-        MinimizeToTray = true
-    };
+    public static Settings Settings { get; set; } = new Settings();
 
     /// <summary>
     /// Create file and directory if they don't exist and save serialized settings.

@@ -99,7 +99,7 @@ internal static class ContactService
         {
             var contactInfo = addressBookContact.contactInfo;
 
-            // Handle user info
+            // Handle user info, normal contacts are the "Regular" type
             if (contactInfo.contactType == "Me")
             {
                 UpdateUser(addressBookContact, user);

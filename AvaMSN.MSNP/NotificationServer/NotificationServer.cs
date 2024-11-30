@@ -12,7 +12,9 @@ public class NotificationServer : Connection
 {
     public User User { get; init; } = new User();
     public static string Protocol => "MSNP15";
-    public string ContactServiceAddress { get; init; } = string.Empty;
+    public string RstUrl { get; init; } = string.Empty;
+    public string SharingServiceUrl { get; init; } = string.Empty;
+    public string AddressBookUrl { get; init; } = string.Empty;
     public IncomingNotificationServer? Incoming { get; private set; }
     internal List<Switchboard.Switchboard> Switchboards { get; set; } = [];
 
@@ -25,8 +27,8 @@ public class NotificationServer : Connection
             Server = this
         };
         
-        ContactService.SharingServiceUrl = $"https://{ContactServiceAddress}/abservice/SharingService.asmx";
-        ContactService.ABServiceUrl = $"https://{ContactServiceAddress}/abservice/abservice.asmx";
+        ContactService.SharingServiceUrl = SharingServiceUrl;
+        ContactService.ABServiceUrl = AddressBookUrl;
         Log.Information("Connected to NS {Server} on port {Port}", Host, Port);
     }
 

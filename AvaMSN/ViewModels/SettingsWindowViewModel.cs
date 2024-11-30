@@ -3,6 +3,7 @@ using ReactiveUI;
 using System.Reactive;
 using System.Threading.Tasks;
 using AvaMSN.Utils;
+using AvaMSN.Models;
 
 namespace AvaMSN.ViewModels;
 
@@ -10,11 +11,11 @@ public class SettingsWindowViewModel : ViewModelBase
 {
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
 
-    public string Server { get; set; }
+    public static Settings Settings { get; set; } = new Settings();
     public bool SaveMessages { get; set; }
     public bool MinimizeToTray { get; set; }
     public bool SaveConnectionLog { get; set; }
-    public static string LogPath => $"Log location: {Path.Combine(SettingsManager.FileDirectory, "connection.log")}";
+    public string LogPath { get; init; } = $"Log location: {Path.Combine(SettingsManager.FileDirectory, "connection.log")}";
 
     private string resultText = string.Empty;
 
@@ -27,7 +28,10 @@ public class SettingsWindowViewModel : ViewModelBase
     public SettingsWindowViewModel()
     {
         SaveCommand = ReactiveCommand.CreateFromTask(Save);
-        Server = SettingsManager.Settings.Server;
+        Settings.MainServer = SettingsManager.Settings.MainServer;
+        Settings.RstUrl = SettingsManager.Settings.RstUrl;
+        Settings.SharingServiceUrl = SettingsManager.Settings.SharingServiceUrl;
+        Settings.AddressBookUrl = SettingsManager.Settings.AddressBookUrl;
         SaveMessages = SettingsManager.Settings.SaveMessagingHistory;
         MinimizeToTray = SettingsManager.Settings.MinimizeToTray;
         SaveConnectionLog = SettingsManager.Settings.SaveConnectionLog;
@@ -38,8 +42,17 @@ public class SettingsWindowViewModel : ViewModelBase
     /// </summary>
     private async Task Save()
     {
-        if (Server != string.Empty)
-            SettingsManager.Settings.Server = Server;
+        if (Settings.MainServer != string.Empty)
+            SettingsManager.Settings.MainServer = Settings.MainServer;
+
+        if (Settings.RstUrl != string.Empty)
+            SettingsManager.Settings.RstUrl = Settings.RstUrl;
+
+        if (Settings.SharingServiceUrl != string.Empty)
+            SettingsManager.Settings.SharingServiceUrl = Settings.SharingServiceUrl;
+
+        if (Settings.AddressBookUrl != string.Empty)
+            SettingsManager.Settings.AddressBookUrl = Settings.AddressBookUrl;
 
         SettingsManager.Settings.SaveMessagingHistory = SaveMessages;
         SettingsManager.Settings.MinimizeToTray = MinimizeToTray;
