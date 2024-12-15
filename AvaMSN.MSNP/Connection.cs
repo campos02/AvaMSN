@@ -39,7 +39,6 @@ public abstract class Connection
         }
         
         IPEndPoint ipEndPoint = new(ipAddress, Port);
-
         Client = new Socket(
             ipEndPoint.AddressFamily,
             SocketType.Stream,
@@ -47,21 +46,6 @@ public abstract class Connection
 
         await Client.ConnectAsync(ipEndPoint);
         Connected = true;
-    }
-
-    /// <summary>
-    /// Asynchronously sends a text command.
-    /// </summary>
-    /// <param name="command"></param>
-    /// <returns></returns>
-    internal async Task SendAsync(string command)
-    {
-        if (Client == null)
-            throw new NullReferenceException("Socket is null");
-        
-        var messageBytes = Encoding.UTF8.GetBytes(command);
-        await Client.SendAsync(messageBytes, SocketFlags.None);
-        Log.Information("Sent: {Message}", command);
     }
 
     /// <summary>
@@ -79,24 +63,14 @@ public abstract class Connection
     }
 
     /// <summary>
-    /// Waits for a response from the server and returns it as a string.
+    /// Asynchronously sends a text command.
     /// </summary>
-    /// <returns>Message received in string format.</returns>
-    internal async Task<string> ReceiveStringAsync()
+    /// <param name="command"></param>
+    /// <returns></returns>
+    internal async Task SendAsync(string command)
     {
-        if (Client == null)
-            throw new NullReferenceException("Socket is null");
-        
-        await receiveSource.CancelAsync();
-        receiveSource = new CancellationTokenSource();
-        receiveSource.CancelAfter(30000);
-
-        var buffer = new byte[1664];
-        var received = await Client.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
-        string response = Encoding.UTF8.GetString(buffer, 0, received);
-        
-        Log.Information("Received: {Response}", response);
-        return response;
+        var messageBytes = Encoding.UTF8.GetBytes(command);
+        await SendAsync(messageBytes);
     }
 
     /// <summary>
@@ -116,8 +90,23 @@ public abstract class Connection
         var received = await Client.ReceiveAsync(buffer, SocketFlags.None, receiveSource.Token);
         byte[] response = new byte[received];
         Buffer.BlockCopy(buffer, 0, response, 0, received);
-        
-        Log.Information("Received: {Response}", Encoding.UTF8.GetString(response));
+
+        string responseString = Encoding.UTF8.GetString(response);
+        if (responseString == "")
+            await DisconnectAsync(new DisconnectedEventArgs { Requested = false });
+
+        Log.Information("Received: {Response}", responseString);
+        return response;
+    }
+
+    /// <summary>
+    /// Waits for a response from the server and returns it as a string.
+    /// </summary>
+    /// <returns>Message received in string format.</returns>
+    internal async Task<string> ReceiveStringAsync()
+    {
+        string response = Encoding.UTF8.GetString(await ReceiveAsync());
+        Log.Information("Received: {Response}", response);
         return response;
     }
 
@@ -146,14 +135,18 @@ public abstract class Connection
 
             byte[] response = new byte[received];
             Buffer.BlockCopy(buffer, 0, response, 0, received);
-            
-            Log.Information("Incoming: {Response}", Encoding.UTF8.GetString(response));
+
+            string responseString = Encoding.UTF8.GetString(response);
+            if (responseString == "")
+                await DisconnectAsync(new DisconnectedEventArgs { Requested = false });
+
+            Log.Information("Incoming: {Response}", responseString);
             await HandleIncoming(response);
         }
     }
 
     /// <summary>
-    /// Virtual function to handle incoming responses that aren't the result of a command.
+    /// Abstract function to handle incoming responses that aren't the result of a command.
     /// </summary>
     /// <param name="response">Message received.</param>
     /// <returns></returns>
@@ -165,9 +158,9 @@ public abstract class Connection
     /// <returns></returns>
     public async Task StartPinging()
     {
+        string message = "PNG\r\n";
         while (true)
         {
-            var message = "PNG\r\n";
             try
             {
                 // Send ping
