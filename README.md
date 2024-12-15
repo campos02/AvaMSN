@@ -11,4 +11,4 @@ The default server is [CrossTalk](https://crosstalk.hiden.cc), which is currentl
 - [x] Tray icon
 - [x] Native notifications
 
-![avamsn](![image](https://github.com/user-attachments/assets/ea8986de-8bb0-4748-a1e5-263ffb4c4f05))
+![image](https://github.com/user-attachments/assets/ea8986de-8bb0-4748-a1e5-263ffb4c4f05)
