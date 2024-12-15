@@ -117,7 +117,7 @@
     <TextBlock Grid.Row="4"
                Foreground="Gray"
                TextAlignment="Center">
-      AvaMSN v0.12.1
+      AvaMSN v0.12.2
     </TextBlock>
     
   </Grid>
