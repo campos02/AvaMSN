@@ -202,6 +202,7 @@ public class LoginViewModel : ViewModelBase
             catch (RedirectedByTheServerException e)
             {
                 ComingFromAPreviousRedirection = false;
+                await authentication.Server.DisconnectAsync();
                 authentication = await CreateConnection(e.Server, e.Port);
                 await GetUserData(user, authentication);
 
@@ -212,6 +213,7 @@ public class LoginViewModel : ViewModelBase
                 catch (MsnpServerAuthException)
                 {
                     // Create new connection and use password
+                    await authentication.Server.DisconnectAsync();
                     authentication = await CreateConnection(e.Server, e.Port);
 
                     string userPassword = string.Empty;
@@ -238,6 +240,7 @@ public class LoginViewModel : ViewModelBase
             catch (MsnpServerAuthException)
             {
                 // Create new connection and use password
+                await authentication.Server.DisconnectAsync();
                 authentication = await CreateConnection();
 
                 string userPassword = string.Empty;
@@ -270,6 +273,7 @@ public class LoginViewModel : ViewModelBase
             catch (RedirectedByTheServerException e)
             {
                 ComingFromAPreviousRedirection = false;
+                await authentication.Server.DisconnectAsync();
                 authentication = await CreateConnection(e.Server, e.Port);
                 await authentication.Authenticate(Password);
             }
