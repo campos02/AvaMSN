@@ -25,4 +25,10 @@ public partial class ContactListView : UserControl
     {
         presenceBox.SelectedIndex = 0;
     }
+
+    private async void AddContactButton_Tapped(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        addContactButton.Flyout?.Hide();
+        await (DataContext as ContactListViewModel)!.AddContact();
+    }
 }

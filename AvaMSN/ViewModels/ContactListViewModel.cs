@@ -31,7 +31,6 @@ public class ContactListViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit> ChangePersonalMessageCommand { get; }
     public ReactiveCommand<Unit, Unit> ChatCommand { get; }
     public ReactiveCommand<Unit, Unit> OptionsCommand { get; }
-    public ReactiveCommand<Unit, Unit> AddContactCommand { get; }
     public ReactiveCommand<Unit, Unit> RemoveContactCommand { get; }
     public ReactiveCommand<Unit, Unit> BlockContactCommand { get; }
     public ReactiveCommand<Unit, Unit> UnblockContactCommand { get; }
@@ -80,10 +79,24 @@ public class ContactListViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref selectedOptionIndex, value);
     }
 
+    private string newContactEmail = string.Empty;
+
+    public string NewContactEmail
+    {
+        get => newContactEmail;
+        set => this.RaiseAndSetIfChanged(ref newContactEmail, value);
+    }
+
+    private string newContactDisplayName = string.Empty;
+
+    public string NewContactDisplayName
+    {
+        get => newContactDisplayName;
+        set => this.RaiseAndSetIfChanged(ref newContactDisplayName, value);
+    }
+
     public string DisplayName { get; set; } = string.Empty;
     public string PersonalMessage { get; set; } = string.Empty;
-    public string NewContactEmail { get; set; } = string.Empty;
-    public string NewContactDisplayName { get; set; } = string.Empty;
     public Database? Database { get; set; }
     
     public event EventHandler<Models.DisconnectedEventArgs>? Disconnected;
@@ -95,7 +108,6 @@ public class ContactListViewModel : ViewModelBase
         ChangePersonalMessageCommand = ReactiveCommand.CreateFromTask(ChangePersonalMessage);
         ChatCommand = ReactiveCommand.CreateFromTask(Chat);
         OptionsCommand = ReactiveCommand.Create(OpenOptions);
-        AddContactCommand = ReactiveCommand.CreateFromTask(AddContact);
         RemoveContactCommand = ReactiveCommand.CreateFromTask(RemoveContact);
         BlockContactCommand = ReactiveCommand.CreateFromTask(BlockContact);
         UnblockContactCommand = ReactiveCommand.CreateFromTask(UnblockContact);
@@ -226,7 +238,7 @@ public class ContactListViewModel : ViewModelBase
         }
     }
 
-    private async Task AddContact()
+    public async Task AddContact()
     {
         if (NewContactDisplayName == string.Empty)
             NewContactDisplayName = NewContactEmail;

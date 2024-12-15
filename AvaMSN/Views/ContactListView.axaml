@@ -206,7 +206,8 @@
     <Button HorizontalAlignment="Right"
             Background="Transparent"
             ToolTip.Tip="Add a contact"
-            ToolTip.ShowDelay="1000">
+            ToolTip.ShowDelay="1000"
+            Name="addContactButton">
       <PathIcon Data="{StaticResource person_add_regular}"/>
       <Button.Flyout>
         <Flyout>
@@ -217,8 +218,8 @@
               <TextBox Text="{Binding NewContactDisplayName}"
                        Watermark="Contact display name"/>
             </StackPanel>
-            <Button Command="{Binding AddContactCommand}"
-                    HorizontalAlignment="Center">Add contact</Button>
+            <Button HorizontalAlignment="Center"
+                    Tapped="AddContactButton_Tapped">Add contact</Button>
           </StackPanel>
         </Flyout>
       </Button.Flyout>
