@@ -156,20 +156,34 @@ public class ContactListViewModel : ViewModelBase
 
         if (files.Count > 0)
         {
-            // Scale to height
             int pictureSize = 100;
             await using Stream fileStream = await files[0].OpenReadAsync();
-            Bitmap picture = Bitmap.DecodeToHeight(fileStream, pictureSize);
-            using MemoryStream pictureStream = new MemoryStream();
-            picture.Save(pictureStream);
-            pictureStream.Seek(0, SeekOrigin.Begin);
+            using SKBitmap bitmap = SKBitmap.Decode(fileStream);
 
-            // Crop to width
-            int cropStart = (picture.PixelSize.Width - pictureSize) / 2;
-            int cropEnd = (picture.PixelSize.Width + pictureSize) / 2;
+            // Resize while maintaining aspect ratio
+            double aspectRatio;
+            int newHeight, newWidth;
+            if (bitmap.Height <= bitmap.Width)
+            {
+                aspectRatio = (double)bitmap.Width / bitmap.Height;
+                newHeight = pictureSize;
+                newWidth = (int)Math.Round(pictureSize * aspectRatio);
+            }
+            else
+            {
+                aspectRatio = (double)bitmap.Height / bitmap.Width;
+                newWidth = pictureSize;
+                newHeight = (int)Math.Round(pictureSize * aspectRatio);
+            }
+            using SKBitmap resized = bitmap.Resize(new SKImageInfo(newWidth, newHeight), SKFilterQuality.High);
 
-            using SKBitmap bitmap = SKBitmap.Decode(pictureStream);
-            SKRect cropRect = new SKRect(cropStart, 0, cropEnd, pictureSize);
+            // Crop to width and height
+            int verticalCropStart = (resized.Height - pictureSize) / 2;
+            int verticalCropEnd = (resized.Height + pictureSize) / 2;
+            int horizontalCropStart = (resized.Width - pictureSize) / 2;
+            int horizontalCropEnd = (resized.Width + pictureSize) / 2;
+
+            SKRect cropRect = new SKRect(horizontalCropStart, verticalCropStart, horizontalCropEnd, verticalCropEnd);
             using SKBitmap croppedBitmap = new SKBitmap((int)cropRect.Width,
                                                   (int)cropRect.Height);
             SKRect destination = new SKRect(0, 0, cropRect.Width, cropRect.Height);
@@ -177,7 +191,7 @@ public class ContactListViewModel : ViewModelBase
                                        cropRect.Right, cropRect.Bottom);
 
             using SKCanvas canvas = new SKCanvas(croppedBitmap);
-            canvas.DrawBitmap(bitmap, source, destination);
+            canvas.DrawBitmap(resized, source, destination);
 
             // Set and save cropped picture
             using MemoryStream croppedPictureStream = new MemoryStream();
