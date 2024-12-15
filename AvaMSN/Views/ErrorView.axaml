@@ -5,7 +5,7 @@
              xmlns:models="clr-namespace:AvaMSN.Models;assembly=AvaMSN.Shared"
              xmlns:vm="clr-namespace:AvaMSN.ViewModels"
              xmlns:dvm="clr-namespace:AvaMSN.ViewModels.Design"
-             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="180"
              x:Class="AvaMSN.Views.ErrorView"
              x:DataType="vm:ErrorViewModel">
 
@@ -34,12 +34,13 @@
           Background="{DynamicResource BackgroundBrush}"
           Padding="10">
     
-    <Grid RowDefinitions="90, 10, Auto">
+    <Grid RowDefinitions="Auto, 10, Auto">
 
-      <ScrollViewer>
+      <ScrollViewer MaxHeight="120">
         <TextBlock Text="{Binding Error}"
                    TextWrapping="Wrap"
-                   TextAlignment="Center"/>
+                   TextAlignment="Center"
+                   VerticalAlignment="Center"/>
       </ScrollViewer>
 
       <Button Command="{Binding CloseCommand}"
