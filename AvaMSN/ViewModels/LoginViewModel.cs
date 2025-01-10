@@ -189,9 +189,12 @@ public class LoginViewModel : ViewModelBase
         LoadDisplayPicture(Email);
         Authentication authentication = await CreateConnection();
 
-        // Use token and binary secret if available
+        // Use ticket and binary secret if they're available and the password box wasn't modified
         StoredUser user = Users?.LastOrDefault(user => user.UserEmail == Email) ?? new StoredUser();
-        if (user.BinarySecret.Length > 0 & user.TicketToken.Length > 0 & user.Ticket.Length > 0)
+        if (user.BinarySecret.Length > 0
+            && user.TicketToken.Length > 0
+            && user.Ticket.Length > 0
+            && Password == Encoding.UTF8.GetString(user.BinarySecret))
         {
             await GetUserData(user, authentication);
 
@@ -293,10 +296,9 @@ public class LoginViewModel : ViewModelBase
         {
             Server = authentication.Server
         };
-        
-        await contactActions.SendContactList();
 
-        // Presence and personal message
+        // Contacts, presence and personal message
+        await contactActions.SendContactList();
         await userProfile.SendUUX();
         userProfile.CreateMSNObject();
         await userProfile.SendCHG();
