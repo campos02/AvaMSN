@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Security;
+using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Serialization;
 using AvaMSN.MSNP.SOAP;
@@ -26,7 +27,6 @@ public class SingleSignOn
     private static byte[] UIntBytes(uint[] uintArray)
     {
         byte[] bytes = new byte[sizeof(uint) * uintArray.Length];
-
         for (int i = 0; i < uintArray.Length; i++)
         {
             byte[] indexBytes = BitConverter.GetBytes(uintArray[i]);
@@ -55,7 +55,8 @@ public class SingleSignOn
 
         Log.Information("Making SOAP request {Request} to {Url}", "RST", RstAddress);
         string soapXML = Encoding.UTF8.GetString(memory.ToArray());
-        string response = await Requests.MakeRequest(soapXML, RstAddress, "http://www.msn.com/webservices/storage/w10/");
+        Log.Information("Sent SOAP: {request}", soapXML.Replace(SecurityElement.Escape(password), "**********"));
+        string response = await Requests.MakeRequest(soapXML, RstAddress, "http://www.msn.com/webservices/storage/w10/", logRequest: false);
 
         XmlSerializer responseSerializer = new(typeof(SOAP.SerializableClasses.RstResponse.Envelope));
         using StringReader reader = new StringReader(response);
